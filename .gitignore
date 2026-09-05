@@ -1,0 +1,38 @@
+# secrets
+.env
+.streamlit/secrets.toml
+
+# python / uv
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# runtime data (generated locally, never commit)
+data/app.db
+data/*.db
+data/leads.csv
+data/bookings.csv
+logs/
+
+# editors / os
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# assistant tooling, never ship
+.claude/
+CLAUDE.md
+CLAUDE.local.md
+.claude*
+.mcp.json
+.cursor/
+.aider*
+
+# simulated outbox
+outbox/
+
+# markdown is written by hand at the end, generated reports stay local
+*.md
