@@ -44,7 +44,8 @@ src = ["src", "scripts", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "N"]
-ignore = ["E501"]
+# B008: FastAPI declares dependencies as call defaults by design.
+ignore = ["E501", "B008"]
 
 [tool.pyright]
 include = ["src"]

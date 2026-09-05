@@ -11,8 +11,9 @@ import re
 
 # UAE numbers appear in every shape the dealers could think of: +971 58 543 8686,
 # 97144501601, 00971589695000, 0555540224, 052 996 5849, (+971) 0542211117.
+# The token boundaries keep digit runs inside URL hashes from counting as phones.
 PHONE_RE = re.compile(
-    r"(?<!\d)(?:\(\+?\s?971\)|\+?\s?971|00971|0?5\d)[\s\-\.\)\(]*\d(?:[\s\-\.\)\(]*\d){6,10}(?!\d)"
+    r"(?<![\w/.#-])(?:\(\+?\s?971\)|\+?\s?971|00971|0?5\d)[\s\-\.\)\(]*\d(?:[\s\-\.\)\(]*\d){6,10}(?![\w/-])"
 )
 
 URL_RE = re.compile(

@@ -1,6 +1,6 @@
 {
  "meta": {
-  "generated_at": "2026-09-05 23:32 UTC",
+  "generated_at": "2026-09-05 23:43 UTC",
   "source_file": "cars.xlsx",
   "source_sha256": "94a97f84aa742ec8ed526bb14d41ca4134ab8a2e1db1ab7f3d2f03af5c38bbb9",
   "llm_model": null,
@@ -8312,10 +8312,7 @@
    "description_quality": "ok",
    "dealer_name": null,
    "dealer_contact": {
-    "phones": [
-     "0502996663",
-     "0558880268"
-    ],
+    "phones": [],
     "urls": [],
     "handles": []
    },
