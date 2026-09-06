@@ -17,7 +17,7 @@ import streamlit.components.v1 as components
 
 BACKEND = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000").rstrip("/")
 TIMEOUT = 120
-# One place to rename the product. Sayara is Arabic for car; provisional until Samad picks.
+# Sayara: Arabic for car. One place to rename the product.
 APP_NAME = "Sayara"
 APP_TAGLINE = "take-home build for dubizzle"
 
