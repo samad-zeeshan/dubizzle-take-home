@@ -9,7 +9,7 @@ a cursor. Debug and admin routers exist only when DEBUG_ENDPOINTS is on.
 from __future__ import annotations
 
 import logging
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 
@@ -32,7 +32,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
 
     @asynccontextmanager
-    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         init_db(settings.db_path)
         conn = connect(settings.db_path)
         try:
@@ -84,8 +84,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except ImportError:
             pass
 
-    @app.exception_handler(RetrievalUnavailableError)
-    async def _retrieval_unavailable(_: Request, exc: RetrievalUnavailableError) -> JSONResponse:
+    async def retrieval_unavailable(_: Request, exc: Exception) -> JSONResponse:
         return JSONResponse(status_code=503, content={"detail": str(exc)})
+
+    app.add_exception_handler(RetrievalUnavailableError, retrieval_unavailable)
 
     return app

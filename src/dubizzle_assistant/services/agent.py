@@ -19,6 +19,7 @@ from typing import Any
 
 from dubizzle_assistant.config import Settings
 from dubizzle_assistant.services import guardrails, memory, tools
+from dubizzle_assistant.services import summary as summary_mod
 from dubizzle_assistant.services.context import TurnContext
 from dubizzle_assistant.services.llm.base import (
     LLMClient,
@@ -364,7 +365,15 @@ def run_turn(
         )
 
     return _run_loop(
-        ctx, llm, messages, user_msg, resolved=resolved, recall=recall, started=started
+        ctx,
+        llm,
+        messages,
+        user_msg,
+        resolved=resolved,
+        recall=recall,
+        started=started,
+        summary_prev=summary,
+        summary_through=saved.get("summary_through_turn", 0),
     )
 
 
@@ -377,6 +386,8 @@ def _run_loop(
     resolved: dict[str, Any] | None,
     recall: str | None,
     started: float,
+    summary_prev: str | None = None,
+    summary_through: int = 0,
 ) -> dict[str, Any]:
     settings, trace = ctx.settings, ctx.trace
     schemas = tools.tool_schemas()
@@ -434,13 +445,13 @@ def _run_loop(
                 tool_names.append(tc.name)
                 with trace.stage("tool", name=tc.name, args=redact(tc.arguments)) as rec:
                     result = tools.run_tool(ctx, tc.name, tc.arguments)
-                    extra = result.pop("_trace", None) if isinstance(result, dict) else None
+                    extra = result.pop("_trace", None)
                     if extra:
                         rec.update(extra)
                     rec["result_ids"] = _ids_in(result)
-                    if isinstance(result, dict) and result.get("error"):
+                    if result.get("error"):
                         rec["error"] = result["error"]
-                    if tc.name == "search_inventory" and isinstance(result, dict):
+                    if tc.name == "search_inventory":
                         rec["total_matches"] = result.get("total_matches")
                         rec["normalization"] = result.get("normalization")
                 ctx.tool_results.append({"name": tc.name, "args": tc.arguments, "result": result})
@@ -476,11 +487,11 @@ def _run_loop(
         reply, hits = guardrails.postfilter(reply)
         trace.add("postfilter", hits=hits)
 
+    sources = guardrails.collect_sources(ctx.tool_results, ctx.shown + ctx.new_cards)
     grounding: dict[str, Any] | None = None
     if settings.ablate_grounding_check:
         trace.add("grounding", result="skipped (ablated)")
     else:
-        sources = guardrails.collect_sources(ctx.tool_results, ctx.shown + ctx.new_cards)
         grounding = _grounding_pass(ctx, reply, sources, "grounding")
         if grounding["ungrounded"]:
             note = {
@@ -514,9 +525,42 @@ def _run_loop(
                 reply = _template_reply(ctx)
                 grounding = _grounding_pass(ctx, reply, sources, "grounding_fallback")
 
-    verification = (
-        _verify(ctx, llm, reply, messages, usage) if settings.verify_mode == "llm" else None
-    )
+    verification = None
+    if settings.verify_mode == "llm":
+        verification = _verify(ctx, llm, reply, messages, usage)
+        if verification and not verification.get("all_supported"):
+            claims = [
+                str(v.get("claim"))
+                for v in verification.get("verdicts", [])
+                if not v.get("supported", True)
+            ]
+            note = {
+                "role": "system",
+                "content": f"A check found these claims unsupported by the tool results: {'; '.join(claims)}. Rewrite the reply using only what the tool results state.",
+            }
+            try:
+                resp3 = _call(
+                    ctx,
+                    llm,
+                    [*messages, {"role": "assistant", "content": reply}, note],
+                    None,
+                    n + 2,
+                    want_schema=False,
+                    model=turn_model,
+                    purpose="regenerate_verify",
+                )
+                reply3, _, _ = _parse_structured(resp3.text)
+                if reply3.strip():
+                    reply = (
+                        reply3 if settings.ablate_postfilter else guardrails.postfilter(reply3)[0]
+                    )
+                    if grounding is not None:
+                        grounding = _grounding_pass(ctx, reply, sources, "grounding_after_verify")
+                    verification["regenerated"] = True
+            except ChatUnavailableError:
+                verification["regenerated"] = False
+
+    summary_mod.maybe_update(ctx, llm, summary_prev, summary_through)
 
     final_msg = assistant_message(final)
     final_msg["content"] = reply

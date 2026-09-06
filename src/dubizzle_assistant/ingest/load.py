@@ -95,7 +95,7 @@ def read_sheet(path: Path, sheet: str) -> list[Row]:
     idx = {name: i for i, name in enumerate(header)}
     out: list[Row] = []
     for n, values in enumerate(rows_iter, start=2):
-        if values is None or all(v is None for v in values):
+        if all(v is None for v in values):
             continue
 
         def get(k: str, values: tuple[object, ...] = values) -> str:

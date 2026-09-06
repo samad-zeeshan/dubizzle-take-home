@@ -199,7 +199,9 @@ def extract_mileage(text: str, title: str) -> tuple[Field, Field, list[dict[str,
     for rx, base in ((MILEAGE_LABEL_RE, 0.9), (MILEAGE_UNIT_RE, 0.7)):
         for m in rx.finditer(t):
             gi = next((i for i, g in enumerate(m.groups(), start=1) if g), None)
-            v = parse_number(m.group(gi)) if gi else None
+            if gi is None:
+                continue
+            v = parse_number(m.group(gi))
             if v is None:
                 continue
             span = (m.start(gi), m.end(gi))

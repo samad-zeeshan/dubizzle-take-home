@@ -9,6 +9,7 @@ lead tools register themselves from their own modules.
 from __future__ import annotations
 
 import contextlib
+import importlib
 from collections.abc import Callable
 from typing import Any
 
@@ -48,8 +49,9 @@ def run_tool(ctx: TurnContext, name: str, args: dict[str, Any]) -> dict[str, Any
 
 def _ensure_loaded() -> None:
     if "propose_viewing" not in _HANDLERS:
-        with contextlib.suppress(ImportError):
-            from dubizzle_assistant.services import booking, leads  # noqa: F401
+        for name in ("booking", "leads"):
+            with contextlib.suppress(ImportError):
+                importlib.import_module(f"dubizzle_assistant.services.{name}")
 
 
 _MAKES_HINT = (
@@ -213,7 +215,12 @@ def _get(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
             "down_payment_pct": row.get("down_payment_pct"),
             "language": row.get("language"),
             "description_quality": row.get("description_quality"),
-            "listing_text": (row.get("description_clean") or "")[:1200],
+            # With the sanitizer ablated the model sees the seller's raw text, phones and all. That is the demo.
+            "listing_text": (
+                inv.raw_text(ctx.conn, row["id"])
+                if ctx.settings.ablate_sanitizer
+                else (row.get("description_clean") or "")
+            )[:1200],
             "evidence": {
                 k: fields[k].get("evidence")
                 for k in (

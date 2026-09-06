@@ -577,3 +577,11 @@ def compare(conn: sqlite3.Connection, ids: list[str]) -> dict[str, Any]:
     ]
     table = {k: [c.get(k) for c in cards] for k in keys}
     return {"ids": [c["id"] for c in cards], "cards": cards, "table": table}
+
+
+def raw_text(conn: sqlite3.Connection, listing_id: str) -> str:
+    """The seller's text with contact details intact. Only the sanitizer ablation ever reads this."""
+    row = conn.execute(
+        "SELECT description_raw FROM listings WHERE id = ?", (listing_id,)
+    ).fetchone()
+    return (row["description_raw"] if row else "") or ""

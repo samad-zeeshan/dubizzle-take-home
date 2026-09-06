@@ -443,7 +443,7 @@ def _availability(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
         return {"error": "which car? give a listing id"}
     when = ctx.now
     if args.get("date_text"):
-        parsed, _, err = parse_slot(str(args["date_text"]), None, 10, ctx.now)
+        parsed, _, _ = parse_slot(str(args["date_text"]), None, 10, ctx.now)
         if parsed is not None:
             when = parsed
     grid = availability_grid(ctx.conn, lid, when, ctx.now)

@@ -61,7 +61,10 @@ def history(
 ) -> dict[str, Any]:
     if not memory.get_user(conn, user_id):
         raise HTTPException(status_code=404, detail="no such user")
-    q = lambda sql: [dict(r) for r in conn.execute(sql, (user_id,))]  # noqa: E731
+
+    def q(sql: str) -> list[dict[str, Any]]:
+        return [dict(r) for r in conn.execute(sql, (user_id,))]
+
     return {
         "searches": q(
             "SELECT raw_query, parsed_filters_json, result_count, ts, session_id FROM search_history WHERE user_id = ? ORDER BY id DESC LIMIT 50"

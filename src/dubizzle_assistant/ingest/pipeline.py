@@ -107,8 +107,7 @@ def build(xlsx: Path, enricher: Enricher | None = None) -> dict[str, Any]:
         "source_sha256": sha,
         "llm_model": llm_model,
         "counts": {
-            "cleaned_read": sum(1 for r in rows if r.source_sheet == "cleaned")
-            + sum(1 for d in removed if d["reason"].startswith("same listing")) * 0,
+            "cleaned_read": sum(1 for r in rows if r.source_sheet == "cleaned"),
             "raw_read": sum(1 for r in rows if r.source_sheet == "raw") + len(removed),
             "cleaned_kept": sum(1 for r in records if r["source_sheet"] == "cleaned"),
             "raw_kept": sum(1 for r in records if r["source_sheet"] == "raw"),
