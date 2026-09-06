@@ -1,0 +1,30 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  offline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Sync (locked, with dev group)
+        run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check src scripts tests main.py app.py pages
+      - name: Format check
+        run: uv run ruff format --check src scripts tests main.py app.py pages
+      - name: Types
+        run: uv run pyright src
+      - name: Inventory builds from the workbook without a key
+        run: uv run python scripts/build_inventory.py --regex-only --out /tmp/inventory.json --report /tmp/enrichment_report.md
+      - name: Offline test suite
+        env:
+          LLM_PROVIDER: mock
+        run: uv run pytest -q
+      - name: Retrieval evaluation
+        run: uv run python scripts/eval_retrieval.py --modes structured fts hybrid --out /tmp/retrieval_eval.md
