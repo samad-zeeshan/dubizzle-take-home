@@ -24,6 +24,7 @@ from dubizzle_assistant.normalize import (
     register_makes,
     register_models,
 )
+from dubizzle_assistant.services.embeddings import RetrievalUnavailableError
 from dubizzle_assistant.text import strip_contacts
 
 # bm25 weights: id (unindexed), make, model, trim, title, english_summary, keywords_en, description_clean.
@@ -56,10 +57,6 @@ CARD_FIELDS = (
 )
 
 Embedder = Callable[[str], list[float]]
-
-
-class RetrievalUnavailableError(RuntimeError):
-    """The requested retrieval mode cannot run here, for example no embeddings file."""
 
 
 @dataclass
@@ -289,6 +286,26 @@ def fts_match_string(text: str) -> str:
     return " OR ".join(parts)
 
 
+PHRASE_BONUS = (
+    6.0  # bm25 is negative and lower is better; an exact phrase hit jumps ahead of loose token hits
+)
+
+
+def fts_scores_for(conn: sqlite3.Connection, text: str) -> tuple[str, dict[str, float]]:
+    """Loose token match for recall, then the exact phrase pulled to the front for precision ("7 seats")."""
+    match = fts_match_string(text)
+    scores = _fts_scores(conn, match)
+    tokens = [t.lower() for t in _FTS_TOKEN_RE.findall(text) if t.lower() not in _FTS_STOP]
+    if len(tokens) >= 2:
+        phrase = '"' + " ".join(tokens) + '"'
+        hits = _fts_scores(conn, phrase)
+        if hits:
+            match = f"{phrase} OR {match}" if match else phrase
+            for lid, score in hits.items():
+                scores[lid] = min(scores.get(lid, 0.0), score) - PHRASE_BONUS
+    return match, scores
+
+
 def _fts_scores(conn: sqlite3.Connection, match: str) -> dict[str, float]:
     if not match:
         return {}
@@ -370,9 +387,8 @@ def _run_stage(
     fts_text = _fts_text_for(f) if mode == "fts" else (f.keywords or "")
     scores: dict[str, float] = {}
     if mode in ("fts", "hybrid") and fts_text:
-        match = fts_match_string(fts_text)
+        match, scores = fts_scores_for(conn, fts_text)
         executed["fts"] = match
-        scores = _fts_scores(conn, match)
         rows = [r for r in rows if r["id"] in scores]
         for r in rows:
             r["_bm25"] = scores[r["id"]]

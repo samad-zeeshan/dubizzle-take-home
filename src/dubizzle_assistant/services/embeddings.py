@@ -17,6 +17,11 @@ import numpy as np
 
 from dubizzle_assistant.config import get_settings
 
+
+class RetrievalUnavailableError(RuntimeError):
+    """The requested retrieval mode cannot run here, for example no embeddings file or no embedder."""
+
+
 _cache: dict[str, Any] = {}
 
 
@@ -41,7 +46,9 @@ def rank_by_similarity(
     query_text: str, embedder: Callable[[str], list[float]] | None, path: Path | None = None
 ) -> dict[str, float]:
     if embedder is None:
-        raise RuntimeError("embeddings mode needs an embedder; the LLM layer provides one")
+        raise RetrievalUnavailableError(
+            "embeddings mode needs an embedder; the LLM layer provides one"
+        )
     ids, matrix = load(path)
     q = np.asarray(embedder(query_text), dtype=np.float32)
     q = q / (np.linalg.norm(q) or 1.0)
