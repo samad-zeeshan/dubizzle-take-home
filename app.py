@@ -22,7 +22,8 @@ st.set_page_config(page_title="dubizzle cars assistant", layout="wide")
 
 
 def api(method: str, path: str, **kwargs: Any) -> httpx.Response:
-    return httpx.request(method, f"{BACKEND}{path}", timeout=TIMEOUT, **kwargs)
+    kwargs.setdefault("timeout", TIMEOUT)
+    return httpx.request(method, f"{BACKEND}{path}", **kwargs)
 
 
 def health() -> dict[str, Any] | None:

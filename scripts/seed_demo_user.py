@@ -51,10 +51,6 @@ def main() -> int:
     memory.remember(conn, uid, "body_type", "suv", "stated", sid, yesterday)
     velar = inventory.get_cards(conn, ["C-003"])[0]
     memory.like(conn, uid, velar, sid, yesterday)
-    # The coming Monday at 10:00, which is never a Sunday and always more than an hour away.
-    monday = now + timedelta(days=(7 - now.weekday()) % 7 or 7)
-    slot = monday.replace(hour=10, minute=0, second=0, microsecond=0)
-    result = booking.create_booking(conn, s, uid, "C-003", slot, now)
     leads.upsert(
         conn,
         s,
@@ -68,6 +64,10 @@ def main() -> int:
         },
         yesterday,
     )
+    # The coming Monday at 10:00, which is never a Sunday and always more than an hour away.
+    monday = now + timedelta(days=(7 - now.weekday()) % 7 or 7)
+    slot = monday.replace(hour=10, minute=0, second=0, microsecond=0)
+    result = booking.create_booking(conn, s, uid, "C-003", slot, now)
     print(
         f"seeded user {uid} (Sara): 2 searches, 2 preferences, liked C-003, booking {result.get('ref') or result.get('reason')}"
     )

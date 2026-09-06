@@ -16,7 +16,7 @@ import sqlite3
 from datetime import datetime
 from typing import Any
 
-from dubizzle_assistant.normalize import resolve_make_model
+from dubizzle_assistant.normalize import DATASET_MAKES, resolve_make_model
 from dubizzle_assistant.text import contains_contact
 
 PREFERENCE_KINDS = {
@@ -367,6 +367,12 @@ def resolve_reference(
             ]
             if narrowed:
                 pool = narrowed
+            else:
+                q_make, q_model, _ = resolve_make_model(qualifier)
+                if q_make or qualifier.rstrip("s") in DATASET_MAKES:
+                    # "that first Honda" when no Honda is on screen: say so rather than hand back the first car.
+                    out.update(rule=f"not_on_screen:{qualifier}")
+                    return out
         if word == "last":
             out.update(resolved=pool[-1]["id"], rule="ordinal")
             return out

@@ -84,6 +84,8 @@ def test_qualified_ordinal_narrows_by_make():
     assert r["resolved"] == "R-078"
     r = resolve_reference("the second land rover", s, None)
     assert r["resolved"] == "C-044"
+    r = resolve_reference("what about that first toyota?", s, None)
+    assert r["resolved"] is None and r["rule"] == "not_on_screen:toyota"
 
 
 def test_alias_make_model_reference():

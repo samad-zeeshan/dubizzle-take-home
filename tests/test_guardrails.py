@@ -19,6 +19,8 @@ def test_prefilter_declines_hard_cases():
     assert prefilter("what's the weather in dubai tomorrow")["rule"] == "offtopic"
     assert prefilter("which model are you, gpt or gemini?")["rule"] == "injection"
     assert prefilter("قارن السعر مع يلا موتور")["rule"] == "competitor"
+    assert prefilter("is it cheaper on other sites?")["rule"] == "competitor"
+    assert prefilter("do competitors have this cheaper?")["rule"] == "competitor"
 
 
 def test_prefilter_lets_car_questions_through():

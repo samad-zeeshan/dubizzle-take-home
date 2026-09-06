@@ -51,7 +51,10 @@ COMPETITORS = [
     "سيل اني كار",
 ]
 COMPETITOR_RE = re.compile(
-    r"(?<![\w-])(" + "|".join(re.escape(c) for c in COMPETITORS) + r")(?![\w-])", re.I
+    r"(?<![\w-])(" + "|".join(re.escape(c) for c in COMPETITORS) + r")(?![\w-])"
+    r"|\b(other|another|different|rival|competitor|competing)\s+(car\s+)?(sites?|websites?|platforms?|marketplaces?|apps?|listings? sites?)\b"
+    r"|\belsewhere online\b|\bcompetitors?\b|\bcheaper (online|elsewhere)\b",
+    re.I,
 )
 
 INJECTION_RE = re.compile(
