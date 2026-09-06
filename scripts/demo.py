@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 import time
 import uuid
 from pathlib import Path
@@ -90,6 +91,9 @@ def main() -> int:
         "--pause", type=float, default=0.0, help="seconds between turns, useful against a live key"
     )
     args = ap.parse_args()
+    # Replies carry markdown and the odd emoji; a redirected Windows stdout defaults to cp1252.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     client = httpx.Client()
     try:
         health = client.get(f"{args.base}/health", timeout=10).json()
