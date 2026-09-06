@@ -75,6 +75,24 @@ def _shown_line(c: dict[str, Any]) -> str:
     )
 
 
+def _pinned_line(c: dict[str, Any]) -> str:
+    trim = f" {c['trim']}" if c.get("trim") and c["trim"] != "other" else ""
+    parts = [
+        f"{c['id']}: {c['year']} {c['make']} {c['model']}{trim}",
+        f"price AED {c['price_aed']:,}" if c.get("price_aed") else "price not listed",
+        f"monthly AED {c['monthly_aed']:,}" if c.get("monthly_aed") else "",
+        f"{c['mileage_km']:,} km" if c.get("mileage_km") is not None else "mileage not stated",
+        str(c.get("exterior_color") or ""),
+        str(c.get("body_type") or ""),
+        str(c.get("regional_spec") or ""),
+        "warranty" if c.get("has_warranty") else "",
+        "dubizzle inspected" if c.get("is_dubizzle_managed") else "",
+    ]
+    line = ", ".join(p for p in parts if p)
+    summary = c.get("english_summary") or ""
+    return line + ("\n" + summary if summary else "")
+
+
 def build_blocks(
     ctx: TurnContext,
     *,
@@ -82,6 +100,7 @@ def build_blocks(
     resolved: dict[str, Any] | None,
     lead_block: str | None,
     summary: str | None,
+    pinned: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     blocks = [_block("static", STATIC)]
     now = ctx.now
@@ -108,6 +127,15 @@ def build_blocks(
                 "resolved",
                 f"## Resolved reference\nResolved reference: the user's phrase '{resolved['input']}' refers to "
                 f"listing {resolved['resolved']} (rule: {resolved['rule']}). Use get_listing on it before answering attribute questions.",
+            )
+        )
+    if pinned:
+        blocks.append(
+            _block(
+                "pinned",
+                "## The car being asked about\n"
+                + _pinned_line(pinned)
+                + "\nAnswer from these facts. Call get_listing only for something not listed here.",
             )
         )
     if lead_block:

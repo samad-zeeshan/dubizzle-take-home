@@ -18,7 +18,7 @@ from collections.abc import Callable
 from typing import Any
 
 from dubizzle_assistant.config import Settings
-from dubizzle_assistant.services import guardrails, memory, streaming, tools
+from dubizzle_assistant.services import guardrails, inventory, memory, streaming, tools
 from dubizzle_assistant.services import summary as summary_mod
 from dubizzle_assistant.services.context import TurnContext
 from dubizzle_assistant.services.llm.base import (
@@ -157,6 +157,24 @@ def _record_call(
                 purpose,
             ),
         )
+
+
+def _pin_offscreen(ctx: TurnContext, resolved: dict[str, Any] | None) -> dict[str, Any] | None:
+    """A reference to a car that is not on screen, from a card link or a remembered id, gets the listing pulled in first.
+
+    The model then answers from facts that are already grounding sources instead of guessing or
+    having to call a tool, which small models skip.
+    """
+    rid = (resolved or {}).get("resolved")
+    if not rid or any(c["id"] == rid for c in ctx.shown):
+        return None
+    cards = inventory.get_cards(ctx.conn, [rid])
+    if not cards:
+        return None
+    ctx.new_cards.extend(cards)
+    ctx.tool_results.append({"name": "pinned_listing", "result": cards[0]})
+    ctx.trace.add("pinned_listing", listing_id=rid)
+    return cards[0]
 
 
 def _scrub_for(settings: Settings) -> Callable[[str], str]:
@@ -370,8 +388,14 @@ def run_turn(
         )
 
     with trace.stage("prompt") as rec:
+        pinned = _pin_offscreen(ctx, resolved)
         blocks = build_blocks(
-            ctx, recall=recall, resolved=resolved, lead_block=lead_block, summary=summary
+            ctx,
+            recall=recall,
+            resolved=resolved,
+            lead_block=lead_block,
+            summary=summary,
+            pinned=pinned,
         )
         history = memory.load_history(
             conn,

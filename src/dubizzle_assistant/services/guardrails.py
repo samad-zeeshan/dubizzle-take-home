@@ -176,7 +176,8 @@ def postfilter(text: str) -> tuple[str, list[dict[str, str]]]:
 
 
 _ID_RE = re.compile(r"\b([CR]-\d{3})\b")
-_NUM_RE = re.compile(r"(?<![\w#/-])(\d{1,3}(?:,\d{3})+|\d{3,})(?![\w-])")
+# A fragment after a decimal point ("115,750.000") is part of the number before it, not a figure of its own.
+_NUM_RE = re.compile(r"(?<![\w#/.-])(\d{1,3}(?:,\d{3})+|\d{3,})(?![\w-])")
 _NUMERIC_FIELDS = ("price_aed", "monthly_aed", "mileage_km", "year", "seats", "down_payment_pct")
 
 

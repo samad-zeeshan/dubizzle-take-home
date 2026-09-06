@@ -342,12 +342,13 @@ def resolve_reference(
         "rule": "none",
         "candidates": len(shown),
     }
-    if not shown:
-        return out
     low = text.lower()
+    # An explicit id needs nothing on screen: card links and remembered ids arrive on fresh sessions.
     explicit = re.search(r"\b([cr]-\d{3})\b", low)
     if explicit:
         out.update(resolved=explicit.group(1).upper(), rule="explicit_id")
+        return out
+    if not shown:
         return out
 
     m = _ORDINAL_RE.search(low)

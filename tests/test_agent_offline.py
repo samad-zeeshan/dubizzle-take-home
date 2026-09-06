@@ -182,3 +182,25 @@ def test_sessions_and_users_endpoints(client):
     assert gone["deleted"]["users"] == 1
     assert client.get(f"/users/{u['user_id']}/profile").status_code == 404
     assert json.dumps(read).count("dealer_contact") == 0
+
+
+def test_offscreen_reference_pulls_the_listing_in(tmp_path) -> None:  # noqa: ANN001
+    """A card link asks about a car nothing has shown yet; the listing must arrive as a card and a source."""
+    from fastapi.testclient import TestClient
+
+    from dubizzle_assistant.api.app import create_app
+    from tests.conftest import make_settings
+
+    with TestClient(create_app(make_settings(tmp_path))) as c:
+        e = c.post(
+            "/chat",
+            json={
+                "message": "Tell me more about the 2018 Range Rover Velar (C-003)",
+                "name": "Sam",
+            },
+        ).json()
+    assert [x["id"] for x in e["cars"]] == ["C-003"]
+    assert any(s["stage"] == "pinned_listing" for s in e["trace"]["stages"])
+    blocks = next(s["blocks"] for s in e["trace"]["stages"] if s["stage"] == "prompt")
+    assert any(b["name"] == "pinned" and "119,750" in b["text"] for b in blocks)
+    assert e["grounding"]["ungrounded"] == []

@@ -81,3 +81,11 @@ def test_figures_in_recall_block_count_as_sources() -> None:
     sources = {k: {"listing_id": None, "field": "memory"} for k in keys}
     g = grounding_spans("You liked the 2023 Evoque (R-069) under AED 150,000.", sources)
     assert g["ungrounded"] == [] and g["grounded"] == 3
+
+
+def test_decimal_tail_is_not_a_separate_figure() -> None:
+    from dubizzle_assistant.services.guardrails import grounding_spans
+
+    sources = {"115750": {"listing_id": "R-005", "field": "price_aed"}}
+    g = grounding_spans("Listed at AED 115,750.000 with a 3.000 year plan.", sources)
+    assert [s["text"] for s in g["spans"]] == ["115,750"] and g["ungrounded"] == []
