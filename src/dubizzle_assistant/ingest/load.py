@@ -288,12 +288,19 @@ def load_workbook_rows(
     cleaned: list[Row] = []
     raw: list[Row] = []
     reports: list[dict[str, Any]] = []
+    taken: set[int] = set()
     for name in names:
         kind = "cleaned" if name == CLEAN_SHEET else "raw" if name == RAW_SHEET else None
         rows, rep = read_sheet_with_report(path, name, kind)
         reports.append(rep)
         for r in rows:
-            if r.source_sheet == "cleaned" and r.listing_id is not None:
+            # Two sheets can both number from 1; the second copy of an id is numbered with the raw rows.
+            if (
+                r.source_sheet == "cleaned"
+                and r.listing_id is not None
+                and r.listing_id not in taken
+            ):
+                taken.add(r.listing_id)
                 cleaned.append(r)
             else:
                 # Without a numeric id a row cannot keep one, so it is numbered with the raw rows.

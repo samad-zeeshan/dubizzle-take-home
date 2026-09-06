@@ -134,8 +134,12 @@ STARTERS = [
     "Compare the two cheapest Range Rovers",
     "Book the Velar for Monday at 10am",
 ]
-# Filled by app.py once the navigation exists, so pages can switch to each other.
-PAGES: dict[str, Any] = {}
+
+
+def pages() -> dict[str, Any]:
+    """The navigation pages for this browser session, set by app.py. A module global would leak
+    demo mode's admin page into every other visitor's sidebar."""
+    return st.session_state.get("pages", {})
 
 
 def inject_css() -> None:
@@ -310,7 +314,7 @@ def sidebar(h: dict[str, Any]) -> None:
             f'<div class="brandmark"><div class="dot"></div><div><b>{html.escape(APP_NAME)}</b><br><span>{html.escape(APP_TAGLINE)}</span></div></div>',
             unsafe_allow_html=True,
         )
-        for key, page in PAGES.items():
+        for key, page in pages().items():
             st.page_link(page, label=key.title(), icon=page.icon or None, use_container_width=True)
         st.divider()
         on = st.toggle(
@@ -466,4 +470,4 @@ def render_cards(
             if picked:
                 st.session_state.pending_prompt = picked
                 if switch_to_chat:
-                    st.switch_page(PAGES["chat"])
+                    st.switch_page(pages()["chat"])

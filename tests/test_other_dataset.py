@@ -107,3 +107,18 @@ def test_foreign_workbook_builds_with_column_provenance(tmp_path: Path) -> None:
     summary = report["summary"]["structured"]
     assert summary["not_applicable"] >= 20 and summary["unavailable"] is None
     conn.close()
+
+
+def test_same_id_on_two_sheets_keeps_one_and_numbers_the_other(tmp_path: Path) -> None:
+    wb = Workbook()
+    a = wb.active
+    assert a is not None
+    a.title = "Cleaned A"
+    a.append(["Listing_ID", "Make", "Model", "Year", "Title", "Description"])
+    a.append([7, "Kia", "Sportage", 2022, "Kia Sportage 2022", "Clean SUV."])
+    b = wb.create_sheet("Cleaned B")
+    b.append(["Listing_ID", "Make", "Model", "Year", "Title", "Description"])
+    b.append([7, "Kia", "Sorento", 2021, "Kia Sorento 2021", "Seven seats."])
+    wb.save(tmp_path / "dup.xlsx")
+    ids = [r["id"] for r in build(tmp_path / "dup.xlsx")["listings"]]
+    assert sorted(ids) == ["C-007", "R-001"]

@@ -37,7 +37,7 @@ if common.demo():
         icon=":material/admin_panel_settings:",
         url_path="admin",
     )
-common.PAGES.update(pages)
+st.session_state["pages"] = pages
 nav = st.navigation(list(pages.values()), position="hidden")
 common.sidebar(h)
 nav.run()

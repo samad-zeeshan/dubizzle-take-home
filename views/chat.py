@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import json
 import uuid
 from typing import Any
@@ -130,7 +131,7 @@ def under_the_hood(env: dict[str, Any]) -> None:
         )
     if env.get("degraded"):
         meta += " · degraded: offline stand-in"
-    st.markdown(f'<div class="meta-line">{meta}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="meta-line">{html.escape(meta)}</div>', unsafe_allow_html=True)
     with st.expander("Under the hood"):
         tabs = st.tabs(["Trace", "Retrieval", "Prompt", "Grounding", "Memory", "Model"])
         with tabs[0]:

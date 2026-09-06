@@ -51,13 +51,13 @@ def page(h: dict[str, Any]) -> None:
         go = c2.form_submit_button("Ask", use_container_width=True, type="primary")
     if go and text.strip():
         st.session_state.pending_prompt = text.strip()
-        st.switch_page(common.PAGES["chat"])
+        st.switch_page(common.pages()["chat"])
     chips = st.container(key="chips")
     cols = chips.columns(len(common.STARTERS))
     for col, s in zip(cols, common.STARTERS, strict=True):
         if col.button(s, key=f"starter_{s}", use_container_width=True, help=s):
             st.session_state.pending_prompt = s
-            st.switch_page(common.PAGES["chat"])
+            st.switch_page(common.pages()["chat"])
 
     st.markdown('<div class="section">What it does</div>', unsafe_allow_html=True)
     st.markdown(common.bento(FEATURES), unsafe_allow_html=True)
@@ -73,9 +73,9 @@ def page(h: dict[str, Any]) -> None:
     with c2:
         if st.button("Open demo mode", type="primary", use_container_width=True):
             common.set_mode("demo")
-            st.switch_page(common.PAGES["chat"])
+            st.switch_page(common.pages()["chat"])
         st.page_link(
-            common.PAGES["inventory"], label="Browse the inventory", use_container_width=True
+            common.pages()["inventory"], label="Browse the inventory", use_container_width=True
         )
 
     llm = h["llm"]
