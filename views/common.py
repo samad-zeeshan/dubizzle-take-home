@@ -95,7 +95,7 @@ h1,h2,h3,.hero h1,.tile h3{font-family:'Space Grotesk','DM Sans',system-ui,sans-
 .reviewer{background:linear-gradient(135deg,#1C1C1F,#141416);border:1px solid var(--line);border-radius:var(--radius);padding:1.4rem 1.5rem;height:100%}
 .reviewer h3{color:var(--ink);margin:0 0 .4rem}
 .reviewer p{color:var(--slate);margin:0;line-height:1.55}
-.car{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);height:100%;transition:transform .22s var(--ease),border-color .22s ease}
+.car{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);height:100%;margin-bottom:.75rem;transition:transform .22s var(--ease),border-color .22s ease}
 .car:hover{transform:translateY(-3px);border-color:rgba(227,38,46,.5)}
 .car .img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#232326}
 .car .imglink,.car .tlink{display:block;color:inherit;text-decoration:none}
@@ -119,6 +119,8 @@ div[data-testid="stButton"]>button:focus-visible,div[data-testid="stFormSubmitBu
 [data-testid="stChatMessage"]{border-radius:var(--radius);padding:.9rem 1rem;border:1px solid var(--line);background:var(--card);margin-bottom:.5rem;animation:rise .35s var(--ease) both}
 [data-testid="stChatInput"]{border-radius:var(--radius)}
 .meta-line{color:var(--muted);font-size:.8rem;margin-top:.3rem}
+.card-actions div[data-testid="stButton"]>button{height:40px;font-size:.9rem}
+[data-testid="stHorizontalBlock"]+[data-testid="stHorizontalBlock"]{margin-top:.25rem}
 #cursor-glow{position:fixed;left:0;top:0;width:440px;height:440px;margin:-220px 0 0 -220px;border-radius:50%;pointer-events:none;z-index:0;background:radial-gradient(circle,rgba(227,38,46,.11) 0%,rgba(227,38,46,.04) 40%,transparent 70%);filter:blur(18px);opacity:0;transition:opacity .4s ease;will-change:transform}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}#cursor-glow{display:none}}
 @media (max-width:1024px){.bento,.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
