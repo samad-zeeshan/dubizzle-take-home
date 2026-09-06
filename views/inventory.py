@@ -134,7 +134,9 @@ def page(h: dict[str, Any]) -> None:
         + (f" · relaxed {res['relaxed_filters']}" if res.get("relaxed_filters") else "")
     )
     if not common.demo():
-        common.render_cards(rows, per_row=3, show_index=False)
+        common.render_cards(
+            rows, per_row=3, show_index=False, key_prefix="inv", switch_to_chat=True
+        )
         return
     if res.get("normalization"):
         st.write("normalisation:", res["normalization"])

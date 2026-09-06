@@ -218,9 +218,21 @@ def under_the_hood(env: dict[str, Any]) -> None:
             )
 
 
-def render_envelope(env: dict[str, Any]) -> None:
+def friendly(action: str, cars: list[dict[str, Any]]) -> str:
+    """Suggested actions arrive with listing ids; people should see the car, not the id."""
+    for c in cars:
+        if c.get("id") and c["id"] in action:
+            return action.replace(c["id"], f"the {common.car_name(c)}")
+    return action
+
+
+def render_envelope(env: dict[str, Any], latest: bool = False) -> None:
     st.markdown(env["reply"])
-    common.render_cards(env.get("cars") or [], show_index=common.demo())
+    common.render_cards(
+        env.get("cars") or [],
+        show_index=common.demo(),
+        key_prefix=env.get("request_id") if latest else None,
+    )
     if common.demo():
         under_the_hood(env)
 
@@ -233,22 +245,21 @@ def page(h: dict[str, Any]) -> None:
         for col, s in zip(cols, common.STARTERS, strict=True):
             if col.button(s, key=f"chat_starter_{s}", use_container_width=True):
                 st.session_state.pending_prompt = s
-    for m in st.session_state.messages:
+    msgs = st.session_state.messages
+    for i, m in enumerate(msgs):
         with st.chat_message(m["role"]):
             if m["role"] == "assistant" and m.get("envelope"):
-                render_envelope(m["envelope"])
+                render_envelope(m["envelope"], latest=(i == len(msgs) - 1))
             else:
                 st.markdown(m["content"])
-    last = st.session_state.messages[-1] if st.session_state.messages else None
+    last = msgs[-1] if msgs else None
     if last and last.get("envelope") and last["envelope"].get("suggested_actions"):
-        cols = st.columns(len(last["envelope"]["suggested_actions"]))
-        for col, action in zip(cols, last["envelope"]["suggested_actions"], strict=True):
-            if col.button(
-                action,
-                key=f"chip_{len(st.session_state.messages)}_{action}",
-                use_container_width=True,
-            ):
-                st.session_state.pending_prompt = action
+        env = last["envelope"]
+        labels = [friendly(a, env.get("cars") or []) for a in env["suggested_actions"]]
+        cols = st.columns(len(labels))
+        for col, label in zip(cols, labels, strict=True):
+            if col.button(label, key=f"chip_{len(msgs)}_{label}", use_container_width=True):
+                st.session_state.pending_prompt = label
     prompt = st.chat_input("Ask about a car, or say hi")
     text = prompt or st.session_state.pending_prompt
     if text:

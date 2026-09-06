@@ -368,7 +368,11 @@ def sidebar(h: dict[str, Any]) -> None:
             )
 
 
-def car_card(c: dict[str, Any], show_index: bool = True) -> str:
+def car_name(c: dict[str, Any]) -> str:
+    return f"{c.get('year') or ''} {str(c.get('make') or '').title()} {str(c.get('model') or '').title()}".strip()
+
+
+def car_card(c: dict[str, Any], show_index: bool = True, show_id: bool = True) -> str:
     title = html.escape(
         f"{c.get('year') or ''} {str(c.get('make') or '').title()} {str(c.get('model') or '').title()}".strip()
     )
@@ -401,7 +405,8 @@ def car_card(c: dict[str, Any], show_index: bool = True) -> str:
         badges.append('<span class="badge ok">dubizzle inspected</span>')
     if c.get("is_brand_new"):
         badges.append('<span class="badge ok">Brand new</span>')
-    badges.append(f'<span class="badge id">{html.escape(str(c.get("id")))}</span>')
+    if show_id:
+        badges.append(f'<span class="badge id">{html.escape(str(c.get("id")))}</span>')
     idx = (
         f'<span class="idx">#{c["display_index"]}</span>'
         if show_index and c.get("display_index")
@@ -414,8 +419,31 @@ def car_card(c: dict[str, Any], show_index: bool = True) -> str:
     )
 
 
-def render_cards(cars: list[dict[str, Any]], per_row: int = 3, show_index: bool = True) -> None:
+def render_cards(
+    cars: list[dict[str, Any]],
+    per_row: int = 3,
+    show_index: bool = True,
+    key_prefix: str | None = None,
+    switch_to_chat: bool = False,
+) -> None:
+    """Card grid. With a key_prefix each card gets ask and book buttons that feed the chat."""
     for i in range(0, len(cars), per_row):
         cols = st.columns(per_row)
         for col, c in zip(cols, cars[i : i + per_row], strict=False):
-            col.markdown(car_card(c, show_index), unsafe_allow_html=True)
+            col.markdown(car_card(c, show_index, show_id=demo()), unsafe_allow_html=True)
+            if not key_prefix:
+                continue
+            b1, b2 = col.columns(2)
+            picked = None
+            if b1.button(
+                "Ask about it", key=f"{key_prefix}_ask_{c['id']}", use_container_width=True
+            ):
+                picked = f"Tell me more about the {car_name(c)}"
+            if b2.button(
+                "Book a viewing", key=f"{key_prefix}_book_{c['id']}", use_container_width=True
+            ):
+                picked = f"Book a viewing for the {car_name(c)}"
+            if picked:
+                st.session_state.pending_prompt = picked
+                if switch_to_chat:
+                    st.switch_page(PAGES["chat"])
