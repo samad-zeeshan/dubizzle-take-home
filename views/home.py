@@ -37,7 +37,7 @@ def page(h: dict[str, Any]) -> None:
     st.markdown(
         f'<div class="hero"><div class="eyebrow">{html.escape(common.APP_NAME)}</div>'
         "<h1>Find your next car.</h1>"
-        "<p>Ask in plain English or Arabic, compare listings, and book a viewing. Everything it says comes from the inventory, nothing else.</p></div>",
+        "<p>Ask in plain English or Arabic, compare listings, and book a viewing.</p></div>",
         unsafe_allow_html=True,
     )
     ask = st.container(key="ask")
