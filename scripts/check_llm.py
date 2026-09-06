@@ -1,5 +1,5 @@
 """
-CLI: one tool call and one plain call against the configured model, so a key can be checked before opening the UI.
+CLI: one tool call and one plain call against the configured model, so a key or a local server can be checked before opening the UI.
 
     uv run python scripts/check_llm.py
 """
@@ -23,10 +23,12 @@ def main() -> int:
     settings = get_settings()
     llm = build_llm(settings)
     if llm is None:
-        print("no model configured: set GEMINI_API_KEY in .env or LLM_PROVIDER=mock")
+        print(
+            "no model configured: set GEMINI_API_KEY or LLM_API_BASE in .env, or LLM_PROVIDER=mock"
+        )
         return 1
     print(
-        f"provider={settings.llm_provider} model={settings.llm_model} cassette={settings.llm_cassette_mode}"
+        f"provider={settings.llm_provider} model={settings.llm_model} api_base={settings.llm_api_base or '-'} cassette={settings.llm_cassette_mode}"
     )
     msgs = [
         {"role": "system", "content": "You are a car inventory assistant. Use the tools."},

@@ -40,7 +40,7 @@ def health(
             "last_error": getattr(request.app.state, "llm_error", None),
             "cassette_mode": settings.llm_cassette_mode,
             "verify_mode": settings.verify_mode,
-            "structured_reply": settings.structured_reply,
+            "structured_reply": settings.use_structured_reply,
         },
         "retrieval_mode": settings.retrieval_mode,
         "debug_endpoints": settings.debug_endpoints,

@@ -1,5 +1,5 @@
 """
-Twelve single-turn probes against the real model. Skipped without a key, capped to respect the free tier.
+Twelve single-turn probes against the real model. Skipped without a key or local endpoint, capped for the free tier.
 
 Each probe is one conversation turn on a fresh session, so the whole file costs
 roughly twenty model calls. The replies and traces are written to
@@ -23,8 +23,20 @@ from tests.conftest import make_settings
 pytestmark = pytest.mark.live
 
 KEY = os.environ.get("GEMINI_API_KEY")
-if not KEY or os.environ.get("LLM_PROVIDER", "litellm") != "litellm":
-    pytest.skip("live probes need GEMINI_API_KEY and LLM_PROVIDER=litellm", allow_module_level=True)
+API_BASE = os.environ.get("LLM_API_BASE")
+if not (KEY or API_BASE) or os.environ.get("LLM_PROVIDER", "litellm") != "litellm":
+    pytest.skip(
+        "live probes need GEMINI_API_KEY or LLM_API_BASE, and LLM_PROVIDER=litellm",
+        allow_module_level=True,
+    )
+# Model and endpoint come from the environment so the same probes run on Gemini or a local server.
+_ENV_KEYS = {
+    "llm_model": "LLM_MODEL",
+    "llm_api_base": "LLM_API_BASE",
+    "llm_api_key": "LLM_API_KEY",
+    "llm_fallback_model": "LLM_FALLBACK_MODEL",
+}
+ENDPOINT = {k: os.environ[v] for k, v in _ENV_KEYS.items() if v in os.environ}
 
 PROBES = [
     ("show me hondas", lambda e: [c["id"] for c in e["cars"]] == ["R-078"]),
@@ -58,6 +70,7 @@ def test_live_probes(tmp_path: Path) -> None:
         tmp_path,
         llm_provider="litellm",
         gemini_api_key=KEY,
+        **ENDPOINT,
         demo_now=datetime(2026, 9, 5, 14, 30, tzinfo=DUBAI),
     )
     lines = [

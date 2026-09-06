@@ -108,5 +108,6 @@ def prompt(session_id: str, conn: sqlite3.Connection = Depends(get_conn)) -> dic
 def config(settings: Settings = Depends(get_settings_dep)) -> dict[str, Any]:
     data = settings.model_dump(mode="json")
     data["gemini_api_key"] = "set" if settings.gemini_api_key else None
+    data["llm_api_key"] = "set" if settings.llm_api_key else None
     data["ablations_active"] = settings.ablations_active
     return data

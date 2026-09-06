@@ -29,6 +29,10 @@ ABLATION_FLAGS = (
 )
 
 
+# Provider prefixes that mean a self-hosted server, so no Gemini key is needed.
+LOCAL_PROVIDERS = frozenset({"lm_studio", "ollama", "ollama_chat"})
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=ROOT / ".env", env_file_encoding="utf-8", extra="ignore"
@@ -38,12 +42,16 @@ class Settings(BaseSettings):
     llm_provider: Literal["litellm", "mock"] = "litellm"
     llm_model: str = "gemini/gemini-2.5-flash-lite"
     llm_fallback_model: str | None = "gemini/gemini-2.5-flash"
+    # Any OpenAI-compatible server: LM Studio, Ollama, llama.cpp, vLLM. The key is whatever it expects.
+    llm_api_base: str | None = None
+    llm_api_key: str | None = None
+    llm_max_tokens: int | None = None
     llm_temperature: float | None = None
     llm_reasoning: str = "low"
     llm_cassette_mode: Literal["off", "record", "replay"] = "off"
     llm_cassette_path: Path = Path("data/cassettes/demo.jsonl")
     verify_mode: Literal["off", "llm"] = "off"
-    structured_reply: bool = True
+    structured_reply: bool | None = None  # None: on for Gemini, off for local models
     summary_after_turns: int = 12
     idempotency_ttl_seconds: int = 600
     debug_endpoints: bool = False
@@ -131,8 +139,38 @@ class Settings(BaseSettings):
         return [f.removeprefix("ablate_") for f in ABLATION_FLAGS if getattr(self, f)]
 
     @property
+    def llm_local(self) -> bool:
+        """A self-hosted endpoint, picked by LLM_API_BASE or a local provider prefix."""
+        prefix = self.llm_model.split("/", 1)[0]
+        return bool(self.llm_api_base) or prefix in LOCAL_PROVIDERS
+
+    @property
     def llm_configured(self) -> bool:
-        return self.llm_provider == "mock" or bool(self.gemini_api_key)
+        return self.llm_provider == "mock" or bool(self.gemini_api_key) or self.llm_local
+
+    @property
+    def use_structured_reply(self) -> bool:
+        # JSON schema mode is where small models under LM Studio's grammar loop until the token ceiling.
+        if self.structured_reply is not None:
+            return self.structured_reply
+        return not self.llm_local
+
+    @property
+    def effective_max_tokens(self) -> int | None:
+        # A small model under a JSON grammar can loop until the context is full, so local runs get a ceiling.
+        if self.llm_max_tokens is not None:
+            return self.llm_max_tokens
+        return 1500 if self.llm_local else None
+
+    @property
+    def usable_fallback_model(self) -> str | None:
+        # A Gemini fallback without a Gemini key would only turn a clear local error into an auth error.
+        fb = (self.llm_fallback_model or "").strip()
+        if not fb or fb == self.llm_model:
+            return None
+        if fb.startswith("gemini/") and not self.gemini_api_key:
+            return None
+        return fb
 
     def now(self) -> datetime:
         """Dubai wall clock, or the frozen demo clock when one is set."""
@@ -144,6 +182,8 @@ class Settings(BaseSettings):
         # Google warns against low temperature on Gemini 3; 2.5 is happy with it.
         if self.llm_temperature is not None:
             return self.llm_temperature
+        if self.llm_local:
+            return 0.2  # small local models wander off the JSON schema at their default 0.7
         return 0.2 if "2.5" in model or "2.0" in model else None
 
 

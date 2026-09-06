@@ -575,7 +575,7 @@ def _cancel(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
 tool_registry.register(
     {
         "name": "get_availability",
-        "description": "Free viewing slots for a listing in a given week. Viewings run Monday to Saturday, 08:00 to 20:00 Dubai time.",
+        "description": "Free viewing slots for a listing in a given week, for when the user asks what times are open. If they name a day and time, call propose_viewing instead. Viewings run Monday to Saturday, 08:00 to 20:00 Dubai time.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -593,7 +593,7 @@ tool_registry.register(
 tool_registry.register(
     {
         "name": "propose_viewing",
-        "description": "Validate a viewing slot and hold it as a proposal. Read the returned readback to the user and wait for their answer. Never confirms by itself.",
+        "description": "The tool for any request to book, schedule or view a car at a given day and time. Validates the slot and holds it as a proposal. Read the returned readback to the user and wait for their answer. Never confirms by itself.",
         "parameters": {
             "type": "object",
             "properties": {

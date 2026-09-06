@@ -15,13 +15,17 @@ def build_llm(settings: Settings) -> LLMClient | None:
         from dubizzle_assistant.services.llm.mock_client import HeuristicLLM
 
         inner = HeuristicLLM()
-    elif settings.gemini_api_key:
+    elif settings.gemini_api_key or settings.llm_local:
         from dubizzle_assistant.services.llm.litellm_client import LiteLLMClient
 
         inner = LiteLLMClient(
             settings.llm_model,
             settings.gemini_api_key,
-            fallback_model=settings.llm_fallback_model,
+            api_base=settings.llm_api_base,
+            api_base_key=settings.llm_api_key,
+            local=settings.llm_local,
+            max_tokens=settings.effective_max_tokens,
+            fallback_model=settings.usable_fallback_model,
             embedding_model=settings.embedding_model,
         )
     if settings.llm_cassette_mode != "off":

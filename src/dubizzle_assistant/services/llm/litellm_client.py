@@ -1,9 +1,10 @@
 """
-Gemini through LiteLLM: lazy import, flat tool schemas, rate-limit parsing, model fallback.
+Gemini or any OpenAI-compatible server through LiteLLM: lazy import, flat tool schemas, rate limits, fallback.
 
 litellm takes about ten seconds to import and tries to fetch a price table
 from GitHub unless told otherwise, so the import happens on first use and the
-local table is forced. A 429 carries a retryDelay that is honoured once.
+local table is forced. A 429 carries a retryDelay that is honoured once. A
+local server such as LM Studio is reached by passing api_base on each call.
 """
 
 from __future__ import annotations
@@ -28,8 +29,12 @@ class LiteLLMClient:
     def __init__(
         self,
         model: str,
-        api_key: str,
+        api_key: str | None,
         *,
+        api_base: str | None = None,
+        api_base_key: str | None = None,
+        local: bool = False,
+        max_tokens: int | None = None,
         fallback_model: str | None = None,
         embedding_model: str = "gemini/gemini-embedding-001",
         max_retry_wait: float = 20.0,
@@ -38,7 +43,13 @@ class LiteLLMClient:
         self.fallback_model = fallback_model
         self.embedding_model = embedding_model
         self.max_retry_wait = max_retry_wait
-        os.environ["GEMINI_API_KEY"] = api_key
+        self.api_base = api_base
+        self.local = local
+        self.max_tokens = max_tokens
+        # The openai-compatible path insists on a non-empty key even when the server ignores it.
+        self.api_base_key = api_base_key or ("lm-studio" if api_base else None)
+        if api_key:
+            os.environ["GEMINI_API_KEY"] = api_key
         os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
         self._litellm: Any = None
 
@@ -53,22 +64,35 @@ class LiteLLMClient:
             self._litellm = litellm
         return self._litellm
 
+    def _endpoint(self, model: str) -> dict[str, Any]:
+        # Only the local model goes to api_base; a Gemini fallback still needs the real endpoint.
+        if self.api_base and not model.startswith("gemini/"):
+            return {"api_base": self.api_base, "api_key": self.api_base_key}
+        return {}
+
     def _call(self, model: str, kwargs: dict[str, Any]) -> Any:
         litellm = self._lib()
         try:
-            return litellm.completion(model=model, **kwargs)
+            return litellm.completion(model=model, **kwargs, **self._endpoint(model))
         except litellm.RateLimitError as e:  # type: ignore[attr-defined]
             text = str(e)
             m = _RETRY_RE.search(text)
             raise RateLimitedError(
-                "Gemini rate limit hit",
+                "model rate limit hit",
                 retry_after=float(m.group(1)) if m else None,
                 daily=bool(_DAILY_RE.search(text)),
             ) from e
         except litellm.AuthenticationError as e:  # type: ignore[attr-defined]
-            raise LLMError("Gemini rejected the API key. Check GEMINI_API_KEY in .env.") from e
+            raise LLMError(
+                "The model endpoint rejected the API key. Check GEMINI_API_KEY or LLM_API_KEY in .env."
+            ) from e
         except litellm.BadRequestError as e:  # type: ignore[attr-defined]
-            raise LLMError(f"Gemini rejected the request: {e}") from e
+            raise LLMError(f"The model rejected the request: {e}") from e
+        except litellm.APIConnectionError as e:  # type: ignore[attr-defined]
+            where = self.api_base or "the model provider"
+            raise LLMError(
+                f"could not reach {where}. Is the server running with a model loaded? {str(e)[:200]}"
+            ) from e
         except Exception as e:  # noqa: BLE001
             raise LLMError(f"model call failed: {type(e).__name__}: {e}") from e
 
@@ -93,10 +117,12 @@ class LiteLLMClient:
                 "type": "json_schema",
                 "json_schema": {"name": "reply", "schema": response_schema, "strict": False},
             }
-        if reasoning:
-            kwargs["reasoning_effort"] = reasoning
+        if reasoning and not self.local:
+            kwargs["reasoning_effort"] = reasoning  # a Gemini knob; local servers may reject it
         if temperature is not None:
             kwargs["temperature"] = temperature
+        if self.max_tokens:
+            kwargs["max_tokens"] = self.max_tokens
 
         note = None
         start = time.monotonic()
@@ -151,7 +177,9 @@ class LiteLLMClient:
         for i in range(0, len(texts), batch_size):
             try:
                 resp = litellm.embedding(
-                    model=self.embedding_model, input=texts[i : i + batch_size]
+                    model=self.embedding_model,
+                    input=texts[i : i + batch_size],
+                    **self._endpoint(self.embedding_model),
                 )
             except Exception as e:  # noqa: BLE001
                 raise LLMError(f"embedding call failed: {type(e).__name__}: {e}") from e
@@ -164,7 +192,9 @@ class LiteLLMClient:
     def embed(self, text: str) -> list[float]:
         litellm = self._lib()
         try:
-            out = litellm.embedding(model=self.embedding_model, input=[text])
+            out = litellm.embedding(
+                model=self.embedding_model, input=[text], **self._endpoint(self.embedding_model)
+            )
         except Exception as e:  # noqa: BLE001
             raise LLMError(f"embedding call failed: {type(e).__name__}: {e}") from e
         return list(out.data[0]["embedding"])

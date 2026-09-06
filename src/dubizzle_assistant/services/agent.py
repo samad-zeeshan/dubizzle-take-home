@@ -197,7 +197,7 @@ def _call(
             ) from e
         except LLMError as e:
             rec["error"] = str(e)
-            fallback = settings.llm_fallback_model
+            fallback = settings.usable_fallback_model
             if n == 1 and fallback and model is None and settings.llm_provider == "litellm":
                 rec["fallback"] = fallback
                 try:
@@ -405,7 +405,7 @@ def _run_loop(
             messages,
             schemas,
             n,
-            want_schema=settings.structured_reply and n > 1,
+            want_schema=settings.use_structured_reply and n > 1,
             model=turn_model,
         )
         if resp.model != settings.llm_model and settings.llm_provider == "litellm":

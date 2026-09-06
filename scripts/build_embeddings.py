@@ -1,7 +1,7 @@
 """
 CLI: embed every listing once and save the vectors, so the embeddings mode costs one call per query.
 
-    uv run python scripts/build_embeddings.py          # needs GEMINI_API_KEY
+    uv run python scripts/build_embeddings.py          # needs GEMINI_API_KEY or LLM_API_BASE
 """
 
 from __future__ import annotations
@@ -20,9 +20,9 @@ from dubizzle_assistant.services.llm.litellm_client import LiteLLMClient  # noqa
 
 def main() -> int:
     settings = get_settings()
-    if not settings.gemini_api_key:
+    if not (settings.gemini_api_key or settings.llm_local):
         print(
-            "GEMINI_API_KEY is not set; embeddings need a key. The hybrid mode works without them."
+            "No model endpoint: set GEMINI_API_KEY or LLM_API_BASE. The hybrid mode works without embeddings."
         )
         return 1
     data = json.loads(settings.inventory_path.read_text(encoding="utf-8"))
@@ -32,7 +32,12 @@ def main() -> int:
         for r in data["listings"]
     ]
     client = LiteLLMClient(
-        settings.llm_model, settings.gemini_api_key, embedding_model=settings.embedding_model
+        settings.llm_model,
+        settings.gemini_api_key,
+        api_base=settings.llm_api_base,
+        api_base_key=settings.llm_api_key,
+        local=settings.llm_local,
+        embedding_model=settings.embedding_model,
     )
     vectors = client.embed_many(texts, batch_size=16)
     embeddings.save(ids, vectors, settings.embeddings_path)
