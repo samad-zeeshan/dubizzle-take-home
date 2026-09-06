@@ -21,8 +21,10 @@ from dubizzle_assistant.db import LISTING_COLUMNS
 from dubizzle_assistant.normalize import (
     canonical_body_type,
     canonical_make,
+    known_makes,
     register_makes,
     register_models,
+    resolve_make_model,
 )
 from dubizzle_assistant.services.embeddings import RetrievalUnavailableError
 from dubizzle_assistant.text import strip_contacts
@@ -206,9 +208,12 @@ def _where(f: SearchFilters, mode: str) -> tuple[list[str], dict[str, Any]]:
         clauses.append("make = :make")
         params["make"] = f.make
     if f.model:
-        # "range rover" should find the Sport and the Velar as well as the plain one.
+        # "range rover" should find the Sport and the Velar as well as the plain one, and "sport"
+        # on its own should still find the Range Rover Sport: the phrase matches whole words anywhere.
+        m = _norm_model("model")
         clauses.append(
-            f"({_norm_model('model')} = :model OR {_norm_model('model')} LIKE :model || ' %')"
+            f"({m} = :model OR {m} LIKE :model || ' %' OR {m} LIKE '% ' || :model"
+            f" OR {m} LIKE '% ' || :model || ' %')"
         )
         params["model"] = f.model.replace("-", " ")
     if f.year_min is not None:
@@ -483,6 +488,13 @@ def search(
     steps = list(normalization or [])
     if filters.make:
         make, step = canonical_make(filters.make)
+        if make not in known_makes():
+            # Models send a model name as the make now and then ("range rover"); read it as a phrase.
+            make2, model2, steps2 = resolve_make_model(filters.make)
+            if make2:
+                make, step = make2, steps2[0]
+                if model2 and not filters.model:
+                    filters = replace(filters, model=model2)
         if make != filters.make:
             steps.append(step)
         filters = replace(filters, make=make)

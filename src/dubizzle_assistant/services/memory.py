@@ -410,6 +410,9 @@ def resolve_reference(
                     return out
                 out.update(rule="ambiguous:" + (rmo or rm), ambiguous=[c["id"] for c in same])
                 return out
+            # A make or model that is not on screen is a new search, so "cheapest mercedes" must
+            # not resolve to the cheapest car already shown.
+            searching = True
 
     cm = _COMPARATIVE_RE.search(low)
     if cm and len(shown) >= 2 and not searching:
