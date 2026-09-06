@@ -331,6 +331,17 @@ def list_bookings(conn: sqlite3.Connection, user_id: str) -> list[dict[str, Any]
     ]
 
 
+def open_booking_cap(conn: sqlite3.Connection, user_id: str, now: datetime) -> str | None:
+    """The cap is checked when a slot is proposed as well, so the read-back never promises a fourth viewing."""
+    open_count = conn.execute(
+        "SELECT COUNT(*) FROM bookings WHERE user_id = ? AND status = 'confirmed' AND slot_start >= ?",
+        (user_id, now.isoformat(timespec="minutes")),
+    ).fetchone()[0]
+    if open_count >= MAX_OPEN_PER_USER:
+        return f"you already have {open_count} upcoming viewings; cancel one before booking another"
+    return None
+
+
 def create_booking(
     conn: sqlite3.Connection,
     settings: Settings,
@@ -347,16 +358,9 @@ def create_booking(
             "reason": error,
             "alternatives": next_free_slots(conn, listing_id, max(start, now), now),
         }
-    open_count = conn.execute(
-        "SELECT COUNT(*) FROM bookings WHERE user_id = ? AND status = 'confirmed' AND slot_start >= ?",
-        (user_id, now.isoformat(timespec="minutes")),
-    ).fetchone()[0]
-    if open_count >= MAX_OPEN_PER_USER:
-        return {
-            "ok": False,
-            "reason": f"you already have {open_count} upcoming viewings; cancel one before booking another",
-            "alternatives": [],
-        }
+    cap = open_booking_cap(conn, user_id, now)
+    if cap:
+        return {"ok": False, "reason": cap, "alternatives": []}
     end = start + timedelta(hours=1)
     ref = _next_ref(conn)
     try:
@@ -479,7 +483,9 @@ def _propose(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
     start, steps, err = parse_slot(args.get("date_text"), args.get("date_iso"), hour, ctx.now)
     if err or start is None:
         return {"ok": False, "reason": err or "could not read the date", "date_steps": steps}
-    error = validate_slot(ctx.conn, lid, start, ctx.now)
+    error = validate_slot(ctx.conn, lid, start, ctx.now) or open_booking_cap(
+        ctx.conn, ctx.user_id, ctx.now
+    )
     if error:
         alts = next_free_slots(ctx.conn, lid, max(start, ctx.now), ctx.now)
         return {
