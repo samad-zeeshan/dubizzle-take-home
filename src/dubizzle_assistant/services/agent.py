@@ -31,6 +31,9 @@ from dubizzle_assistant.services.llm.base import (
     estimate_tokens,
     tool_result_message,
 )
+from dubizzle_assistant.services.llm.mock_client import (
+    _search_args as search_args_from_text,  # pyright: ignore[reportPrivateUsage]
+)
 from dubizzle_assistant.services.prompts import REPLY_SCHEMA, build_blocks, system_message
 from dubizzle_assistant.services.trace import TurnTrace, redact
 
@@ -535,6 +538,7 @@ def _run_loop(
     final: LLMResponse | None = None
     turn_model: str | None = None
     n = 0
+    nudged = False
     while n < settings.max_tool_iterations:
         n += 1
         resp = _call(
@@ -606,6 +610,31 @@ def _run_loop(
         ):
             trace.add("search_nudge", reason="stock question answered without a search")
             messages.append(SEARCH_NUDGE)
+            nudged = True
+            continue
+        if nudged and n == 2 and not ctx.tool_results:
+            # The note was ignored too. Code runs the search the user asked for and the model narrates it.
+            args = search_args_from_text(ctx.raw_message) or {"keywords": ctx.raw_message}
+            with trace.stage("tool", name="search_inventory", args=redact(args), by="rule") as rec:
+                result = tools.run_tool(ctx, "search_inventory", args)
+                extra = result.pop("_trace", None)
+                if extra:
+                    rec.update(extra)
+                rec["result_ids"] = _ids_in(result)
+                rec["total_matches"] = result.get("total_matches")
+                rec["normalization"] = result.get("normalization")
+            ctx.tool_results.append({"name": "search_inventory", "args": args, "result": result})
+            tool_names.append("search_inventory")
+            messages.append(
+                {
+                    "role": "system",
+                    "content": "search_inventory was run for you with "
+                    + json.dumps(args, ensure_ascii=False)
+                    + ". Its result: "
+                    + json.dumps(result, ensure_ascii=False, default=str)
+                    + " Answer from these results only.",
+                }
+            )
             continue
         final = resp
         break

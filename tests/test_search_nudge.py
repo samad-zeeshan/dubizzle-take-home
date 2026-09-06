@@ -74,3 +74,22 @@ def test_reference_questions_are_left_alone(tmp_path: Path) -> None:
         e = c.post("/chat", json={"message": "hi", "name": "Nudge"}).json()
     assert not any(s["stage"] == "search_nudge" for s in e["trace"]["stages"])
     assert not llm.queue
+
+
+def test_ignored_nudge_ends_in_a_search_run_by_code(tmp_path: Path) -> None:
+    llm = Scripted(
+        [
+            _resp("I don't have any Honda listings."),
+            _resp("Still no Hondas here."),
+            _resp("Here is the one Honda in stock."),
+        ]
+    )
+    app = create_app(make_settings(tmp_path))
+    with TestClient(app) as c:
+        app.state.llm = llm
+        e = c.post("/chat", json={"message": "show me hondas", "name": "Nudge"}).json()
+    forced = [s for s in e["trace"]["stages"] if s["stage"] == "tool" and s.get("by") == "rule"]
+    assert forced and forced[0]["name"] == "search_inventory"
+    assert [x["id"] for x in e["cars"]] == ["R-078"]
+    assert e["reply"].startswith("Here is the one Honda")
+    assert e["intent"] == "inventory_search"
