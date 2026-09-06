@@ -32,6 +32,8 @@ class TurnContext:
     embedder: Callable[[str], list[float]] | None = None
     user_name: str | None = None
     raw_message: str = ""
+    on_token: Callable[[str], None] | None = None
+    streamed_text: str | None = None
 
     def note_write(self, table: str, by: str, **detail: Any) -> None:
         self.memory_writes.append({"table": table, "by": by, **detail})

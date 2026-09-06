@@ -1,9 +1,11 @@
 """
-POST /chat/stream: the same turn as /chat, with one Server-Sent Event per trace stage as it happens.
+POST /chat/stream: the same turn as /chat, with one Server-Sent Event per trace stage and one per streamed sentence.
 
-This is not token streaming. The interesting part of the wait is what the
-system is doing, so the client shows "searching inventory", "12 matches,
-relaxed colour", "composing reply", and then receives the full envelope.
+Stage events show what the system is doing: "searching inventory", "12
+matches, relaxed colour", "composing reply". Token events carry draft reply
+text, already scrubbed, when the model supports streaming. The envelope at
+the end holds the final reply, which may differ from the draft after the
+grounding check.
 """
 
 from __future__ import annotations
@@ -62,6 +64,9 @@ async def chat_stream(
                 )
             )
 
+        def on_token(text: str) -> None:
+            q.put(("token", {"text": text}))
+
         def work() -> None:
             try:
                 env = run_turn(
@@ -74,6 +79,7 @@ async def chat_stream(
                     request_id=secrets.token_hex(6),
                     on_stage=on_stage,
                     embedder=getattr(request.app.state, "embedder", None),
+                    on_token=on_token,
                 )
                 env["new_session"] = prep["new_session"]
                 env["degraded"] = prep["degraded"]

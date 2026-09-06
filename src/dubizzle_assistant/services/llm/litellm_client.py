@@ -13,7 +13,8 @@ import json
 import os
 import re
 import time
-from typing import Any
+from collections.abc import Callable
+from typing import Any, NoReturn
 
 from dubizzle_assistant.services.llm.base import LLMError, LLMResponse, RateLimitedError, ToolCall
 
@@ -70,11 +71,9 @@ class LiteLLMClient:
             return {"api_base": self.api_base, "api_key": self.api_base_key}
         return {}
 
-    def _call(self, model: str, kwargs: dict[str, Any]) -> Any:
+    def _raise_mapped(self, e: Exception) -> NoReturn:
         litellm = self._lib()
-        try:
-            return litellm.completion(model=model, **kwargs, **self._endpoint(model))
-        except litellm.RateLimitError as e:  # type: ignore[attr-defined]
+        if isinstance(e, litellm.RateLimitError):  # type: ignore[attr-defined]
             text = str(e)
             m = _RETRY_RE.search(text)
             raise RateLimitedError(
@@ -82,32 +81,57 @@ class LiteLLMClient:
                 retry_after=float(m.group(1)) if m else None,
                 daily=bool(_DAILY_RE.search(text)),
             ) from e
-        except litellm.AuthenticationError as e:  # type: ignore[attr-defined]
+        if isinstance(e, litellm.AuthenticationError):  # type: ignore[attr-defined]
             raise LLMError(
                 "The model endpoint rejected the API key. Check GEMINI_API_KEY or LLM_API_KEY in .env."
             ) from e
-        except litellm.BadRequestError as e:  # type: ignore[attr-defined]
+        if isinstance(e, litellm.BadRequestError):  # type: ignore[attr-defined]
             raise LLMError(f"The model rejected the request: {e}") from e
-        except litellm.APIConnectionError as e:  # type: ignore[attr-defined]
+        if isinstance(e, litellm.APIConnectionError):  # type: ignore[attr-defined]
             where = self.api_base or "the model provider"
             raise LLMError(
                 f"could not reach {where}. Is the server running with a model loaded? {str(e)[:200]}"
             ) from e
-        except Exception as e:  # noqa: BLE001
-            raise LLMError(f"model call failed: {type(e).__name__}: {e}") from e
+        raise LLMError(f"model call failed: {type(e).__name__}: {e}") from e
 
-    def complete(
+    def _call(self, model: str, kwargs: dict[str, Any]) -> Any:
+        litellm = self._lib()
+        try:
+            return litellm.completion(model=model, **kwargs, **self._endpoint(model))
+        except Exception as e:  # noqa: BLE001
+            self._raise_mapped(e)
+
+    def _stream(self, model: str, kwargs: dict[str, Any], on_token: Callable[[str], None]) -> Any:
+        """Forward text deltas as they arrive, then rebuild the full response so parsing stays shared."""
+        litellm = self._lib()
+        chunks: list[Any] = []
+        try:
+            for chunk in litellm.completion(
+                model=model, **kwargs, **self._endpoint(model), stream=True
+            ):
+                chunks.append(chunk)
+                choices = getattr(chunk, "choices", None) or []
+                delta = getattr(choices[0], "delta", None) if choices else None
+                text = getattr(delta, "content", None) if delta is not None else None
+                if isinstance(text, str) and text:
+                    on_token(text)
+            if not chunks:
+                raise LLMError("the model returned an empty stream")
+            return litellm.stream_chunk_builder(chunks, messages=kwargs["messages"])
+        except LLMError:
+            raise
+        except Exception as e:  # noqa: BLE001
+            self._raise_mapped(e)
+
+    def _kwargs(
         self,
         messages: list[dict[str, Any]],
-        tools: list[dict[str, Any]] | None = None,
+        tools: list[dict[str, Any]] | None,
         *,
-        reasoning: str = "low",
-        response_schema: dict[str, Any] | None = None,
-        temperature: float | None = None,
-        model: str | None = None,
-        purpose: str = "chat",
-    ) -> LLMResponse:
-        use_model = model or self.model
+        reasoning: str,
+        response_schema: dict[str, Any] | None,
+        temperature: float | None,
+    ) -> dict[str, Any]:
         kwargs: dict[str, Any] = {"messages": messages, "num_retries": 0}
         if tools:
             kwargs["tools"] = tools
@@ -123,27 +147,32 @@ class LiteLLMClient:
             kwargs["temperature"] = temperature
         if self.max_tokens:
             kwargs["max_tokens"] = self.max_tokens
+        return kwargs
 
+    def _run(
+        self, kwargs: dict[str, Any], runner: Callable[[dict[str, Any]], Any]
+    ) -> tuple[Any, str | None]:
+        """One attempt, one retry after a short rate limit, one fallback out of json schema mode."""
         note = None
-        start = time.monotonic()
         try:
-            resp = self._call(use_model, kwargs)
+            resp = runner(kwargs)
         except RateLimitedError as e:
             if e.daily or e.retry_after is None or e.retry_after > self.max_retry_wait:
                 raise
             time.sleep(e.retry_after + 0.5)
             note = f"retried once after {e.retry_after}s rate limit"
-            resp = self._call(use_model, kwargs)
+            resp = runner(kwargs)
         except LLMError as e:
-            if response_schema and "response_format" in kwargs and "schema" in str(e).lower():
+            if "response_format" in kwargs and "schema" in str(e).lower():
                 # Some models reject json_schema mode; plain text plus the post-filter still works.
                 kwargs.pop("response_format")
                 note = "model rejected json schema mode, fell back to text"
-                resp = self._call(use_model, kwargs)
+                resp = runner(kwargs)
             else:
                 raise
-        latency = int((time.monotonic() - start) * 1000)
+        return resp, note
 
+    def _parse(self, resp: Any, use_model: str, latency: int, note: str | None) -> LLMResponse:
         choice = resp.choices[0]
         msg = choice.message
         raw = msg.model_dump() if hasattr(msg, "model_dump") else dict(msg)
@@ -169,6 +198,56 @@ class LiteLLMClient:
             latency_ms=latency,
             note=note,
         )
+
+    def complete(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None = None,
+        *,
+        reasoning: str = "low",
+        response_schema: dict[str, Any] | None = None,
+        temperature: float | None = None,
+        model: str | None = None,
+        purpose: str = "chat",
+    ) -> LLMResponse:
+        use_model = model or self.model
+        kwargs = self._kwargs(
+            messages,
+            tools,
+            reasoning=reasoning,
+            response_schema=response_schema,
+            temperature=temperature,
+        )
+        start = time.monotonic()
+        resp, note = self._run(kwargs, lambda kw: self._call(use_model, kw))
+        return self._parse(resp, use_model, int((time.monotonic() - start) * 1000), note)
+
+    def complete_stream(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None = None,
+        *,
+        on_token: Callable[[str], None],
+        reasoning: str = "low",
+        response_schema: dict[str, Any] | None = None,
+        temperature: float | None = None,
+        model: str | None = None,
+        purpose: str = "chat",
+    ) -> LLMResponse:
+        """Like complete, but text deltas reach on_token while the model is still generating."""
+        use_model = model or self.model
+        kwargs = self._kwargs(
+            messages,
+            tools,
+            reasoning=reasoning,
+            response_schema=response_schema,
+            temperature=temperature,
+        )
+        start = time.monotonic()
+        resp, note = self._run(kwargs, lambda kw: self._stream(use_model, kw, on_token))
+        out = self._parse(resp, use_model, int((time.monotonic() - start) * 1000), note)
+        out.note = f"{out.note}; streamed" if out.note else "streamed"
+        return out
 
     def embed_many(self, texts: list[str], batch_size: int = 16) -> list[list[float]]:
         """Batched embeddings for the one-time corpus build; about a dozen calls for the whole inventory."""

@@ -18,7 +18,7 @@ from collections.abc import Callable
 from typing import Any
 
 from dubizzle_assistant.config import Settings
-from dubizzle_assistant.services import guardrails, memory, tools
+from dubizzle_assistant.services import guardrails, memory, streaming, tools
 from dubizzle_assistant.services import summary as summary_mod
 from dubizzle_assistant.services.context import TurnContext
 from dubizzle_assistant.services.llm.base import (
@@ -159,6 +159,12 @@ def _record_call(
         )
 
 
+def _scrub_for(settings: Settings) -> Callable[[str], str]:
+    if settings.ablate_postfilter:
+        return lambda text: text
+    return lambda text: guardrails.postfilter(text)[0]
+
+
 def _call(
     ctx: TurnContext,
     llm: LLMClient,
@@ -174,15 +180,34 @@ def _call(
     use_model = model or settings.llm_model
     with ctx.trace.stage("llm_call", n=n, purpose=purpose) as rec:
         try:
-            resp = llm.complete(
-                messages,
-                schemas,
-                reasoning=settings.llm_reasoning,
-                response_schema=REPLY_SCHEMA if want_schema else None,
-                temperature=settings.temperature_for(use_model),
-                model=model,
-                purpose=purpose,
-            )
+            call_kwargs: dict[str, Any] = {
+                "reasoning": settings.llm_reasoning,
+                "response_schema": REPLY_SCHEMA if want_schema else None,
+                "temperature": settings.temperature_for(use_model),
+                "model": model,
+                "purpose": purpose,
+            }
+            streamer = getattr(llm, "complete_stream", None)
+            if (
+                ctx.on_token is not None
+                and streamer is not None
+                and n > 1
+                and purpose == "chat"
+                and model is None
+            ):
+                # Draft text reaches the client a sentence at a time, scrubbed. The final reply may still replace it.
+                gate = streaming.SentenceGate(_scrub_for(settings), ctx.on_token)
+                extractor = streaming.ReplyFieldExtractor() if want_schema else None
+
+                def _on_delta(piece: str) -> None:
+                    gate.feed(extractor.feed(piece) if extractor else piece)
+
+                resp = streamer(messages, schemas, on_token=_on_delta, **call_kwargs)
+                gate.close()
+                ctx.streamed_text = gate.emitted
+                rec["streamed_chars"] = len(gate.emitted)
+            else:
+                resp = llm.complete(messages, schemas, **call_kwargs)
         except RateLimitedError as e:
             rec["error"] = str(e)
             if e.daily:
@@ -261,6 +286,7 @@ def run_turn(
     request_id: str,
     on_stage: Callable[[dict[str, Any]], None] | None = None,
     embedder: Callable[[str], list[float]] | None = None,
+    on_token: Callable[[str], None] | None = None,
 ) -> dict[str, Any]:
     started = time.monotonic()
     now = settings.now()
@@ -285,6 +311,7 @@ def run_turn(
         embedder=embedder,
         user_name=user["name"] if user else None,
         raw_message=message,
+        on_token=on_token,
     )
     trace.add("received", chars=len(message), turn=turn)
     user_msg: dict[str, Any] = {"role": "user", "content": message}
@@ -677,6 +704,12 @@ def _finish(
         "turn": ctx.turn,
         "request_id": ctx.request_id,
         "reply": reply,
+        "streamed": None
+        if ctx.streamed_text is None
+        else {
+            "chars": len(ctx.streamed_text),
+            "matches_reply": ctx.streamed_text.strip() == reply.strip(),
+        },
         "intent": intent,
         "cars": cars,
         "suggested_actions": actions,

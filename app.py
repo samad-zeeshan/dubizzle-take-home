@@ -80,6 +80,8 @@ def send(text: str) -> None:
         body["name"] = st.session_state.user_name
     st.session_state.messages.append({"role": "user", "content": text})
     status = st.status("working", expanded=True)
+    draft = st.empty()  # streamed sentences show here until the final reply replaces them
+    draft_text = ""
     envelope: dict[str, Any] | None = None
     error: str | None = None
     try:
@@ -101,12 +103,16 @@ def send(text: str) -> None:
                         data = json.loads(line[6:])
                         if event == "stage":
                             status.write(data["label"])
+                        elif event == "token":
+                            draft_text += data["text"]
+                            draft.markdown(draft_text + " ▌")
                         elif event == "envelope":
                             envelope = data
                         elif event == "error":
                             error = f"{data.get('status')}: {data.get('detail')}"
     except httpx.HTTPError as e:
         error = f"backend not reachable: {e}"
+    draft.empty()
     status.update(
         label="done" if envelope else "failed",
         state="complete" if envelope else "error",
