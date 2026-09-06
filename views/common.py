@@ -10,6 +10,7 @@ from __future__ import annotations
 import html
 import os
 from typing import Any
+from urllib.parse import urlencode
 
 import httpx
 import streamlit as st
@@ -96,7 +97,9 @@ h1,h2,h3,.hero h1,.tile h3{font-family:'Space Grotesk','DM Sans',system-ui,sans-
 .reviewer p{color:var(--slate);margin:0;line-height:1.55}
 .car{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);height:100%;transition:transform .22s var(--ease),border-color .22s ease}
 .car:hover{transform:translateY(-3px);border-color:rgba(227,38,46,.5)}
-.car .img{aspect-ratio:16/10;background:#232326 center/cover no-repeat;display:block}
+.car .img{width:100%;aspect-ratio:16/10;object-fit:cover;display:block;background:#232326}
+.car .imglink,.car .tlink{display:block;color:inherit;text-decoration:none}
+.car .tlink:hover .t{color:var(--brand)}
 .car .body{padding:.85rem 1rem .95rem}
 .car .t{font-weight:600;font-size:.98rem;line-height:1.3;color:var(--ink)}
 .car .price{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.15rem;margin:.25rem 0 .1rem;font-variant-numeric:tabular-nums;color:var(--ink)}
@@ -282,6 +285,18 @@ def identify(name: str) -> None:
     st.session_state.identify_note = note
 
 
+def ask_href(listing_id: str) -> str:
+    """A link into the chat that asks about one car, keeping the user's session and mode in the URL."""
+    params = {"ask": listing_id}
+    if st.session_state.get("user_id"):
+        params["user"] = st.session_state.user_id
+    if st.session_state.get("session_id"):
+        params["session"] = st.session_state.session_id
+    if demo():
+        params["mode"] = "demo"
+    return "/chat?" + urlencode(params)
+
+
 def money(n: Any) -> str:
     return f"AED {int(n):,}" if n else ""
 
@@ -379,11 +394,13 @@ def car_card(c: dict[str, Any], show_index: bool = True, show_id: bool = True) -
     trim = c.get("trim")
     if trim and trim != "other":
         title += " " + html.escape(str(trim).title())
-    photo = c.get("thumb") or c.get("photo_url") or ""
+    photo = c.get("thumb_url") or c.get("photo_url") or ""
+    href = ask_href(str(c.get("id")))
+    # A real img tag: lazy, thumbnail sized, no referrer so the CDN treats it like any browser hit.
     img = (
-        f'<div class="img" role="img" aria-label="{title}" style="background-image:url({html.escape(photo)})"></div>'
+        f'<a class="imglink" href="{href}" target="_self"><img class="img" src="{html.escape(photo)}" alt="{title}" loading="lazy" referrerpolicy="no-referrer"></a>'
         if photo
-        else '<div class="img"></div>'
+        else f'<a class="imglink" href="{href}" target="_self"><div class="img"></div></a>'
     )
     price = money(c.get("price_aed")) or "Price not listed"
     monthly = f"<small>or {money(c.get('monthly_aed'))}/mo</small>" if c.get("monthly_aed") else ""
@@ -413,7 +430,7 @@ def car_card(c: dict[str, Any], show_index: bool = True, show_id: bool = True) -
         else ""
     )
     return (
-        f'<div class="car">{img}<div class="body">{idx}<div class="t">{title}</div>'
+        f'<div class="car">{img}<div class="body">{idx}<a class="tlink" href="{href}" target="_self"><div class="t">{title}</div></a>'
         f'<div class="price">{price}{monthly}</div><div class="meta">{html.escape(meta)}</div>'
         f'<div class="badges">{"".join(badges)}</div></div></div>'
     )

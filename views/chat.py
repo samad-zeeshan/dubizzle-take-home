@@ -238,6 +238,13 @@ def render_envelope(env: dict[str, Any], latest: bool = False) -> None:
 
 
 def page(h: dict[str, Any]) -> None:
+    ask = st.query_params.get("ask")
+    if ask:
+        # A photo or title link from a card lands here with the listing id.
+        st.query_params.pop("ask")
+        d = common.get_json(f"/inventory/{ask}")
+        if d:
+            st.session_state.pending_prompt = f"Tell me more about the {common.car_name(d)}"
     if not st.session_state.messages:
         st.markdown("### Ask about a car")
         st.caption("Search the inventory, compare listings, or book a viewing. Try one of these:")
