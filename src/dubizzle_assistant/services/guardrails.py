@@ -226,6 +226,11 @@ def collect_sources(
     return sources
 
 
+def figures_in(text: str) -> list[str]:
+    """Ids and normalised numbers in a prompt block the server wrote itself, so they count as sourced."""
+    return [m.group(1) for m in _ID_RE.finditer(text)] + [_norm(n) for n in _NUM_RE.findall(text)]
+
+
 def grounding_spans(reply: str, sources: dict[str, dict[str, Any]]) -> dict[str, Any]:
     """Mark every figure and id in the reply as sourced or not."""
     spans: list[dict[str, Any]] = []

@@ -70,3 +70,14 @@ def test_grounding_marks_unsourced_figures():
 def test_grounding_ignores_small_numbers_and_display_indexes():
     g = grounding_spans("Here are the first 2 of 5 cars, see #1 and #2.", {})
     assert g["checked"] == 0
+
+
+def test_figures_in_recall_block_count_as_sources() -> None:
+    from dubizzle_assistant.services.guardrails import figures_in, grounding_spans
+
+    recall = "Liked earlier today: 2023 land rover range rover evoque (R-069). Budget: AED 150,000."
+    keys = figures_in(recall)
+    assert "R-069" in keys and "2023" in keys and "150000" in keys
+    sources = {k: {"listing_id": None, "field": "memory"} for k in keys}
+    g = grounding_spans("You liked the 2023 Evoque (R-069) under AED 150,000.", sources)
+    assert g["ungrounded"] == [] and g["grounded"] == 3

@@ -515,6 +515,10 @@ def _run_loop(
         trace.add("postfilter", hits=hits)
 
     sources = guardrails.collect_sources(ctx.tool_results, ctx.shown + ctx.new_cards)
+    # The recall and summary blocks are written by the server from the database, so their figures are sourced too.
+    for label, block in (("memory", recall), ("summary", summary_prev)):
+        for key in guardrails.figures_in(block or ""):
+            sources.setdefault(key, {"listing_id": None, "field": label})
     grounding: dict[str, Any] | None = None
     if settings.ablate_grounding_check:
         trace.add("grounding", result="skipped (ablated)")
