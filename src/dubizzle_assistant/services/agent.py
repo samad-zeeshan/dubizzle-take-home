@@ -18,6 +18,7 @@ from collections.abc import Callable
 from typing import Any
 
 from dubizzle_assistant.config import Settings
+from dubizzle_assistant.normalize import resolve_make_model
 from dubizzle_assistant.services import guardrails, inventory, memory, streaming, tools
 from dubizzle_assistant.services import summary as summary_mod
 from dubizzle_assistant.services.context import TurnContext
@@ -157,6 +158,82 @@ def _record_call(
                 purpose,
             ),
         )
+
+
+# "any convertibles?" late in a long session sometimes gets "none in stock" from memory instead
+# of a search. When the question is plainly about stock and no tool ran, the model is sent back once.
+_STOCK_VERB_RE = re.compile(
+    r"\b(any|which|what|show|do you have|have you got|got any|are there|is there|list|find|looking for|cheapest|most expensive|options|available|in stock)\b",
+    re.I,
+)
+_STOCK_NOUN_RE = re.compile(
+    r"\b(cars?|vehicles?|models?|options?|anything|stock|inventory|suvs?|sedans?|convertibles?|coupes?|hatchbacks?|pickups?|vans?|wagons?|trucks?|electric|hybrid|diesel|petrol|seater|brand new|automatic|manual)\b",
+    re.I,
+)
+SEARCH_NUDGE = {
+    "role": "system",
+    "content": "You have not searched the inventory this turn. Call search_inventory now and answer only from its results.",
+}
+
+
+def _stock_question(text: str) -> bool:
+    low = text.lower()
+    if not _STOCK_VERB_RE.search(low):
+        return False
+    if _STOCK_NOUN_RE.search(low):
+        return True
+    return resolve_make_model(low)[0] is not None
+
+
+# "hi, it's Sara again" is identity, not chit-chat. Small models skip the tool, so code runs it
+# when the whole message is an introduction.
+_INTRO_RE = re.compile(
+    r"^(?:(?:hi|hello|hey|hiya|salam|marhaba|good (?:morning|afternoon|evening))[,!. ]*)?\s*"
+    r"(?:i'?m|i am|my name is|it'?s|this is|call me)\s+([a-z][a-z'-]{1,30})(?:\s+(?:again|here|back))?[.!]*$",
+    re.I,
+)
+_NOT_NAMES = {
+    "fine",
+    "ok",
+    "okay",
+    "good",
+    "great",
+    "me",
+    "back",
+    "here",
+    "done",
+    "not",
+    "too",
+    "all",
+    "cool",
+    "urgent",
+    "bad",
+    "late",
+    "early",
+    "new",
+    "old",
+    "the",
+    "a",
+    "an",
+    "it",
+    "that",
+    "this",
+    "true",
+    "false",
+    "time",
+    "over",
+    "ready",
+    "sorry",
+    "interested",
+    "looking",
+}
+
+
+def _intro_name(message: str) -> str | None:
+    m = _INTRO_RE.match(message.strip())
+    if not m or m.group(1).lower() in _NOT_NAMES:
+        return None
+    return m.group(1)
 
 
 def _pin_offscreen(ctx: TurnContext, resolved: dict[str, Any] | None) -> dict[str, Any] | None:
@@ -361,6 +438,16 @@ def run_turn(
             llm_used=False,
         )
 
+    intro = _intro_name(message)
+    if intro and memory.name_key(ctx.user_name or "") in ("", "guest"):
+        with trace.stage("tool", name="identify_user", args={"name": intro}, by="rule") as rec:
+            result = tools.run_tool(ctx, "identify_user", {"name": intro})
+            rec["result_ids"] = []
+        ctx.tool_results.append(
+            {"name": "identify_user", "args": {"name": intro}, "result": result}
+        )
+        user_id = ctx.user_id
+
     resolved: dict[str, Any] | None = None
     if settings.ablate_resolver:
         trace.add("resolver", result="skipped (ablated)")
@@ -510,6 +597,16 @@ def _run_loop(
                 messages.append(tm)
                 turn_msgs.append(tm)
             continue
+        if (
+            n == 1
+            and not ctx.tool_results
+            and not ctx.pending_booking
+            and not (resolved or {}).get("resolved")
+            and _stock_question(ctx.raw_message)
+        ):
+            trace.add("search_nudge", reason="stock question answered without a search")
+            messages.append(SEARCH_NUDGE)
+            continue
         final = resp
         break
     if final is None:
@@ -539,8 +636,8 @@ def _run_loop(
         trace.add("postfilter", hits=hits)
 
     sources = guardrails.collect_sources(ctx.tool_results, ctx.shown + ctx.new_cards)
-    # The recall and summary blocks are written by the server from the database, so their figures are sourced too.
-    for label, block in (("memory", recall), ("summary", summary_prev)):
+    # The recall, summary, and lead blocks are written by the server from the database, so their figures are sourced too.
+    for label, block in (("memory", recall), ("summary", summary_prev), ("lead", _lead_block(ctx))):
         for key in guardrails.figures_in(block or ""):
             sources.setdefault(key, {"listing_id": None, "field": label})
     grounding: dict[str, Any] | None = None
