@@ -9,8 +9,9 @@ from __future__ import annotations
 import streamlit as st
 from views import admin, chat, common, home, inventory
 
-st.set_page_config(page_title="Car Assistant", page_icon=":material/directions_car:", layout="wide")
+st.set_page_config(page_title=common.APP_NAME, page_icon=":material/directions_car:", layout="wide")
 common.inject_css()
+common.cursor_glow()
 common.init_state()
 h = common.health()
 if h is None:

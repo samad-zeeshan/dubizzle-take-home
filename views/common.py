@@ -13,9 +13,13 @@ from typing import Any
 
 import httpx
 import streamlit as st
+import streamlit.components.v1 as components
 
 BACKEND = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000").rstrip("/")
 TIMEOUT = 120
+# One place to rename the product. Sayara is Arabic for car; provisional until Samad picks.
+APP_NAME = "Sayara"
+APP_TAGLINE = "take-home build for dubizzle"
 
 # dubizzle's red as the single accent on a slate and off-white base, so the brand reads without shouting.
 BRAND = {
@@ -43,55 +47,79 @@ ICONS = {
 CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap');
-:root{--brand:#D8232A;--brand-dark:#B3161E;--brand-soft:#FDECEC;--ink:#0F172A;--slate:#334155;--muted:#64748B;--line:#E2E8F0;--bg:#F8FAFC;--card:#FFFFFF;--ok-bg:#DCFCE7;--ok-fg:#166534;--radius:14px;--shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px -16px rgba(15,23,42,.25)}
-html,body,[data-testid="stAppViewContainer"]{font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink)}
-h1,h2,h3,.hero h1,.tile h3{font-family:'Space Grotesk','DM Sans',system-ui,sans-serif;letter-spacing:-.01em}
-[data-testid="stAppDeployButton"],#MainMenu{display:none}
-.block-container{padding-top:1.6rem;max-width:1180px}
-[data-testid="stSidebar"]{background:var(--bg);border-right:1px solid var(--line)}
+:root{--brand:#E3262E;--brand-dark:#B3161E;--brand-soft:rgba(227,38,46,.16);--ink:#F1F5F9;--slate:#CBD5E1;--muted:#94A3B8;--line:#1F2937;--bg:#0B0F19;--card:#111827;--card-2:#161E2E;--ok-bg:rgba(34,197,94,.16);--ok-fg:#86EFAC;--radius:16px;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px -18px rgba(0,0,0,.8);--ease:cubic-bezier(.2,.7,.2,1)}
+html,body,[data-testid="stAppViewContainer"]{font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:var(--bg)}
+h1,h2,h3,.hero h1,.tile h3{font-family:'Space Grotesk','DM Sans',system-ui,sans-serif;letter-spacing:-.01em;color:var(--ink)}
+[data-testid="stAppDeployButton"],#MainMenu,[data-testid="stMainMenu"]{display:none}
+.block-container{padding-top:1.4rem;max-width:1180px}
+[data-testid="stSidebar"]{background:#0E1424;border-right:1px solid var(--line)}
+[data-testid="stSidebar"] hr{border-color:var(--line)}
 .brandmark{display:flex;align-items:center;gap:.6rem;margin:.2rem 0 .8rem}
-.brandmark .dot{width:14px;height:14px;border-radius:4px;background:var(--brand);flex:none}
-.brandmark b{font-family:'Space Grotesk',sans-serif;font-size:1.05rem}
+.brandmark .dot{width:14px;height:14px;border-radius:4px;background:var(--brand);flex:none;box-shadow:0 0 14px rgba(227,38,46,.7)}
+.brandmark b{font-family:'Space Grotesk',sans-serif;font-size:1.05rem;color:var(--ink)}
 .brandmark span{color:var(--muted);font-size:.8rem}
-.hero{background:linear-gradient(135deg,var(--brand-dark) 0%,var(--brand) 55%,#F04B44 100%);color:#fff;border-radius:22px;padding:2.6rem 2.4rem 2.2rem;box-shadow:var(--shadow)}
-.hero .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.72rem;opacity:.85;font-weight:600}
-.hero h1{font-size:2.6rem;line-height:1.1;margin:.5rem 0 .7rem;color:#fff}
-.hero p{font-size:1.1rem;max-width:58ch;opacity:.94;line-height:1.55;margin:0}
-.stats{display:flex;gap:1rem;flex-wrap:wrap;margin:1.2rem 0 .4rem}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:.9rem 1.2rem;min-width:150px;flex:1}
-.stat b{display:block;font-size:1.5rem;font-variant-numeric:tabular-nums;font-family:'Space Grotesk',sans-serif}
-.stat span{color:var(--muted);font-size:.85rem}
-.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:1.2rem 1.2rem 1.1rem;height:100%;box-shadow:var(--shadow);transition:transform .2s ease,box-shadow .2s ease}
-.tile:hover{transform:translateY(-2px)}
-.tile .ic{width:38px;height:38px;border-radius:10px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;margin-bottom:.7rem}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes sheen{0%{background-position:0% 50%}100%{background-position:100% 50%}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(134,239,172,.55)}70%{box-shadow:0 0 0 8px rgba(134,239,172,0)}}
+.hero{position:relative;overflow:hidden;background:linear-gradient(120deg,#8F1017 0%,var(--brand-dark) 30%,var(--brand) 62%,#F0563F 100%);background-size:200% 200%;animation:rise .6s var(--ease) both,sheen 14s ease-in-out infinite alternate;color:#fff;border-radius:24px;padding:3rem 2.6rem 2.6rem;box-shadow:0 30px 60px -30px rgba(227,38,46,.55)}
+.hero:after{content:"";position:absolute;inset:auto -20% -60% auto;width:60%;aspect-ratio:1;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.18),transparent 70%);pointer-events:none}
+.hero .eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:.72rem;opacity:.85;font-weight:600}
+.hero h1{font-size:3.2rem;line-height:1.05;margin:.5rem 0 .7rem;color:#fff}
+.hero p{font-size:1.12rem;max-width:56ch;opacity:.94;line-height:1.55;margin:0}
+.st-key-ask{margin:1.1rem 0 .6rem;animation:rise .6s .1s var(--ease) both}
+.st-key-ask .react-aria-TextField,.st-key-ask [data-testid="stTextInputRootElement"]{height:64px}
+.st-key-ask [data-testid="stTextInputRootElement"]{background:var(--card);border:1px solid var(--line);border-radius:18px;display:flex;align-items:center;transition:border-color .18s ease,box-shadow .18s ease}
+.st-key-ask [data-testid="stTextInputRootElement"]:focus-within{border-color:var(--brand);box-shadow:0 0 0 4px var(--brand-soft)}
+.st-key-ask [data-testid="stTextInputField"]{height:60px;font-size:1.08rem;padding-left:1.1rem;color:var(--ink);background:transparent}
+.st-key-ask [data-testid="stTextInput"]{margin-bottom:0}
+.st-key-ask div[data-testid="stFormSubmitButton"]>button{height:64px;width:100%;border-radius:18px;font-size:1.12rem;font-weight:700;background:var(--brand);border:1px solid var(--brand);color:#fff;box-shadow:0 12px 30px -14px rgba(227,38,46,.9);transition:transform .18s var(--ease),background .18s ease}
+.st-key-ask div[data-testid="stFormSubmitButton"]>button:hover{background:#F03A41;transform:translateY(-1px)}
+.st-key-chips{animation:rise .6s .18s var(--ease) both}
+.st-key-chips div[data-testid="stButton"]>button{height:48px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--slate);font-weight:500;transition:border-color .18s ease,color .18s ease,transform .18s var(--ease)}
+.st-key-chips div[data-testid="stButton"]>button:hover{border-color:var(--brand);color:var(--ink);transform:translateY(-1px)}
+.section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1.35rem;margin:1.6rem 0 .8rem}
+.bento{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;align-items:stretch}
+.tile{background:linear-gradient(180deg,var(--card-2),var(--card));border:1px solid var(--line);border-radius:var(--radius);padding:1.3rem 1.2rem;min-height:230px;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:transform .22s var(--ease),border-color .22s ease;animation:rise .6s var(--ease) both}
+.bento .tile:nth-child(1){animation-delay:.2s}.bento .tile:nth-child(2){animation-delay:.28s}.bento .tile:nth-child(3){animation-delay:.36s}.bento .tile:nth-child(4){animation-delay:.44s}
+.tile:hover{transform:translateY(-4px);border-color:rgba(227,38,46,.5)}
+.tile .ic{width:40px;height:40px;border-radius:12px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;margin-bottom:.9rem}
 .tile .ic svg{width:20px;height:20px}
-.tile h3{font-size:1.02rem;margin:0 0 .3rem}
-.tile p{color:var(--slate);font-size:.93rem;line-height:1.5;margin:0}
-.car{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);height:100%}
-.car .img{aspect-ratio:16/10;background:#EEF2F6 center/cover no-repeat;display:block}
-.car .body{padding:.8rem .95rem .9rem}
-.car .t{font-weight:600;font-size:.98rem;line-height:1.3}
-.car .price{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.15rem;margin:.25rem 0 .1rem;font-variant-numeric:tabular-nums}
+.tile h3{font-size:1.04rem;margin:0 0 .35rem}
+.tile p{color:var(--slate);font-size:.93rem;line-height:1.55;margin:0}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;margin:1.4rem 0 .4rem}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:1rem 1.2rem;min-height:96px;display:flex;flex-direction:column;justify-content:center}
+.stat b{display:block;font-size:1.55rem;font-variant-numeric:tabular-nums;font-family:'Space Grotesk',sans-serif;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat span{color:var(--muted);font-size:.84rem}
+.stat .live{display:inline-block;width:9px;height:9px;border-radius:50%;background:#4ADE80;margin-right:.45rem;animation:pulse 2s ease-out infinite;vertical-align:middle}
+.reviewer{background:linear-gradient(135deg,#131B2C,#0E1424);border:1px solid var(--line);border-radius:var(--radius);padding:1.4rem 1.5rem;height:100%}
+.reviewer h3{color:var(--ink);margin:0 0 .4rem}
+.reviewer p{color:var(--slate);margin:0;line-height:1.55}
+.car{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);height:100%;transition:transform .22s var(--ease),border-color .22s ease}
+.car:hover{transform:translateY(-3px);border-color:rgba(227,38,46,.5)}
+.car .img{aspect-ratio:16/10;background:#1F2937 center/cover no-repeat;display:block}
+.car .body{padding:.85rem 1rem .95rem}
+.car .t{font-weight:600;font-size:.98rem;line-height:1.3;color:var(--ink)}
+.car .price{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.15rem;margin:.25rem 0 .1rem;font-variant-numeric:tabular-nums;color:var(--ink)}
 .car .price small{font-family:'DM Sans',sans-serif;font-weight:500;color:var(--muted);font-size:.8rem;margin-left:.3rem}
 .car .meta{color:var(--muted);font-size:.84rem}
-.car .idx{position:relative;display:inline-block;background:var(--ink);color:#fff;border-radius:999px;padding:.05rem .55rem;font-size:.72rem;margin-bottom:.4rem}
+.car .idx{display:inline-block;background:var(--brand);color:#fff;border-radius:999px;padding:.05rem .55rem;font-size:.72rem;margin-bottom:.4rem}
 .badges{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.5rem}
-.badge{font-size:.72rem;font-weight:600;padding:.15rem .55rem;border-radius:999px;background:var(--brand-soft);color:var(--brand-dark)}
+.badge{font-size:.72rem;font-weight:600;padding:.15rem .55rem;border-radius:999px;background:var(--brand-soft);color:#FCA5A5}
 .badge.ok{background:var(--ok-bg);color:var(--ok-fg)}
-.badge.id{background:#EEF2F6;color:var(--slate);font-weight:500}
-.reviewer{background:var(--ink);color:#fff;border-radius:var(--radius);padding:1.3rem 1.4rem}
-.reviewer h3{color:#fff;margin:0 0 .3rem}
-.reviewer p{color:#CBD5E1;margin:0;line-height:1.5}
-.foot{color:var(--muted);font-size:.8rem;margin-top:2rem;border-top:1px solid var(--line);padding-top:.8rem}
-div[data-testid="stButton"]>button,div[data-testid="stFormSubmitButton"]>button{border-radius:999px;border:1px solid var(--line);padding:.35rem .95rem;font-weight:500;transition:background .15s ease,border-color .15s ease}
+.badge.id{background:#1F2937;color:var(--slate);font-weight:500}
+.foot{color:var(--muted);font-size:.8rem;margin-top:1.6rem;border-top:1px solid var(--line);padding-top:.8rem}
+div[data-testid="stButton"]>button,div[data-testid="stFormSubmitButton"]>button{border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:.35rem .95rem;font-weight:500;transition:background .15s ease,border-color .15s ease,transform .18s var(--ease)}
+div[data-testid="stButton"]>button:hover{border-color:var(--brand);color:var(--ink)}
 div[data-testid="stButton"]>button[kind="primary"]{background:var(--brand);border-color:var(--brand);color:#fff}
-div[data-testid="stButton"]>button[kind="primary"]:hover{background:var(--brand-dark);border-color:var(--brand-dark)}
-div[data-testid="stButton"]>button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
-[data-testid="stChatMessage"]{border-radius:var(--radius);padding:.9rem 1rem;border:1px solid var(--line);background:var(--card);margin-bottom:.5rem}
+div[data-testid="stButton"]>button[kind="primary"]:hover{background:#F03A41;border-color:#F03A41}
+div[data-testid="stButton"]>button:focus-visible,div[data-testid="stFormSubmitButton"]>button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+[data-testid="stChatMessage"]{border-radius:var(--radius);padding:.9rem 1rem;border:1px solid var(--line);background:var(--card);margin-bottom:.5rem;animation:rise .35s var(--ease) both}
 [data-testid="stChatInput"]{border-radius:var(--radius)}
 .meta-line{color:var(--muted);font-size:.8rem;margin-top:.3rem}
-@media (prefers-reduced-motion:reduce){.tile,.tile:hover,div[data-testid="stButton"]>button{transition:none;transform:none}}
-@media (max-width:768px){.hero{padding:1.8rem 1.3rem}.hero h1{font-size:2rem}}
+#cursor-glow{position:fixed;left:0;top:0;width:520px;height:520px;margin:-260px 0 0 -260px;border-radius:50%;pointer-events:none;z-index:0;mix-blend-mode:screen;background:radial-gradient(circle,rgba(227,38,46,.26) 0%,rgba(227,38,46,.10) 35%,transparent 70%);filter:blur(12px);opacity:0;transition:opacity .4s ease;will-change:transform}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}#cursor-glow{display:none}}
+@media (max-width:1024px){.bento,.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.bento,.stats{grid-template-columns:1fr}.hero{padding:1.8rem 1.3rem}.hero h1{font-size:2.1rem}}
 </style>
 """
 
@@ -107,6 +135,49 @@ PAGES: dict[str, Any] = {}
 
 def inject_css() -> None:
     st.markdown(CSS, unsafe_allow_html=True)
+
+
+def bento(tiles: list[tuple[str, str, str]]) -> str:
+    """Equal-height feature tiles as one CSS grid, so the boxes never drift with their text."""
+    cards = "".join(
+        f'<div class="tile"><div class="ic">{ICONS[icon]}</div><h3>{html.escape(title)}</h3><p>{html.escape(body)}</p></div>'
+        for icon, title, body in tiles
+    )
+    return f'<div class="bento">{cards}</div>'
+
+
+_GLOW_JS = """
+<script>
+(function () {
+  var doc = window.parent && window.parent.document;
+  if (!doc || doc.getElementById('cursor-glow')) return;
+  var win = window.parent;
+  if (win.matchMedia && win.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (win.matchMedia && win.matchMedia('(pointer: coarse)').matches) return;
+  var g = doc.createElement('div');
+  g.id = 'cursor-glow';
+  doc.body.appendChild(g);
+  var x = 0, y = 0, tx = 0, ty = 0, raf = null;
+  function tick() {
+    x += (tx - x) * 0.16;
+    y += (ty - y) * 0.16;
+    g.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+    raf = (Math.abs(tx - x) > 0.5 || Math.abs(ty - y) > 0.5) ? win.requestAnimationFrame(tick) : null;
+  }
+  doc.addEventListener('mousemove', function (e) {
+    tx = e.clientX; ty = e.clientY;
+    g.style.opacity = '1';
+    if (!raf) raf = win.requestAnimationFrame(tick);
+  }, { passive: true });
+  doc.documentElement.addEventListener('mouseleave', function () { g.style.opacity = '0'; });
+})();
+</script>
+"""
+
+
+def cursor_glow() -> None:
+    """A soft red glow that follows the pointer. Runs from a same-origin component frame because markdown strips scripts."""
+    components.html(_GLOW_JS, height=0)
 
 
 def api(method: str, path: str, **kwargs: Any) -> httpx.Response:
@@ -219,7 +290,7 @@ def sidebar(h: dict[str, Any]) -> None:
     """The one sidebar for every page: brand, the mode switch, who you are, and in demo mode the backend."""
     with st.sidebar:
         st.markdown(
-            '<div class="brandmark"><div class="dot"></div><div><b>Car Assistant</b><br><span>take-home build for dubizzle</span></div></div>',
+            f'<div class="brandmark"><div class="dot"></div><div><b>{html.escape(APP_NAME)}</b><br><span>{html.escape(APP_TAGLINE)}</span></div></div>',
             unsafe_allow_html=True,
         )
         for key, page in PAGES.items():

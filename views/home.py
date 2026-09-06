@@ -1,4 +1,4 @@
-"""Landing page: the question box is the call to action, then what the assistant does, then the reviewer's door."""
+"""Landing page: the question box is the call to action, then what the assistant does, the reviewer's door, and the numbers."""
 
 from __future__ import annotations
 
@@ -35,13 +35,14 @@ FEATURES = [
 
 def page(h: dict[str, Any]) -> None:
     st.markdown(
-        '<div class="hero"><div class="eyebrow">Car assistant</div>'
-        "<h1>Find your next car by talking to it.</h1>"
+        f'<div class="hero"><div class="eyebrow">{html.escape(common.APP_NAME)}</div>'
+        "<h1>Find your next car.</h1>"
         "<p>Ask in plain English or Arabic, compare listings, and book a viewing. Everything it says comes from the inventory, nothing else.</p></div>",
         unsafe_allow_html=True,
     )
-    with st.form("hero_ask", border=False):
-        c1, c2 = st.columns([5, 1])
+    ask = st.container(key="ask")
+    with ask.form("hero_ask", border=False):
+        c1, c2 = st.columns([4, 1], vertical_alignment="bottom")
         text = c1.text_input(
             "Ask about a car",
             placeholder="Show me SUVs with warranty under AED 150k",
@@ -51,32 +52,18 @@ def page(h: dict[str, Any]) -> None:
     if go and text.strip():
         st.session_state.pending_prompt = text.strip()
         st.switch_page(common.PAGES["chat"])
-    cols = st.columns(len(common.STARTERS))
+    chips = st.container(key="chips")
+    cols = chips.columns(len(common.STARTERS))
     for col, s in zip(cols, common.STARTERS, strict=True):
-        if col.button(s, key=f"starter_{s}", use_container_width=True):
+        if col.button(s, key=f"starter_{s}", use_container_width=True, help=s):
             st.session_state.pending_prompt = s
             st.switch_page(common.PAGES["chat"])
 
-    llm = h["llm"]
-    model = llm["model"].split("/")[-1]
-    st.markdown(
-        '<div class="stats">'
-        f'<div class="stat"><b>{h["inventory_count"]}</b><span>listings, both sheets merged</span></div>'
-        f'<div class="stat"><b>{html.escape(h["retrieval_mode"])}</b><span>retrieval mode</span></div>'
-        f'<div class="stat"><b>{html.escape(model)}</b><span>model behind the replies</span></div>'
-        f'<div class="stat"><b>{"frozen" if h.get("demo_clock") else "live"}</b><span>booking clock</span></div>'
-        "</div>",
-        unsafe_allow_html=True,
-    )
-    st.markdown("### What it does")
-    cols = st.columns(4)
-    for col, (icon, title, body) in zip(cols, FEATURES, strict=True):
-        col.markdown(
-            f'<div class="tile"><div class="ic">{common.ICONS[icon]}</div><h3>{html.escape(title)}</h3><p>{html.escape(body)}</p></div>',
-            unsafe_allow_html=True,
-        )
+    st.markdown('<div class="section">What it does</div>', unsafe_allow_html=True)
+    st.markdown(common.bento(FEATURES), unsafe_allow_html=True)
+
     st.write("")
-    c1, c2 = st.columns([3, 1])
+    c1, c2 = st.columns([3, 1], vertical_alignment="center")
     c1.markdown(
         '<div class="reviewer"><h3>Reviewing this build?</h3>'
         "<p>Demo mode shows the work behind every reply: the trace with timings, the exact prompt, the SQL and relaxation ladder, "
@@ -84,14 +71,26 @@ def page(h: dict[str, Any]) -> None:
         unsafe_allow_html=True,
     )
     with c2:
-        st.write("")
         if st.button("Open demo mode", type="primary", use_container_width=True):
             common.set_mode("demo")
             st.switch_page(common.PAGES["chat"])
         st.page_link(
             common.PAGES["inventory"], label="Browse the inventory", use_container_width=True
         )
+
+    llm = h["llm"]
+    model = llm["model"].split("/")[-1]
+    clock = '<span class="live"></span>live' if not h.get("demo_clock") else "frozen"
     st.markdown(
-        '<div class="foot">Built as a take-home assignment for dubizzle. Not an official dubizzle product. Listings are the assignment sample.</div>',
+        '<div class="stats">'
+        f'<div class="stat"><b>{h["inventory_count"]}</b><span>listings, both sheets merged</span></div>'
+        f'<div class="stat"><b>{html.escape(h["retrieval_mode"])}</b><span>retrieval mode</span></div>'
+        f'<div class="stat"><b title="{html.escape(llm["model"])}">{html.escape(model)}</b><span>model behind the replies</span></div>'
+        f'<div class="stat"><b>{clock}</b><span>booking clock</span></div>'
+        "</div>",
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        f'<div class="foot">{html.escape(common.APP_NAME)} is a take-home assignment build for dubizzle, not an official dubizzle product. Listings are the assignment sample.</div>',
         unsafe_allow_html=True,
     )

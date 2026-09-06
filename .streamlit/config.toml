@@ -5,9 +5,9 @@ gatherUsageStats = false
 showEmailPrompt = false
 
 [theme]
-base = "light"
-primaryColor = "#D8232A"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F8FAFC"
-textColor = "#0F172A"
+base = "dark"
+primaryColor = "#E3262E"
+backgroundColor = "#0B0F19"
+secondaryBackgroundColor = "#111827"
+textColor = "#F1F5F9"
 font = "sans serif"
