@@ -9,6 +9,7 @@ Every mapping here is a documented step so the trace can show it.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 
 USD_TO_AED = 3.6725  # the dirham has been pegged at this rate since 1997
@@ -363,7 +364,7 @@ def resolve_make_model(text: str) -> tuple[str | None, str | None, list[str]]:
     """Find a make and model mentioned anywhere in a phrase."""
     t = normalize_digits(text.lower())
     steps: list[str] = []
-    for phrase, make, model in MODEL_ALIASES:
+    for phrase, make, model in [*MODEL_ALIASES, *DATA_MODEL_ALIASES]:
         if _phrase_in(phrase, t):
             steps.append(f"{phrase} -> make {make}, model {model} (alias)")
             return make, model, steps
@@ -376,3 +377,42 @@ def resolve_make_model(text: str) -> tuple[str | None, str | None, list[str]]:
 
 def canonical_body_type(text: str) -> str | None:
     return BODY_TYPE_ALIASES.get(text.strip().lower())
+
+
+# Whatever inventory is loaded teaches the resolver its makes and models; the static tables above are the seed.
+KNOWN_MAKES: set[str] = set(DATASET_MAKES)
+DATA_MODEL_ALIASES: list[tuple[str, str, str]] = []
+
+
+def known_makes() -> set[str]:
+    return KNOWN_MAKES
+
+
+def register_makes(makes: Iterable[str]) -> int:
+    added = 0
+    for raw in makes:
+        m = (raw or "").strip().lower()
+        if not m:
+            continue
+        KNOWN_MAKES.add(m)
+        if m not in MAKE_ALIASES:
+            MAKE_ALIASES[m] = m
+            added += 1
+    return added
+
+
+def register_models(pairs: Iterable[tuple[str, str]]) -> int:
+    known = {p for p, _, _ in MODEL_ALIASES} | {p for p, _, _ in DATA_MODEL_ALIASES}
+    added = 0
+    for make, model in pairs:
+        phrase = (model or "").strip().lower()
+        # Short or numeric model names ("3", "x5") would match everywhere, so they stay out.
+        if len(phrase) < 4 or not re.search(r"[a-z]{3}", phrase):
+            continue
+        if phrase in known or phrase in MAKE_ALIASES:
+            continue
+        DATA_MODEL_ALIASES.append((phrase, make.strip().lower(), phrase))
+        known.add(phrase)
+        added += 1
+    DATA_MODEL_ALIASES.sort(key=lambda t: len(t[0]), reverse=True)
+    return added

@@ -21,11 +21,29 @@ from dubizzle_assistant.services.explain import filters_from_args
 MODES = ("structured", "fts", "hybrid", "embeddings")
 
 
+NOT_APPLICABLE = "not applicable"
+# The Honda and the Velar anchor the hand-written checks; another dataset will not have them.
+_ANCHOR_IDS = ("R-078", "C-003")
+
+
+def applicability(case: Any, by_id: dict[str, dict[str, Any]]) -> str | None:
+    """Why a case cannot be scored on this inventory, or None when it can."""
+    if not any(case.expected(r) for r in by_id.values()):
+        return f"{NOT_APPLICABLE}: no listing here matches the expectation"
+    if case.check is not None and not all(i in by_id for i in _ANCHOR_IDS):
+        return f"{NOT_APPLICABLE}: check written for the assignment dataset"
+    return None
+
+
 def run_mode(
     conn: sqlite3.Connection, by_id: dict[str, dict[str, Any]], mode: str, embedder: Any = None
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for case in CASES:
+        why = applicability(case, by_id)
+        if why:
+            rows.append({"name": case.name, "mode": mode, "passed": None, "note": why})
+            continue
         filters, steps = filters_from_args({k: v for k, v in case.args.items() if v is not None})
         try:
             result = inv.search(
@@ -63,7 +81,17 @@ def evaluate(
             )
             if scored
             else None,
-            "unavailable": next((r["note"] for r in rows if r.get("passed") is None), None),
+            "not_applicable": sum(
+                1 for r in rows if r.get("passed") is None and NOT_APPLICABLE in str(r.get("note"))
+            ),
+            "unavailable": next(
+                (
+                    r["note"]
+                    for r in rows
+                    if r.get("passed") is None and NOT_APPLICABLE not in str(r.get("note"))
+                ),
+                None,
+            ),
         }
     return {
         "generated_at": datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC"),
@@ -82,12 +110,12 @@ def render(report: dict[str, Any]) -> str:
     lines += [
         "## Per mode",
         "",
-        "| mode | cases | passed | mean precision@k | mean recall | note |",
-        "|---|---|---|---|---|---|",
+        "| mode | cases | passed | n/a | mean precision@k | mean recall | note |",
+        "|---|---|---|---|---|---|---|",
     ]
     for m, s in report["summary"].items():
         lines.append(
-            f"| {m} | {s['cases']} | {s['passed']} | {s['mean_precision_at_k']} | {s['mean_recall']} | {s['unavailable'] or ''} |"
+            f"| {m} | {s['cases']} | {s['passed']} | {s.get('not_applicable', 0)} | {s['mean_precision_at_k']} | {s['mean_recall']} | {s['unavailable'] or ''} |"
         )
     lines += ["", "## Per query", ""]
     modes = list(report["results"])

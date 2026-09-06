@@ -16,7 +16,7 @@ import sqlite3
 from datetime import datetime
 from typing import Any
 
-from dubizzle_assistant.normalize import DATASET_MAKES, resolve_make_model
+from dubizzle_assistant.normalize import known_makes, resolve_make_model
 from dubizzle_assistant.text import contains_contact
 
 PREFERENCE_KINDS = {
@@ -369,7 +369,7 @@ def resolve_reference(
                 pool = narrowed
             else:
                 q_make = resolve_make_model(qualifier)[0]
-                if q_make or qualifier.rstrip("s") in DATASET_MAKES:
+                if q_make or qualifier.rstrip("s") in known_makes():
                     # "that first Honda" when no Honda is on screen: say so rather than hand back the first car.
                     out.update(rule=f"not_on_screen:{qualifier}")
                     return out

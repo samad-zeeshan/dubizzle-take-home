@@ -18,7 +18,12 @@ from pathlib import Path
 from typing import Any
 
 from dubizzle_assistant.db import LISTING_COLUMNS
-from dubizzle_assistant.normalize import canonical_body_type, canonical_make
+from dubizzle_assistant.normalize import (
+    canonical_body_type,
+    canonical_make,
+    register_makes,
+    register_models,
+)
 from dubizzle_assistant.text import strip_contacts
 
 # bm25 weights: id (unindexed), make, model, trim, title, english_summary, keywords_en, description_clean.
@@ -107,6 +112,9 @@ def thumb_url(photo_url: str) -> str:
 
 def load_inventory(conn: sqlite3.Connection, path: Path) -> int:
     data = json.loads(path.read_text(encoding="utf-8"))
+    # The resolver learns this inventory's makes and models, so another dataset resolves "the civic" too.
+    register_makes(r["make"] for r in data["listings"])
+    register_models((r["make"], r["model"]) for r in data["listings"])
     rows: list[tuple[Any, ...]] = []
     for rec in data["listings"]:
         f = rec["fields"]

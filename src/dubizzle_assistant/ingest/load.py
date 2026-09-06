@@ -11,6 +11,7 @@ import html
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from openpyxl import load_workbook
 
@@ -87,39 +88,145 @@ def _cell(v: object) -> str:
     return str(v).strip()
 
 
-def read_sheet(path: Path, sheet: str) -> list[Row]:
+# Header spellings seen across marketplace exports. Matching is case-insensitive after punctuation is dropped.
+HEADER_ALIASES: dict[str, tuple[str, ...]] = {
+    "make": ("make", "brand", "manufacturer", "car_make", "make_name"),
+    "model": ("model", "car_model", "model_name"),
+    "trim": ("trim", "variant", "version", "grade", "trim_level"),
+    "year": ("year", "model_year", "manufacture_year", "year_of_manufacture"),
+    "title": ("title", "listing_title", "ad_title", "heading"),
+    "description": (
+        "description",
+        "desc",
+        "details",
+        "description_raw",
+        "body",
+        "text",
+        "ad_description",
+    ),
+    "photo_url": ("photo_url", "photo", "image", "image_url", "picture", "photos", "thumbnail"),
+    "listing_id": ("listing_id", "id", "ad_id", "ref", "reference"),
+}
+# Structured columns this dataset lacks but another might carry. They beat the text extractor.
+COLUMN_ALIASES: dict[str, tuple[str, ...]] = {
+    "price_aed": ("price", "price_aed", "cash_price", "asking_price"),
+    "monthly_aed": (
+        "monthly",
+        "monthly_aed",
+        "installment",
+        "instalment",
+        "emi",
+        "monthly_payment",
+    ),
+    "mileage_km": ("mileage", "mileage_km", "km", "kms", "kilometers", "kilometres", "odometer"),
+    "exterior_color": ("color", "colour", "exterior_color", "exterior_colour", "ext_color"),
+    "body_type": ("body_type", "body", "body_style", "category"),
+    "fuel_type": ("fuel", "fuel_type"),
+    "transmission": ("transmission", "gearbox"),
+    "regional_spec": ("spec", "specs", "regional_spec"),
+    "seats": ("seats", "seating"),
+    "has_warranty": ("warranty", "has_warranty", "under_warranty"),
+}
+_HEADER_CLEAN_RE = re.compile(r"[^a-z0-9]+")
+
+
+def _header_key(h: str) -> str:
+    return _HEADER_CLEAN_RE.sub("_", h.strip().lower()).strip("_")
+
+
+def resolve_header(header: list[str]) -> tuple[dict[str, int], dict[str, int], list[str]]:
+    """Map the core fields and optional columns to positions, and list the headers nothing claimed."""
+    keys = [_header_key(h) for h in header]
+    core: dict[str, int] = {}
+    extra: dict[str, int] = {}
+    claimed: set[int] = set()
+    for table, out in ((HEADER_ALIASES, core), (COLUMN_ALIASES, extra)):
+        for canon, names in table.items():
+            for i, k in enumerate(keys):
+                if k in names and i not in claimed:
+                    out[canon] = i
+                    claimed.add(i)
+                    break
+    unmapped = [h for i, h in enumerate(header) if i not in claimed and h]
+    return core, extra, unmapped
+
+
+def _sheet_kind(name: str, core: dict[str, int]) -> str:
+    low = name.lower()
+    if "clean" in low:
+        return "cleaned"
+    if "raw" in low:
+        return "raw"
+    return "cleaned" if "listing_id" in core else "raw"
+
+
+def _int_or_none(text: str) -> int | None:
+    try:
+        return int(float(text))
+    except ValueError:
+        return None
+
+
+def read_sheet(path: Path, sheet: str, kind: str | None = None) -> list[Row]:
+    return read_sheet_with_report(path, sheet, kind)[0]
+
+
+def read_sheet_with_report(
+    path: Path, sheet: str, kind: str | None = None
+) -> tuple[list[Row], dict[str, Any]]:
     wb = load_workbook(path, read_only=True, data_only=True)
     ws = wb[sheet]
     rows_iter = ws.iter_rows(values_only=True)
-    header = [_cell(h).lower() for h in next(rows_iter)]
-    idx = {name: i for i, name in enumerate(header)}
+    header = [_cell(h) for h in next(rows_iter, ())]
+    core, extra, unmapped = resolve_header(header)
+    kind = kind or _sheet_kind(sheet, core)
     out: list[Row] = []
     for n, values in enumerate(rows_iter, start=2):
         if all(v is None for v in values):
             continue
 
         def get(k: str, values: tuple[object, ...] = values) -> str:
-            return _cell(values[idx[k]]) if k in idx else ""
+            i = core.get(k)
+            return _cell(values[i]) if i is not None and i < len(values) else ""
 
         raw_desc = get("description")
+        lid = get("listing_id")
         row = Row(
-            source_sheet="cleaned" if sheet == CLEAN_SHEET else "raw",
+            source_sheet=kind,
             source_row=n,
             # Mazda "3" and the DBX "707" arrive as ints from the workbook.
             make=get("make").lower(),
             model=get("model").lower(),
             trim=get("trim").lower() or "other",
-            year=int(float(get("year") or 0)),
+            year=_int_or_none(get("year")) or 0,
             title=clean_html(get("title")),
             description_raw=raw_desc,
             photo_url=get("photo_url"),
-            listing_id=int(float(get("listing_id"))) if get("listing_id") else None,
+            listing_id=_int_or_none(lid) if lid else None,
         )
+        if lid and row.listing_id is None:
+            row.extra["source_id"] = lid
+        if not row.title:
+            # Cards, search, and summaries all lean on the title, so a missing one is rebuilt from the columns.
+            row.title = " ".join(p for p in (str(row.year or ""), row.make, row.model) if p).title()
+            row.extra["title_synthesized"] = True
+        for key, i in extra.items():
+            v = _cell(values[i]) if i < len(values) else ""
+            if v:
+                row.extra[key] = v
         row.truncated = is_truncated(raw_desc)
         row.language = detect_language(row.title + " " + clean_html(raw_desc))
         out.append(row)
     wb.close()
-    return out
+    report = {
+        "sheet": sheet,
+        "kind": kind,
+        "rows": len(out),
+        "columns": {k: header[i] for k, i in core.items()},
+        "optional_columns": {k: header[i] for k, i in extra.items()},
+        "unmapped": unmapped,
+    }
+    return out, report
 
 
 def merge_sheets(cleaned: list[Row], raw: list[Row]) -> tuple[list[Row], list[dict[str, object]]]:
@@ -165,7 +272,41 @@ def merge_sheets(cleaned: list[Row], raw: list[Row]) -> tuple[list[Row], list[di
     return cleaned + final_raw, removed
 
 
+def resolve_sheets(names: list[str]) -> list[str]:
+    """The two canonical sheets when present, otherwise every sheet in the workbook."""
+    if CLEAN_SHEET in names and RAW_SHEET in names:
+        return [CLEAN_SHEET, RAW_SHEET]
+    return list(names)
+
+
+def load_workbook_rows(
+    path: Path,
+) -> tuple[list[Row], list[dict[str, object]], list[dict[str, Any]]]:
+    wb = load_workbook(path, read_only=True)
+    names = resolve_sheets(wb.sheetnames)
+    wb.close()
+    cleaned: list[Row] = []
+    raw: list[Row] = []
+    reports: list[dict[str, Any]] = []
+    for name in names:
+        kind = "cleaned" if name == CLEAN_SHEET else "raw" if name == RAW_SHEET else None
+        rows, rep = read_sheet_with_report(path, name, kind)
+        reports.append(rep)
+        for r in rows:
+            if r.source_sheet == "cleaned" and r.listing_id is not None:
+                cleaned.append(r)
+            else:
+                # Without a numeric id a row cannot keep one, so it is numbered with the raw rows.
+                r.source_sheet = "raw"
+                raw.append(r)
+    merged, removed = merge_sheets(cleaned, raw)
+    if not merged:
+        raise ValueError(
+            f"no listings found in {path.name}: sheets {names}; check the column mapping in the build report"
+        )
+    return merged, removed, reports
+
+
 def load_all(path: Path) -> tuple[list[Row], list[dict[str, object]]]:
-    cleaned = read_sheet(path, CLEAN_SHEET)
-    raw = read_sheet(path, RAW_SHEET)
-    return merge_sheets(cleaned, raw)
+    rows, removed, _ = load_workbook_rows(path)
+    return rows, removed

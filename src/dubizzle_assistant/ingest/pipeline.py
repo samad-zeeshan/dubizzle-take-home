@@ -17,8 +17,9 @@ from pathlib import Path
 from typing import Any
 
 from dubizzle_assistant.ingest import report as report_mod
+from dubizzle_assistant.ingest.columns import apply_columns
 from dubizzle_assistant.ingest.extract import Field, extract_all
-from dubizzle_assistant.ingest.load import Row, clean_html, load_all
+from dubizzle_assistant.ingest.load import Row, clean_html, load_workbook_rows
 from dubizzle_assistant.ingest.sanitize import sanitize
 from dubizzle_assistant.ingest.summarize import english_summary, keywords
 
@@ -39,6 +40,7 @@ def _row_to_record(row: Row) -> dict[str, Any]:
     cleaned_html = clean_html(row.description_raw)
     san = sanitize(cleaned_html)
     fields, rejected = extract_all(row.make, row.model, row.title, san.clean)
+    from_columns = apply_columns(fields, row.extra)
     fields["is_dubizzle_managed"] = Field(
         san.is_dubizzle_managed,
         "regex",
@@ -78,6 +80,7 @@ def _row_to_record(row: Row) -> dict[str, Any]:
         "removed_sentences": san.removed_sentences,
         "fields": {k: v.as_dict() for k, v in fields.items()},
         "rejected": rejected,
+        "from_columns": from_columns,
     }
 
 
@@ -90,7 +93,7 @@ def _mark_shared_descriptions(records: list[dict[str, Any]]) -> None:
 
 
 def build(xlsx: Path, enricher: Enricher | None = None) -> dict[str, Any]:
-    rows, removed = load_all(xlsx)
+    rows, removed, sheets = load_workbook_rows(xlsx)
     records = [_row_to_record(r) for r in rows]
     _mark_shared_descriptions(records)
 
@@ -112,9 +115,11 @@ def build(xlsx: Path, enricher: Enricher | None = None) -> dict[str, Any]:
             "cleaned_kept": sum(1 for r in records if r["source_sheet"] == "cleaned"),
             "raw_kept": sum(1 for r in records if r["source_sheet"] == "raw"),
             "makes": len({r["make"] for r in records}),
-            "year_min": min(years),
-            "year_max": max(years),
+            "year_min": min(years) if years else None,
+            "year_max": max(years) if years else None,
+            "column_fields": sum(len(r["from_columns"]) for r in records),
         },
+        "sheets": sheets,
         "removed": removed,
         "disagreements": disagreements,
         "quirks": QUIRKS,

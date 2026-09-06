@@ -43,6 +43,19 @@ def render(listings: list[dict[str, Any]], meta: dict[str, Any]) -> str:
         f"LLM enrichment: {'yes, ' + meta['llm_model'] if meta.get('llm_model') else 'not run (regex and model knowledge only)'}.\n"
     )
 
+    if meta.get("sheets"):
+        lines.append("## Sheets and columns\n")
+        lines.append("| sheet | kind | rows | core columns | optional columns | unmapped |")
+        lines.append("|---|---|---|---|---|---|")
+        for sh in meta["sheets"]:
+            core = ", ".join(f"{k}={v}" for k, v in sh["columns"].items()) or "none"
+            opt = ", ".join(f"{k}={v}" for k, v in sh["optional_columns"].items()) or "none"
+            lines.append(
+                f"| {sh['sheet']} | {sh['kind']} | {sh['rows']} | {core} | {opt} | {', '.join(sh['unmapped']) or 'none'} |"
+            )
+        lines.append(
+            f"\n{meta['counts'].get('column_fields', 0)} field values came straight from columns and outrank the text extractor.\n"
+        )
     lines.append("## Rows\n")
     c = meta["counts"]
     lines.append("| stage | cleaned sheet | raw sheet |")
