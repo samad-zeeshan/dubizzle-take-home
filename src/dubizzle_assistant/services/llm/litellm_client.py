@@ -50,7 +50,6 @@ class LiteLLMClient:
             litellm.drop_params = (
                 True  # Gemini rejects parallel_tool_calls and a few OpenAI-only knobs
             )
-            litellm.set_verbose = False
             self._litellm = litellm
         return self._litellm
 
@@ -144,6 +143,23 @@ class LiteLLMClient:
             latency_ms=latency,
             note=note,
         )
+
+    def embed_many(self, texts: list[str], batch_size: int = 16) -> list[list[float]]:
+        """Batched embeddings for the one-time corpus build; about a dozen calls for the whole inventory."""
+        litellm = self._lib()
+        out: list[list[float]] = []
+        for i in range(0, len(texts), batch_size):
+            try:
+                resp = litellm.embedding(
+                    model=self.embedding_model, input=texts[i : i + batch_size]
+                )
+            except Exception as e:  # noqa: BLE001
+                raise LLMError(f"embedding call failed: {type(e).__name__}: {e}") from e
+            out.extend(
+                list(item["embedding"])
+                for item in sorted(resp.data, key=lambda d: d.get("index", 0))
+            )
+        return out
 
     def embed(self, text: str) -> list[float]:
         litellm = self._lib()
