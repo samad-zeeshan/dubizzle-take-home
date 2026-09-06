@@ -97,12 +97,16 @@ def like(
 
 
 @router.delete("/{user_id}")
-def forget(user_id: str, conn: sqlite3.Connection = Depends(get_conn)) -> dict[str, Any]:
+def forget(
+    user_id: str,
+    settings: Settings = Depends(get_settings_dep),
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
     if not memory.get_user(conn, user_id):
         raise HTTPException(status_code=404, detail="no such user")
     counts = memory.forget_user(conn, user_id)
     with contextlib.suppress(ImportError):
         from dubizzle_assistant.services import leads
 
-        leads.export_csv(conn, None)
+        leads.export_csv(conn, settings.leads_csv)
     return {"forgotten": user_id, "deleted": counts}
