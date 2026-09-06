@@ -7,7 +7,7 @@ showEmailPrompt = false
 [theme]
 base = "dark"
 primaryColor = "#E3262E"
-backgroundColor = "#0B0F19"
-secondaryBackgroundColor = "#111827"
-textColor = "#F1F5F9"
+backgroundColor = "#0F0F10"
+secondaryBackgroundColor = "#18181A"
+textColor = "#F4F4F5"
 font = "sans serif"
