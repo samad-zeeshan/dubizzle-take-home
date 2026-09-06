@@ -34,7 +34,7 @@ def health(
             "configured": settings.llm_configured,
             "provider": settings.llm_provider,
             "model": settings.llm_model,
-            "fallback_model": settings.llm_fallback_model,
+            "fallback_model": settings.usable_fallback_model,
             "requests_today": requests_today,
             "budget": settings.daily_llm_budget,
             "last_error": getattr(request.app.state, "llm_error", None),
