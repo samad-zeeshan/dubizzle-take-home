@@ -89,7 +89,8 @@ def build_blocks(
     blocks.append(
         _block(
             "datetime",
-            f"## Now\nCurrent time: {now.strftime('%A %Y-%m-%d %H:%M')} Asia/Dubai. "
+            # Rounded to the hour so the cached prompt prefix survives across turns in a live demo.
+            f"## Now\nCurrent time: {now.strftime('%A %Y-%m-%d %H:00')} Asia/Dubai. "
             f"Tomorrow is {tomorrow.strftime('%A %Y-%m-%d')}. Viewings are never on a Sunday.",
         )
     )
@@ -118,6 +119,15 @@ def build_blocks(
                 "pending_booking",
                 f"## Pending booking\nProposed on turn {pb.get('turn')}: listing {pb.get('listing_id')} at {pb.get('slot_label')}. "
                 "Call confirm_viewing only if the user has now agreed.",
+            )
+        )
+    if ctx.settings.use_brief_replies:
+        # Last, so it never disturbs the cached prefix. Local models generate at tens of tokens a second.
+        blocks.append(
+            _block(
+                "style",
+                "## Reply style\nKeep replies under 60 words: the car, the facts asked for, one next step. "
+                "No bullet lists unless comparing cars.",
             )
         )
     return blocks

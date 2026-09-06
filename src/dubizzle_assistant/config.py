@@ -46,6 +46,7 @@ class Settings(BaseSettings):
     llm_api_base: str | None = None
     llm_api_key: str | None = None
     llm_max_tokens: int | None = None
+    brief_replies: bool | None = None  # None: on for local models, where every token costs time
     llm_temperature: float | None = None
     llm_reasoning: str = "low"
     llm_cassette_mode: Literal["off", "record", "replay"] = "off"
@@ -154,6 +155,12 @@ class Settings(BaseSettings):
         if self.structured_reply is not None:
             return self.structured_reply
         return not self.llm_local
+
+    @property
+    def use_brief_replies(self) -> bool:
+        if self.brief_replies is not None:
+            return self.brief_replies
+        return self.llm_local
 
     @property
     def effective_max_tokens(self) -> int | None:

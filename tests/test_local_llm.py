@@ -35,11 +35,12 @@ def test_local_endpoint_counts_as_configured(tmp_path: Path) -> None:
     assert s.usable_fallback_model is None
     assert s.temperature_for(s.llm_model) == 0.2
     assert s.effective_max_tokens == 1500
-    assert s.use_structured_reply is False
+    assert s.use_structured_reply is False and s.use_brief_replies is True
     assert local_settings(tmp_path, structured_reply=True).use_structured_reply is True
     assert local_settings(tmp_path, llm_max_tokens=800).effective_max_tokens == 800
     gemini = make_settings(tmp_path, llm_provider="litellm", gemini_api_key="k")
     assert gemini.effective_max_tokens is None and gemini.use_structured_reply is True
+    assert gemini.use_brief_replies is False
     assert (
         local_settings(tmp_path, gemini_api_key="k").usable_fallback_model
         == "gemini/gemini-2.5-flash"
