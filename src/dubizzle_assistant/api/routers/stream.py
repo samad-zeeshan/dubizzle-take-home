@@ -25,6 +25,7 @@ from fastapi.responses import StreamingResponse
 from dubizzle_assistant.api.deps import get_conn, get_settings_dep
 from dubizzle_assistant.api.routers.chat import ChatRequest, prepare, store_idempotent
 from dubizzle_assistant.config import Settings
+from dubizzle_assistant.db import connect
 from dubizzle_assistant.services.agent import ChatUnavailableError, run_turn
 from dubizzle_assistant.services.trace import TurnTrace
 
@@ -68,10 +69,13 @@ async def chat_stream(
             q.put(("token", {"text": text}))
 
         def work() -> None:
+            # The request's connection closes when the client disconnects, which can happen mid-reply
+            # on a refresh. A connection in use on another thread must not be closed under it.
+            wconn = connect(settings.db_path)
             try:
                 env = run_turn(
                     settings=settings,
-                    conn=conn,
+                    conn=wconn,
                     llm=prep["llm"],
                     user_id=prep["user_id"],
                     session_id=prep["session_id"],
@@ -83,7 +87,7 @@ async def chat_stream(
                 )
                 env["new_session"] = prep["new_session"]
                 env["degraded"] = prep["degraded"]
-                store_idempotent(conn, prep, env)
+                store_idempotent(wconn, prep, env)
                 q.put(("envelope", env))
             except ChatUnavailableError as e:
                 request.app.state.llm_error = str(e)
@@ -93,6 +97,7 @@ async def chat_stream(
             except Exception as e:  # noqa: BLE001
                 q.put(("error", {"status": 500, "detail": f"{type(e).__name__}: {e}"}))
             finally:
+                wconn.close()
                 q.put(None)
 
         threading.Thread(target=work, daemon=True).start()
