@@ -89,3 +89,6 @@ def test_decimal_tail_is_not_a_separate_figure() -> None:
     sources = {"115750": {"listing_id": "R-005", "field": "price_aed"}}
     g = grounding_spans("Listed at AED 115,750.000 with a 3.000 year plan.", sources)
     assert [s["text"] for s in g["spans"]] == ["115,750"] and g["ungrounded"] == []
+    # A slash before the number used to leave "000" behind as a figure of its own.
+    g = grounding_spans("GCC spec with 6-year/200,000 km warranty at AED 115,750.", sources)
+    assert [s["text"] for s in g["spans"]] == ["115,750"] and g["ungrounded"] == []

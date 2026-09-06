@@ -176,8 +176,27 @@ def postfilter(text: str) -> tuple[str, list[dict[str, str]]]:
 
 
 _ID_RE = re.compile(r"\b([CR]-\d{3})\b")
-# A fragment after a decimal point ("115,750.000") is part of the number before it, not a figure of its own.
-_NUM_RE = re.compile(r"(?<![\w#/.-])(\d{1,3}(?:,\d{3})+|\d{3,})(?![\w-])")
+# Whole numbers first, then context decides. A number glued to a word, a path, a decimal point or a
+# hyphen ("R-005", "6-year/200,000", "115,750.000") is skipped as a whole, so no fragment of it
+# ("000") can ever be judged on its own.
+_NUM_RE = re.compile(r"\d{1,3}(?:,\d{3})+|\d{3,}")
+_GLUE_BEFORE = "#/.-_"
+_GLUE_AFTER = "-_"
+
+
+def figures(text: str) -> list[re.Match[str]]:
+    out: list[re.Match[str]] = []
+    for m in _NUM_RE.finditer(text):
+        before = text[m.start() - 1] if m.start() else ""
+        after = text[m.end()] if m.end() < len(text) else ""
+        if before and (before.isalnum() or before in _GLUE_BEFORE):
+            continue
+        if after and (after.isalnum() or after in _GLUE_AFTER):
+            continue
+        out.append(m)
+    return out
+
+
 _NUMERIC_FIELDS = ("price_aed", "monthly_aed", "mileage_km", "year", "seats", "down_payment_pct")
 
 
@@ -246,12 +265,12 @@ def grounding_spans(reply: str, sources: dict[str, dict[str, Any]]) -> dict[str,
                 "source": sources.get(key),
             }
         )
-    for m in _NUM_RE.finditer(reply):
-        key = _norm(m.group(1))
+    for m in figures(reply):
+        key = _norm(m.group(0))
         # Display numbers (#1, #2) and short counts are under three digits and never reach here.
         spans.append(
             {
-                "text": m.group(1),
+                "text": m.group(0),
                 "start": m.start(),
                 "end": m.end(),
                 "grounded": key in sources,
