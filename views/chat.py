@@ -244,7 +244,9 @@ def page(h: dict[str, Any]) -> None:
         st.query_params.pop("ask")
         d = common.get_json(f"/inventory/{ask}")
         if d:
-            st.session_state.pending_prompt = f"Tell me more about the {common.car_name(d)}"
+            st.session_state.pending_prompt = (
+                f"Tell me more about the {common.car_name(d)} ({d['id']})"
+            )
     if not st.session_state.messages:
         st.markdown("### Ask about a car")
         st.caption("Search the inventory, compare listings, or book a viewing. Try one of these:")

@@ -455,11 +455,12 @@ def render_cards(
             if b1.button(
                 "Ask about it", key=f"{key_prefix}_ask_{c['id']}", use_container_width=True
             ):
-                picked = f"Tell me more about the {car_name(c)}"
+                # The id in brackets lets the resolver pin the car even when it is not on screen yet.
+                picked = f"Tell me more about the {car_name(c)} ({c['id']})"
             if b2.button(
                 "Book a viewing", key=f"{key_prefix}_book_{c['id']}", use_container_width=True
             ):
-                picked = f"Book a viewing for the {car_name(c)}"
+                picked = f"Book a viewing for the {car_name(c)} ({c['id']})"
             if picked:
                 st.session_state.pending_prompt = picked
                 if switch_to_chat:
