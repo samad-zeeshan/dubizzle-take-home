@@ -11,6 +11,7 @@ __pycache__/
 
 # runtime data (generated locally, never commit)
 data/app.db
+data/app.db-*
 data/*.db
 data/leads.csv
 data/bookings.csv
