@@ -41,6 +41,8 @@ def make_settings(tmp: Path, **overrides) -> Settings:
         "leads_file": tmp / "leads.csv",
         "bookings_file": tmp / "bookings.csv",
         "llm_cassette_path": tmp / "cassette.jsonl",
+        "rate_limit_per_min": 1000,
+        "rate_limit_per_day": 10000,
         # A Saturday afternoon, so "tomorrow" is the Sunday the booking rules reject.
         "demo_now": datetime(2026, 9, 5, 14, 30, tzinfo=DUBAI),
     }

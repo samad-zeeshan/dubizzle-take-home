@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import re
 import time
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from typing import Any
 
@@ -32,7 +32,7 @@ FORBIDDEN_KEYS = frozenset(
     }
 )
 
-_KEY_HINT_RE = re.compile(r"(?i)(api[_-]?key|token|secret|password)")
+_KEY_HINT_RE = re.compile(r"(?i)(api[_-]?key|token(?!s)|secret|password|bearer)")
 
 
 def redact(value: Any) -> Any:
@@ -70,9 +70,9 @@ class TurnTrace:
         for fn in self.listeners:
             fn(record)
 
-    def add(self, stage: str, ms: int = 0, **payload: Any) -> dict[str, Any]:
+    def add(self, stage_name: str, ms: int = 0, **payload: Any) -> dict[str, Any]:
         record = {
-            "stage": stage,
+            "stage": stage_name,
             "at_ms": int((time.monotonic() - self._t0) * 1000),
             "ms": ms,
             **payload,
@@ -81,10 +81,10 @@ class TurnTrace:
         return record
 
     @contextmanager
-    def stage(self, name: str, **payload: Any) -> Iterator[dict[str, Any]]:
+    def stage(self, stage_name: str, **payload: Any) -> Generator[dict[str, Any]]:
         """Time a block. Anything the block puts into the yielded dict lands in the record."""
         record: dict[str, Any] = {
-            "stage": name,
+            "stage": stage_name,
             "at_ms": int((time.monotonic() - self._t0) * 1000),
             **payload,
         }
@@ -95,8 +95,8 @@ class TurnTrace:
             record["ms"] = int((time.monotonic() - start) * 1000)
             self._emit(record)
 
-    def find(self, stage: str) -> list[dict[str, Any]]:
-        return [s for s in self.stages if s["stage"] == stage]
+    def find(self, stage_name: str) -> list[dict[str, Any]]:
+        return [s for s in self.stages if s["stage"] == stage_name]
 
     def to_dict(self) -> dict[str, Any]:
         return redact(

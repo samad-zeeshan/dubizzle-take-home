@@ -15,7 +15,57 @@ USD_TO_AED = 3.6725  # the dirham has been pegged at this rate since 1997
 
 ARABIC_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹", "01234567890123456789")
 
+DATASET_MAKES: tuple[str, ...] = (
+    "aston martin",
+    "audi",
+    "bentley",
+    "bestune",
+    "bmw",
+    "bugatti",
+    "byd",
+    "chery",
+    "chevrolet",
+    "dodge",
+    "ferrari",
+    "ford",
+    "genesis",
+    "gwm",
+    "haval",
+    "honda",
+    "hummer",
+    "hyundai",
+    "infiniti",
+    "jac",
+    "jaguar",
+    "jeep",
+    "kaiyi",
+    "kia",
+    "lamborghini",
+    "land rover",
+    "lexus",
+    "lincoln",
+    "maserati",
+    "mazda",
+    "mclaren",
+    "mercedes-benz",
+    "mini",
+    "mitsubishi",
+    "nissan",
+    "opel",
+    "peugeot",
+    "porsche",
+    "renault",
+    "rolls-royce",
+    "tesla",
+    "tova",
+    "toyota",
+    "volkswagen",
+    "volvo",
+    "xiaomi",
+)
+
 MAKE_ALIASES: dict[str, str] = {
+    **{m: m for m in DATASET_MAKES},
     "merc": "mercedes-benz",
     "mercedes": "mercedes-benz",
     "mercedes benz": "mercedes-benz",
@@ -305,7 +355,8 @@ def canonical_make(text: str) -> tuple[str | None, str]:
 
 
 def _phrase_in(phrase: str, text: str) -> bool:
-    return re.search(rf"(?<![\w-]){re.escape(phrase)}(?![\w-])", text) is not None
+    # A trailing s covers "hondas" and "suvs" without matching "hondal".
+    return re.search(rf"(?<![\w-]){re.escape(phrase)}(?:s|es)?(?![\w-])", text) is not None
 
 
 def resolve_make_model(text: str) -> tuple[str | None, str | None, list[str]]:

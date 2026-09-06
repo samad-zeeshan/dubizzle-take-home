@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Callable
 from typing import Any
 
 FIELD_ORDER = [
@@ -123,7 +124,7 @@ def render(listings: list[dict[str, Any]], meta: dict[str, Any]) -> str:
 
     lines.append("## Flags\n")
 
-    def ids(pred: Any) -> str:
+    def ids(pred: Callable[[dict[str, Any]], bool]) -> str:
         found = [row["id"] for row in listings if pred(row)]
         return f"{len(found)}: " + ", ".join(found) if found else "0"
 

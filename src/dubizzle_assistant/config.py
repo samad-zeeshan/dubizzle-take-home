@@ -51,8 +51,8 @@ class Settings(BaseSettings):
     embedding_model: str = "gemini/gemini-embedding-001"
     demo_now: datetime | None = None
 
-    rate_limit_per_min: int = 10
-    rate_limit_per_day: int = 200
+    rate_limit_per_min: int = 20
+    rate_limit_per_day: int = 300
     daily_llm_budget: int = 1000
     max_message_chars: int = 1000
     max_tool_iterations: int = 4
