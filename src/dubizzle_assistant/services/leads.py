@@ -11,10 +11,10 @@ from __future__ import annotations
 
 import contextlib
 import csv
+import hashlib
 import json
 import os
 import re
-import secrets
 import sqlite3
 import threading
 from datetime import datetime
@@ -166,7 +166,10 @@ def upsert(
         row = conn.execute("SELECT name FROM users WHERE user_id = ?", (user_id,)).fetchone()
         data["name"] = row["name"] if row else None
     status, reason = qualify(data)
-    lead_id = existing.get("lead_id") or ("L-" + secrets.token_hex(3).upper())
+    # One lead per user, so the id derives from the user id and replays identically.
+    lead_id = existing.get("lead_id") or (
+        "L-" + hashlib.sha1(user_id.encode()).hexdigest()[:6].upper()
+    )
     created = existing.get("created_at") or now.isoformat(timespec="seconds")
     with conn:
         conn.execute(

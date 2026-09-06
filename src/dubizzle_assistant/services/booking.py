@@ -15,6 +15,7 @@ import re
 import sqlite3
 import threading
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 import dateparser
@@ -400,7 +401,8 @@ def create_booking(
         "slot_label": label,
         "kind": kind,
         "message": f"Booked: {kind} for the {car['year']} {str(car['make']).title()} {str(car['model']).title()} ({listing_id}), {label}. Reference {ref}.",
-        "outbox_path": outbox,
+        # The file name only: an absolute path differs between machines and would break cassette replay.
+        "outbox_file": Path(outbox).name,
     }
 
 
