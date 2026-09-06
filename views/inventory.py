@@ -129,8 +129,9 @@ def page(h: dict[str, Any]) -> None:
     if not res:
         return
     rows = res["results"]
+    n = res["total_matches"]
     st.caption(
-        f"{res['total_matches']} matches"
+        f"{n} match{'' if n == 1 else 'es'}"
         + (f" · relaxed {res['relaxed_filters']}" if res.get("relaxed_filters") else "")
     )
     if not common.demo():

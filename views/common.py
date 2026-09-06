@@ -405,7 +405,7 @@ def car_card(c: dict[str, Any], show_index: bool = True, show_id: bool = True) -
         else f'<a class="imglink" href="{href}" target="_self"><div class="img"></div></a>'
     )
     price = money(c.get("price_aed")) or "Price not listed"
-    monthly = f"<small>or {money(c.get('monthly_aed'))}/mo</small>" if c.get("monthly_aed") else ""
+    monthly = f" <small>or {money(c.get('monthly_aed'))}/mo</small>" if c.get("monthly_aed") else ""
     body = str(c.get("body_type") or "")
     meta = " · ".join(
         p

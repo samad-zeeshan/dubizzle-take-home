@@ -256,16 +256,20 @@ def page(h: dict[str, Any]) -> None:
             if col.button(s, key=f"chat_starter_{s}", use_container_width=True):
                 st.session_state.pending_prompt = s
     msgs = st.session_state.messages
+    # Buttons live on the last reply that showed cars, and chips name any car seen this session.
+    with_cards = [i for i, m in enumerate(msgs) if (m.get("envelope") or {}).get("cars")]
+    hot = with_cards[-1] if with_cards else -1
+    seen_cars = [c for m in msgs for c in ((m.get("envelope") or {}).get("cars") or [])]
     for i, m in enumerate(msgs):
         with st.chat_message(m["role"]):
             if m["role"] == "assistant" and m.get("envelope"):
-                render_envelope(m["envelope"], latest=(i == len(msgs) - 1))
+                render_envelope(m["envelope"], latest=(i == hot))
             else:
                 st.markdown(m["content"])
     last = msgs[-1] if msgs else None
     if last and last.get("envelope") and last["envelope"].get("suggested_actions"):
         env = last["envelope"]
-        labels = [friendly(a, env.get("cars") or []) for a in env["suggested_actions"]]
+        labels = [friendly(a, seen_cars) for a in env["suggested_actions"]]
         cols = st.columns(len(labels))
         for col, label in zip(cols, labels, strict=True):
             if col.button(label, key=f"chip_{len(msgs)}_{label}", use_container_width=True):
