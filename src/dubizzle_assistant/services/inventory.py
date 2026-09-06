@@ -407,11 +407,18 @@ def _run_stage(
     elif mode == "embeddings":
         rows.sort(key=lambda r: (-(r.get("_cosine") or 0.0), r["id"]))
     elif scores:
-        # bm25 is negative in FTS5, lower is better. Listed prices then newer years break ties.
-        rows.sort(key=lambda r: (r["_bm25"], r["price_aed"] is None, -(r["year"] or 0), r["id"]))
+        # bm25 is negative in FTS5, lower is better. Listed figures then newer years break ties.
+        rows.sort(key=lambda r: (r["_bm25"], _unknown(r, f), -(r["year"] or 0), r["id"]))
     else:
-        rows.sort(key=lambda r: (r["price_aed"] is None, -(r["year"] or 0), r["id"]))
+        rows.sort(key=lambda r: (_unknown(r, f), -(r["year"] or 0), r["id"]))
     return rows, executed
+
+
+def _unknown(row: dict[str, Any], f: SearchFilters) -> bool:
+    # A soft pass must rank after a real match, and a monthly budget judges the instalment, not the cash price.
+    if f.monthly_max_aed is not None:
+        return row["monthly_aed"] is None
+    return row["price_aed"] is None
 
 
 def _sort_key(sort: str) -> Callable[[dict[str, Any]], tuple[Any, ...]]:

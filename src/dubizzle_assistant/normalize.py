@@ -293,11 +293,11 @@ def normalize_digits(text: str) -> str:
 
 
 def parse_number(raw: str) -> float | None:
-    """Parse '115,750.00', '25.000', '89 900', '1,349,999', '150k', '1.2M'."""
+    """Parse '115,750.00', '25.000', '89 900', '1,349,999', '150k', '1.2M', '150 thousand'."""
     s = normalize_digits(raw).strip().lower().replace(" ", " ")
-    m = re.fullmatch(r"(\d+(?:\.\d+)?)\s*(k|m)\b", s)
+    m = re.fullmatch(r"(\d+(?:\.\d+)?)\s*(k|m|thousand|million|mil)\b", s)
     if m:
-        return float(m.group(1)) * (1_000 if m.group(2) == "k" else 1_000_000)
+        return float(m.group(1)) * (1_000 if m.group(2) in ("k", "thousand") else 1_000_000)
     s = s.rstrip("/-").strip()
     # A dot followed by exactly three digits is a thousands separator here ("25.000AED").
     if re.fullmatch(r"\d{1,3}(?:[.,\s]\d{3})+", s):
@@ -320,7 +320,7 @@ _MONTHLY_HINT = re.compile(
     r"\b(a|per)\s+month\b|/\s*mo(nth)?\b|\bmonthly\b|\bp\.?m\.?\b|\binstal", re.I
 )
 _MONEY_RE = re.compile(
-    r"(\$|usd|dollars?|aed|dhs|dirhams?|درهم)?\s*(\d[\d,\. ]*\s*[km]?\b)\s*(\$|usd|dollars?|aed|dhs|dirhams?|درهم)?"
+    r"(\$|usd|dollars?|aed|dhs|dirhams?|درهم)?\s*(\d[\d,\. ]*\s*(?:k|m|thousand|million|mil)?\b)\s*(\$|usd|dollars?|aed|dhs|dirhams?|درهم)?"
 )
 
 
