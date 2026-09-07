@@ -469,9 +469,12 @@ def sidebar(h: dict[str, Any]) -> None:
         if on != demo():
             set_mode("demo" if on else "user")
             st.rerun()
+        if demo() and not h.get("debug_endpoints"):
+            st.caption("Admin needs DEBUG_ENDPOINTS=true on the backend")
         if demo():
             st.divider()
             llm = h["llm"]
+            inv = h.get("inventory") or {}
             st.markdown("**Backend**")
             rows = [
                 ("model", llm["model"]),
@@ -480,6 +483,8 @@ def sidebar(h: dict[str, Any]) -> None:
                 ("cassette", llm["cassette_mode"]),
                 ("verify", llm["verify_mode"]),
                 ("calls today", f"{llm['requests_today']} / {llm['budget']}"),
+                ("inventory", f"{inv.get('source_file', '?')} @ {inv.get('source_sha256', '?')}"),
+                ("enriched by", inv.get("llm_model") or "regex only"),
                 ("clock", f"frozen at {h['demo_clock']}" if h.get("demo_clock") else "live"),
                 ("user", st.session_state.user_id or "-"),
                 ("session", st.session_state.session_id or "-"),

@@ -31,7 +31,8 @@ pages = {
         url_path="inventory",
     ),
 }
-if common.demo():
+# The admin page reads /admin/*, which the backend only mounts when DEBUG_ENDPOINTS is on.
+if common.demo() and h.get("debug_endpoints"):
     pages["admin"] = st.Page(
         lambda: admin.page(h),
         title="Admin",
