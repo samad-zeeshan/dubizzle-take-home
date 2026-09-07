@@ -363,25 +363,35 @@ def create_booking(
         return {"ok": False, "reason": cap, "alternatives": []}
     end = start + timedelta(hours=1)
     ref = _next_ref(conn)
-    try:
-        with conn:
-            conn.execute(
-                "INSERT INTO bookings (ref, user_id, listing_id, slot_start, slot_end, status, created_at) VALUES (?,?,?,?,?,'confirmed',?)",
-                (
-                    ref,
-                    user_id,
-                    listing_id,
-                    start.isoformat(timespec="minutes"),
-                    end.isoformat(timespec="minutes"),
-                    now.isoformat(timespec="seconds"),
-                ),
-            )
-    except sqlite3.IntegrityError:
-        return {
-            "ok": False,
-            "reason": "that slot was just taken, or you already hold a viewing at that hour",
-            "alternatives": next_free_slots(conn, listing_id, start, now),
-        }
+    for attempt in range(2):
+        try:
+            with conn:
+                conn.execute(
+                    "INSERT INTO bookings (ref, user_id, listing_id, slot_start, slot_end, status, created_at) VALUES (?,?,?,?,?,'confirmed',?)",
+                    (
+                        ref,
+                        user_id,
+                        listing_id,
+                        start.isoformat(timespec="minutes"),
+                        end.isoformat(timespec="minutes"),
+                        now.isoformat(timespec="seconds"),
+                    ),
+                )
+            break
+        except sqlite3.IntegrityError as e:
+            # The ref is COUNT(*)+1 read outside this transaction, so two writers can pick the
+            # same one. That is a clash in our own numbering, and telling the customer their
+            # slot was taken when it was not sends them away from a free appointment.
+            if attempt or "bookings.ref" not in str(e):
+                return {
+                    "ok": False,
+                    "reason": "that slot was just taken, or you already hold a viewing at that hour",
+                    "alternatives": next_free_slots(conn, listing_id, start, now),
+                }
+            n = int(ref.removeprefix("BK-")) + 1
+            while conn.execute("SELECT 1 FROM bookings WHERE ref = ?", (f"BK-{n:04d}",)).fetchone():
+                n += 1
+            ref = f"BK-{n:04d}"
     cards = inv.get_cards(conn, [listing_id])
     car = cards[0] if cards else {"id": listing_id, "year": "", "make": "", "model": ""}
     label = slot_label(start)

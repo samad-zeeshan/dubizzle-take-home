@@ -106,3 +106,20 @@ def test_availability_grid_states(tmp_path, app_settings):
         for s in next(d for d in this_week["days"] if d["weekday"] == "Saturday")["slots"]
     }
     assert saturday[9] == "past" and saturday[19] == "free"
+
+
+def test_a_reference_collision_is_retried(tmp_path, app_settings, monkeypatch):
+    conn = fresh(tmp_path, app_settings)
+    first = booking.create_booking(conn, app_settings, "u1", "C-003", at(2, 10), NOW)
+    assert first["ok"] and first["ref"] == "BK-0001"
+
+    # Two writers reading COUNT(*)+1 at the same moment both pick BK-0001. The second one
+    # is not a clash on the slot, so the customer must not be turned away from a free hour.
+    monkeypatch.setattr(booking, "_next_ref", lambda _conn: "BK-0001")
+    second = booking.create_booking(conn, app_settings, "u2", "C-044", at(2, 11), NOW)
+    assert second["ok"] and second["ref"] == "BK-0002"
+
+    # A real slot clash still reads as one. It is caught before the insert, which is why an
+    # IntegrityError on this table is nearly always the reference and not the slot.
+    taken = booking.create_booking(conn, app_settings, "u3", "C-003", at(2, 10), NOW)
+    assert not taken["ok"] and "already taken" in taken["reason"]
