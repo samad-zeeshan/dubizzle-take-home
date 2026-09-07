@@ -147,3 +147,35 @@ def test_summary_kicks_in_on_long_sessions(tmp_path):
         ).json()
         prompt = c.get(f"/debug/prompt/{sid}").json()
         assert "summary" in [b["name"] for b in prompt["blocks"]]
+
+
+def test_a_refresh_gets_the_whole_transcript_back(tmp_path):
+    """F5 rebuilds the chat from GET /sessions/{id}, so the window the prompt uses must not reach it."""
+    from fastapi.testclient import TestClient
+
+    from dubizzle_assistant.api.app import create_app
+    from tests.conftest import make_settings
+
+    asked = [f"show me hondas {i}" if i % 3 else "hi" for i in range(15)]
+    with TestClient(create_app(make_settings(tmp_path, history_turns=2))) as c:
+        uid = sid = None
+        for m in asked:
+            body = {"message": m}
+            body.update({"user_id": uid, "session_id": sid} if sid else {"name": "Refresh"})
+            e = c.post("/chat", json=body).json()
+            uid, sid = e["user_id"], e["session_id"]
+        got = c.get(f"/sessions/{sid}").json()
+
+    assert got["session"]["turn_counter"] == 15
+    assert sorted({m["turn"] for m in got["messages"]}) == list(range(1, 16))
+    # What the client keeps after the filter in views.common.restore_history.
+    kept = [
+        m
+        for m in got["messages"]
+        if m["role"] in ("user", "assistant")
+        and isinstance(m.get("content"), str)
+        and m["content"].strip()
+        and not m["content"].startswith("{")
+    ]
+    assert [m["content"] for m in kept if m["role"] == "user"] == asked
+    assert sum(1 for m in kept if m["role"] == "assistant") == 15
