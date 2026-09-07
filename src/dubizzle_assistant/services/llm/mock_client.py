@@ -30,6 +30,10 @@ _CONFIRM_RE = re.compile(
 )
 _CANCEL_RE = re.compile(r"\bcancel\b", re.I)
 _COMPARE_RE = re.compile(r"\bcompare|\bvs\.?\b|\bversus\b|\bdifference between\b", re.I)
+_SIMILAR_RE = re.compile(
+    r"\b(similar|alternatives?|comparable|(?:other|more) (?:cars|ones|options) like|anything (?:else )?like|something like|cars like (?:this|that|it))\b",
+    re.I,
+)
 _LIKE_RE = re.compile(
     r"\b(i like|i love|save|shortlist|favou?rite|remember that one|i'll take)\b", re.I
 )
@@ -221,7 +225,288 @@ def _card_line(c: dict[str, Any]) -> str:
     if c.get("has_warranty"):
         bits.append("warranty mentioned")
     idx = c.get("display_index")
-    return f"{'#' + str(idx) + ' ' if idx else ''}{c['id']}: {c['year']} {str(c['make']).title()} {str(c['model']).title()} ({', '.join(bits)})"
+    return (
+        f"{'#' + str(idx) + ' ' if idx else ''}{c['year']} {str(c['make']).title()} "
+        f"{str(c['model']).title()} ({', '.join(bits)})"
+    )
+
+
+def _val(c: dict[str, Any], key: str) -> Any:
+    """Condition and inferred fields arrive wrapped; everything else is a plain value."""
+    v = c.get(key)
+    return v.get("value") if isinstance(v, dict) else v
+
+
+def _evidence(c: dict[str, Any], key: str) -> str:
+    v = c.get(key)
+    return str(v.get("evidence") or "") if isinstance(v, dict) else ""
+
+
+def _is_inferred(c: dict[str, Any], key: str) -> bool:
+    v = c.get(key)
+    return isinstance(v, dict) and v.get("source") == "inferred"
+
+
+def _quote(c: dict[str, Any], key: str, fallback: str) -> str:
+    ev = _evidence(c, key)
+    return f' The listing says: "{ev}".' if ev else fallback
+
+
+# The offline model answers each buyer question from the tool result and nothing else, so an
+# offline reply is grounded by construction. Order matters: the first pattern that matches wins.
+_TOPICS: tuple[tuple[str, str], ...] = (
+    ("economy", r"fuel econom|l/100|litres per|km/l|\bmpg\b"),
+    ("mileage", r"kilomet|mileage|\bkms?\b|how many km"),
+    ("negotiable", r"negotiab|best offer|discount|haggle"),
+    ("instalment", r"instal|monthly|per month|down ?payment|finance"),
+    ("fuel", r"fuel type|engine size|what engine|cylinder|horse ?power"),
+    ("price", r"price|how much|cost|\bvat\b|out.the.door"),
+    ("warranty", r"warrant"),
+    ("service", r"service (record|histor)|maintenance log|full service|fsh"),
+    ("accident", r"accident|repaint|body ?work|\brust\b"),
+    ("flood", r"flood|chassis|frame repair"),
+    ("faults", r"mechanical issue|warning light|check engine|known (issue|problem|fault)|\bfault"),
+    ("owners", r"previous owner|how many owner|\bowners?\b"),
+    ("tyres", r"\btyre|\btire"),
+    ("brakes", r"\bbrake|\bbatter"),
+    ("carplay", r"carplay|android auto"),
+    ("assist", r"lane assist|lane depart|blind spot|adaptive cruise|automatic brak|safety feature"),
+    ("airbags", r"airbag"),
+    ("interior", r"interior|leather|cloth|fabric|upholster"),
+    ("colour", r"colou?r"),
+    ("seats", r"how many seat|\bseats?\b|seater"),
+    ("transmission", r"transmission|gearbox|\bcvt\b|dual.clutch|automatic or manual"),
+    ("timing", r"timing (belt|chain)"),
+    ("recall", r"recall"),
+    ("history_use", r"rental|taxi|uber|careem|fleet"),
+    ("inspection", r"inspect|120.?point|own mechanic|independent mechanic|\bppi\b"),
+    ("trade", r"trade.?in|part exchange|my (current )?car worth|worth"),
+    ("spec", r"\bgcc\b|regional spec|import|registered|registration|mulkiya"),
+)
+
+
+def _first_search(patterns: tuple[str, ...], text: str) -> re.Match[str] | None:
+    """The first pattern that matches anywhere, rather than the leftmost match overall."""
+    for p in patterns:
+        m = re.search(p, text, re.I)
+        if m:
+            return m
+    return None
+
+
+def _topic(low: str) -> str | None:
+    for topic, pattern in _TOPICS:
+        if re.search(pattern, low, re.I):
+            return topic
+    return None
+
+
+def _listing_answer(c: dict[str, Any], user: str) -> str:  # noqa: PLR0911, PLR0912
+    """One grounded sentence per buyer question, or an honest "the listing does not say"."""
+    low = user.lower()
+    car = f"the {c['year']} {str(c['make']).title()} {str(c['model']).title()}"
+    nothing = f"The listing for {car} does not state that."
+    topic = _topic(low)
+
+    if topic == "mileage":
+        km = _val(c, "mileage_km")
+        if km is not None:
+            return f"{car} has {int(km):,} km on the odometer."
+        if _val(c, "is_brand_new"):
+            return f"{car} is listed as brand new."
+        return f"The listing for {car} does not state the mileage."
+    if topic == "economy":
+        return f"The listing for {car} does not state fuel economy. No listing here carries a consumption figure."
+    if topic == "fuel":
+        fuel = _val(c, "fuel_type")
+        # Ordered, not alternated: a bare "V4" in the title should not win over "4 cylinders"
+        # later in the ad, which is what re.search over one alternation would pick.
+        engine = _first_search(
+            (
+                r"cylinders?\s*[:\-]?\s*V?\d[^.|]{0,30}",
+                r"\d\s?cylinders?\b[^.|]{0,40}",
+                r"\d{3,4}\+?\s?cc\b[^.|]{0,50}",
+                r"\bV[468]\b[^.|]{0,40}",
+                # The litre needs its unit: a bare 2.5 also appears in "2.5% for Car insurance".
+                r"\d\.\d\s?[lL]\b[^.|]{0,60}",
+                r"\d{2,4}\s?-?\s?\d{0,3}\s?hp\b",
+                # Last resort for "T-Roc 1.4 Style", where the litre carries no unit at all.
+                r"\b\d\.\d\b(?!\s*%)[^.|]{0,40}",
+            ),
+            f"{c.get('title') or ''} {c.get('listing_text') or ''}",
+        )
+        engine_note = (
+            f' The listing says: "{" ".join(engine.group(0).split())}".'
+            if engine
+            else " The listing does not state the engine size."
+        )
+        if fuel and _is_inferred(c, "fuel_type"):
+            return (
+                f"This model is normally {fuel}, but the listing for {car} does not state the fuel "
+                f"type.{engine_note}"
+            )
+        if fuel:
+            return f"{car} is {fuel}.{engine_note}"
+        return f"The listing for {car} does not state the fuel type.{engine_note}"
+    if topic == "price":
+        vat = _val(c, "price_vat_status")
+        note = (
+            " The listing prices it excluding 5% VAT."
+            if vat == "excl"
+            else " The listing says the price includes VAT."
+            if vat == "incl"
+            else " The listing does not mention VAT or registration fees."
+        )
+        if _val(c, "price_aed"):
+            return f"{car} is listed at {_money(_val(c, 'price_aed'))}.{note}"
+        monthly = _val(c, "monthly_aed")
+        tail = f", only an instalment of AED {int(monthly):,} per month" if monthly else ""
+        return f"The listing for {car} does not state a total price{tail}.{note}"
+    if topic == "instalment":
+        monthly, down = _val(c, "monthly_aed"), _val(c, "down_payment_pct")
+        if monthly:
+            extra = f" with {down}% down" if down else ", and the listing does not state a deposit"
+            return f"{car} is offered at AED {int(monthly):,} per month{extra}."
+        return f"The listing for {car} does not state a monthly instalment."
+    if topic == "warranty":
+        if _val(c, "has_warranty"):
+            return f"{car} is listed with a warranty: {_val(c, 'warranty_text') or 'as written in the ad'}."
+        return f"The listing for {car} does not mention a warranty."
+    if topic == "service":
+        history = _val(c, "service_history")
+        if history:
+            return (
+                f"{car} is listed with {history} service history.{_quote(c, 'service_history', '')}"
+            )
+        if _val(c, "service_contract"):
+            return f"{car} comes with a service contract, as the listing puts it."
+        return f"The listing for {car} does not mention service records."
+    if topic == "accident":
+        bits = []
+        if _val(c, "accident_free"):
+            bits.append("no accidents")
+        if _val(c, "original_paint"):
+            bits.append("original paint")
+        if bits:
+            return f"{car} is listed as {' with '.join(bits)}.{_quote(c, 'accident_free', '')}"
+        return f"The listing for {car} does not mention accident or paint history."
+    if topic == "flood":
+        if _val(c, "no_flood"):
+            return f"{car} is listed with no flood damage.{_quote(c, 'no_flood', '')}"
+        return f"The listing for {car} does not mention flood damage or chassis repair."
+    if topic == "faults":
+        if _val(c, "no_faults"):
+            return f"{car} is listed as free of mechanical faults.{_quote(c, 'no_faults', '')}"
+        return f"The listing for {car} does not mention any faults or warning lights."
+    if topic == "owners":
+        owners = _val(c, "owners")
+        if owners:
+            return f"{car} is listed with {owners} previous owner{'s' if int(owners) != 1 else ''}."
+        return f"The listing for {car} does not state how many owners it has had."
+    if topic == "tyres":
+        if _val(c, "new_tyres"):
+            return f"{car} is listed with new tyres, but no replacement date is given."
+        return f"The listing for {car} does not mention the tyres or when they were replaced."
+    if topic == "brakes":
+        text = str(c.get("listing_text") or "")
+        m = re.search(r"[^.|]*\b(brake|batter)\w*[^.|]*", text, re.I)
+        if m:
+            return f'{car}: the listing says "{" ".join(m.group(0).split())}".'
+        return f"The listing for {car} does not mention the brakes or the battery."
+    if topic == "carplay":
+        if _val(c, "has_carplay"):
+            return f"Yes, {car} is listed with Apple CarPlay or Android Auto."
+        return f"The listing for {car} does not mention CarPlay or Android Auto."
+    if topic == "assist":
+        labels = _val(c, "driver_assist")
+        if labels:
+            return f"{car} is listed with {', '.join(str(x) for x in labels)}."
+        return f"The listing for {car} does not mention driver assistance features."
+    if topic == "airbags":
+        text = str(c.get("listing_text") or "")
+        m = re.search(r"[^.|]*airbag\w*[^.|]*", text, re.I)
+        if m:
+            return f'{car}: the listing says "{" ".join(m.group(0).split())}". It gives no airbag count.'
+        return f"The listing for {car} does not state how many airbags it has."
+    if topic == "interior":
+        bits = []
+        if _val(c, "has_leather"):
+            bits.append("leather")
+        if _val(c, "interior_color"):
+            bits.append(f"{_val(c, 'interior_color')} interior")
+        if bits:
+            return f"{car} is listed with {' and a '.join(bits)}."
+        trim = re.search(
+            r"[^.|]*\b(?:cloth|fabric|alcantara|velour|suede)\b[^.|]*",
+            str(c.get("listing_text") or ""),
+            re.I,
+        )
+        if trim:
+            return f'{car}: the listing says "{" ".join(trim.group(0).split())}".'
+        return f"The listing for {car} does not state the interior material or colour."
+    if topic == "colour":
+        if _val(c, "exterior_color"):
+            return f"{car} is {_val(c, 'exterior_color')}."
+        return f"The listing for {car} does not state the colour."
+    if topic == "seats":
+        seats = _val(c, "seats")
+        if seats:
+            return f"{car} is listed as a {int(seats)} seat car."
+        return f"The listing for {car} does not state the number of seats."
+    if topic == "transmission":
+        gearbox = _val(c, "transmission")
+        if gearbox and _is_inferred(c, "transmission"):
+            return (
+                f"This model is normally {gearbox}, but the listing for {car} does not state the "
+                "transmission."
+            )
+        if gearbox:
+            return f"{car} is listed as {gearbox}.{_quote(c, 'transmission', '')}"
+        return f"The listing for {car} does not state the transmission."
+    if topic == "timing":
+        return (
+            f"The listing for {car} does not mention the timing belt or chain. A mechanic can "
+            "check it at the viewing."
+        )
+    if topic == "recall":
+        return (
+            f"The listing for {car} does not cover recalls. That is a check with the "
+            "manufacturer rather than something a listing carries."
+        )
+    if topic == "history_use":
+        return (
+            f"The listing for {car} does not say whether it was a rental, taxi, or rideshare car."
+        )
+    if topic == "negotiable":
+        negotiable = _val(c, "negotiable")
+        if negotiable is True:
+            return f"{car} is listed as negotiable.{_quote(c, 'negotiable', '')}"
+        if negotiable is False:
+            return f"{car} is listed at a fixed price."
+        return f"The listing for {car} does not say whether the price is negotiable."
+    if topic == "inspection":
+        if _val(c, "is_dubizzle_managed"):
+            return (
+                f"{car} is a dubizzle managed car, so it comes with a 120-point inspection report."
+            )
+        return (
+            f"The listing for {car} does not mention an inspection. You can arrange your own "
+            "mechanic to look at it at the viewing."
+        )
+    if topic == "trade":
+        if _val(c, "trade_in_accepted"):
+            return f"The listing for {car} mentions trade-in.{_quote(c, 'trade_in_accepted', '')} I cannot value your own car, but I can note it as a sale."
+        return (
+            f"The listing for {car} does not mention trade-in, and I cannot value your own car. "
+            "I can note what you want to sell so the team follows up."
+        )
+    if topic == "spec":
+        spec = _val(c, "regional_spec")
+        if spec:
+            return f"{car} is {str(spec).upper()} spec. The listing does not state its registration status."
+        return f"The listing for {car} does not state the regional spec or registration."
+    summary = c.get("english_summary") or nothing
+    return f"{car}: {summary}"
 
 
 def _reply_for_results(results: list[dict[str, Any]], user: str) -> tuple[str, list[str]]:
@@ -251,42 +536,23 @@ def _reply_for_results(results: list[dict[str, Any]], user: str) -> tuple[str, l
             c = data
             if "error" in c:
                 return (c["error"], [])
-            low = user.lower()
-            name_str = (
-                f"the {c['year']} {str(c['make']).title()} {str(c['model']).title()} ({c['id']})"
+            return (_listing_answer(c, user), [c["id"]])
+        if name == "similar_listings":
+            if "error" in data:
+                return (data["error"], [])
+            a = data.get("anchor") or {}
+            label = f"the {a['year']} {str(a['make']).title()} {str(a['model']).title()}"
+            cars = data.get("results", [])
+            if not cars:
+                return (
+                    f"Nothing else in the inventory comes close to {label} on body type or price.",
+                    [a["id"]],
+                )
+            lines = "\n".join(f"- {_card_line(c)}: {c.get('vs_anchor', '')}" for c in cars)
+            return (
+                f"Cars like {label}, listed at {_money(a.get('price_aed'))}:\n{lines}",
+                [a["id"], *[c["id"] for c in cars]],
             )
-            if re.search(r"mileage|km|kilomet", low):
-                ans = (
-                    f"{name_str} has {int(c['mileage_km']):,} km on the odometer."
-                    if c.get("mileage_km") is not None
-                    else f"The listing for {name_str} does not state the mileage."
-                )
-            elif "warrant" in low:
-                ans = (
-                    f"Yes, the listing for {name_str} mentions a warranty: {c.get('warranty_text') or 'details as listed'}."
-                    if c.get("has_warranty")
-                    else f"The listing for {name_str} does not mention a warranty."
-                )
-            elif re.search(r"price|how much|cost", low):
-                ans = (
-                    f"{name_str} is listed at {_money(c['price_aed'])}."
-                    if c.get("price_aed")
-                    else f"The listing for {name_str} does not state a total price"
-                    + (
-                        f", only an instalment of AED {int(c['monthly_aed']):,} per month."
-                        if c.get("monthly_aed")
-                        else "."
-                    )
-                )
-            elif "colo" in low:
-                ans = (
-                    f"{name_str} is {c['exterior_color']}."
-                    if c.get("exterior_color")
-                    else f"The listing for {name_str} does not state the colour."
-                )
-            else:
-                ans = f"{name_str}: {c.get('english_summary', '')}"
-            return (ans, [c["id"]])
         if name == "compare_listings":
             cards = data.get("cards", [])
             return (
@@ -487,6 +753,12 @@ class HeuristicLLM:
                     )
                 ]
             )
+        if _SIMILAR_RE.search(low) and "similar_listings" in available and (explicit or focus):
+            return self._resp(
+                calls=[
+                    self._call("similar_listings", listing_id=explicit[0] if explicit else focus)
+                ]
+            )
         if _COMPARE_RE.search(low) and "compare_listings" in available:
             ids = explicit or shown[:2]
             if focus and focus in shown and len(explicit) == 1:
@@ -524,22 +796,20 @@ class HeuristicLLM:
         ):
             return self._resp(calls=[self._call("get_listing", listing_id=resolved)])
         args = _search_args(user)
-        searchy = any(
-            k in args
-            for k in (
-                "make",
-                "model",
-                "body_type",
-                "color",
-                "budget_text",
-                "year_min",
-                "fuel_type",
-                "is_brand_new",
-                "regional_spec",
-                "keywords",
-                "sort",
-                "is_dubizzle_managed",
-            )
+        # "what colour is the interior" carries a colour word but is a question about the car in
+        # focus, not a search for one. Colour and body only start a search when nothing is pinned.
+        strong = ("make", "model", "budget_text", "year_min", "sort")
+        weak = (
+            "keywords",
+            "body_type",
+            "color",
+            "fuel_type",
+            "is_brand_new",
+            "regional_spec",
+            "is_dubizzle_managed",
+        )
+        searchy = any(k in args for k in strong) or (
+            not (explicit or focus) and any(k in args for k in weak)
         )
         if (
             (explicit or focus)
