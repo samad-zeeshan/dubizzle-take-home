@@ -1,4 +1,8 @@
-"""Leads: the contact form that bypasses the model, and the CSV a reviewer opens afterwards."""
+"""Leads: the contact form that bypasses the model, and the CSV a reviewer opens afterwards.
+
+The account form posts a contact whatever the deployment, so that route is always on. Reading
+the lead table back is the admin page's job and rides with the rest of the debug endpoints.
+"""
 
 from __future__ import annotations
 
@@ -14,6 +18,7 @@ from dubizzle_assistant.config import Settings
 from dubizzle_assistant.services import leads, memory
 
 router = APIRouter(tags=["leads"])
+admin_router = APIRouter(tags=["leads"])
 
 
 class Contact(BaseModel):
@@ -44,12 +49,12 @@ def contact(
     )
 
 
-@router.get("/leads")
+@admin_router.get("/leads")
 def list_leads(conn: sqlite3.Connection = Depends(get_conn)) -> list[dict[str, Any]]:
     return leads.all_leads(conn)
 
 
-@router.get("/leads.csv")
+@admin_router.get("/leads.csv")
 def leads_csv(
     settings: Settings = Depends(get_settings_dep), conn: sqlite3.Connection = Depends(get_conn)
 ) -> FileResponse:

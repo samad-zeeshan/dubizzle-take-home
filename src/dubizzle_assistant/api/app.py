@@ -113,6 +113,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     if settings.debug_endpoints:
         app.include_router(debug.router)
         app.include_router(admin.router)
+        # Reading the lead table back only ever serves the admin page; the contact form does not.
+        app.include_router(leads.admin_router)
 
     async def retrieval_unavailable(_: Request, exc: Exception) -> JSONResponse:
         return JSONResponse(status_code=503, content={"detail": str(exc)})

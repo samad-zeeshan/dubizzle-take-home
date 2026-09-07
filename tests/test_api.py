@@ -25,8 +25,26 @@ def test_every_router_is_mounted(client):
     # These four used to be imported in a try/except that swallowed any ImportError,
     # so a typo inside one of them removed its routes without a word.
     paths = client.get("/openapi.json").json()["paths"]
-    for p in ("/bookings", "/leads.csv", "/chat/stream", "/inventory/{listing_id}/availability"):
+    for p in (
+        "/bookings",
+        "/leads/contact",
+        "/chat/stream",
+        "/inventory/{listing_id}/availability",
+    ):
         assert p in paths, p
+
+
+def test_reading_the_lead_table_needs_the_debug_flag(tmp_path):
+    from fastapi.testclient import TestClient
+
+    from dubizzle_assistant.api.app import create_app
+    from tests.conftest import make_settings
+
+    with TestClient(create_app(make_settings(tmp_path, debug_endpoints=False))) as c:
+        paths = c.get("/openapi.json").json()["paths"]
+    # The account form posts contacts on any deployment; only the admin page reads them back.
+    assert "/leads/contact" in paths
+    assert "/leads" not in paths and "/leads.csv" not in paths
 
 
 def test_search_honda(client):
