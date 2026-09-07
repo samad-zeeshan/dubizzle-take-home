@@ -18,6 +18,9 @@ import httpx
 import streamlit as st
 import streamlit.components.v1 as components
 
+from views.i18n import LANGS, enum_label
+from views.i18n import t as _t
+
 BACKEND = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000").rstrip("/")
 TIMEOUT = 120
 # Sayara: Arabic for car. One place to rename the product; the wordmark in assets/ is a separate drawing.
@@ -50,7 +53,7 @@ ICONS = {
 # Buttons with help= sit inside a tooltip wrapper, so button rules use descendant selectors, not >.
 CSS = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap');
 :root{--brand:#E3262E;--brand-dark:#B3161E;--brand-soft:rgba(227,38,46,.16);--ink:#F4F4F5;--slate:#C9C9CE;--muted:#9A9AA1;--line:#2A2A2E;--bg:#0F0F10;--card:#18181A;--card-2:#1E1E21;--ok-bg:rgba(34,197,94,.16);--ok-fg:#86EFAC;--radius:16px;--shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px -18px rgba(0,0,0,.8);--ease:cubic-bezier(.2,.7,.2,1)}
 html,body,[data-testid="stAppViewContainer"]{font-family:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:var(--bg)}
 h1,h2,h3,.hero h1,.tile h3{font-family:'Space Grotesk','DM Sans',system-ui,sans-serif;letter-spacing:-.01em;color:var(--ink)}
@@ -140,6 +143,16 @@ div[data-testid="stButton"] button:focus-visible,div[data-testid="stFormSubmitBu
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}#cursor-glow{display:none}}
 @media (max-width:1024px){.bento,.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:640px){.bento,.stats{grid-template-columns:1fr}.hero{padding:1.8rem 1.3rem}.hero h1{font-size:2.1rem}}
+/* Arabic: mirror our own markup and hand the whole tree an Arabic face. Streamlit's own
+   widgets read the dir attribute on the root, which is why it is set there and not on .stApp. */
+[dir=rtl] html,[dir=rtl] body,[dir=rtl] [data-testid="stAppViewContainer"],[dir=rtl] [data-testid="stSidebar"]{font-family:'IBM Plex Sans Arabic','DM Sans',system-ui,sans-serif}
+[dir=rtl] h1,[dir=rtl] h2,[dir=rtl] h3,[dir=rtl] .hero h1,[dir=rtl] .tile h3,[dir=rtl] .section{font-family:'IBM Plex Sans Arabic','Space Grotesk',sans-serif;letter-spacing:0}
+[dir=rtl] .car,[dir=rtl] .tile,[dir=rtl] .hero,[dir=rtl] .stat,[dir=rtl] .kv{text-align:right}
+[dir=rtl] .badges,[dir=rtl] .meta{flex-direction:row-reverse;justify-content:flex-end}
+[dir=rtl] .idx{left:auto;right:.6rem}
+/* Prices, kilometres and years stay left-to-right inside an Arabic sentence, or the digits
+   and the currency word swap round and the figure reads wrong. */
+[dir=rtl] .price,[dir=rtl] .kv b,[dir=rtl] .stat b{direction:ltr;unicode-bidi:embed;display:inline-block}
 </style>
 """
 
@@ -223,6 +236,27 @@ _GLOW_JS = """
 """
 
 
+_DIR_JS = """
+<script>
+(function () {
+  var doc = window.parent && window.parent.document;
+  if (!doc) return;
+  var lang = "__LANG__", dir = lang === "ar" ? "rtl" : "ltr";
+  // Dialogs, popovers and toasts mount on body rather than inside the app container, so the
+  // attribute goes on the root where every one of them inherits it.
+  doc.documentElement.setAttribute("lang", lang);
+  doc.documentElement.setAttribute("dir", dir);
+  doc.body.setAttribute("dir", dir);
+})();
+</script>
+"""
+
+
+def direction() -> None:
+    """Set lang and dir on the host page so Streamlit's own widgets mirror too."""
+    components.html(_DIR_JS.replace("__LANG__", lang()), height=0)
+
+
 def cursor_glow() -> None:
     """A soft red glow that follows the pointer. Runs from a same-origin component frame because markdown strips scripts."""
     components.html(_GLOW_JS, height=0)
@@ -267,6 +301,7 @@ def init_state() -> None:
     st.session_state.setdefault("messages", [])
     st.session_state.setdefault("pending_prompt", None)
     st.session_state.setdefault("mode", st.query_params.get("mode", "user"))
+    st.session_state.setdefault("lang", st.query_params.get("lang", "en"))
     if not st.session_state.session_id and "session" in st.query_params:
         st.session_state.session_id = st.query_params["session"]
     if not st.session_state.user_id and "user" in st.query_params:
@@ -315,6 +350,22 @@ def for_display(text: str) -> str:
     return text if demo() else without_ids(text)
 
 
+def lang() -> str:
+    return st.session_state.get("lang", "en")
+
+
+def t(key: str, **fmt: object) -> str:
+    return _t(key, lang(), **fmt)
+
+
+def set_lang(code: str) -> None:
+    st.session_state.lang = code
+    if code == "ar":
+        st.query_params["lang"] = "ar"
+    else:
+        st.query_params.pop("lang", None)
+
+
 def set_mode(mode: str) -> None:
     st.session_state.mode = mode
     if mode == "demo":
@@ -355,7 +406,7 @@ def forget() -> None:
     st.query_params.pop("user", None)
     new_session()
     st.session_state.flash = (
-        "Forgotten. Your profile, searches, likes, bookings, and contact details are gone.",
+        t("acct.forgotten"),
         ":material/delete:",
     )
 
@@ -382,31 +433,32 @@ def ask_href(listing_id: str) -> str:
 
 
 def money(n: Any) -> str:
-    return f"AED {int(n):,}" if n else ""
+    if not n:
+        return ""
+    # The dirham sits after the figure in Arabic, and the digits stay Western so the
+    # grounding check still reads them back against the listing.
+    return f"{int(n):,} درهم" if lang() == "ar" else f"AED {int(n):,}"
 
 
-@st.dialog("Your account")
+@st.dialog("Your account")  # Streamlit needs a literal title here
 def account() -> None:
     """Who you are, your contact details, and your bookings. A name is enough; the chat can take it too."""
     if not st.session_state.user_id:
-        st.write(
-            "Tell me your name and I will remember your searches, the cars you liked, and your "
-            "bookings next time. Saying hi in the chat works too."
-        )
+        st.write(t("acct.intro"))
         with st.form("identify", border=False):
-            name = st.text_input("Name", placeholder="Sara")
-            go = st.form_submit_button("Continue", type="primary", use_container_width=True)
+            name = st.text_input(t("acct.name"), placeholder="Sara")
+            go = st.form_submit_button(t("acct.continue"), type="primary", use_container_width=True)
         if go and name.strip():
             identify(name.strip())
             st.rerun()
         return
-    st.markdown(f"Signed in as **{st.session_state.user_name}**")
-    st.markdown("**Contact details**")
-    st.caption("Saved straight to the backend, never through the model.")
+    st.markdown(t("acct.signed_in", name=st.session_state.user_name))
+    st.markdown(t("acct.contact"))
+    st.caption(t("acct.contact_note"))
     with st.form("contact", border=False):
         c1, c2 = st.columns(2)
-        phone = c1.text_input("Phone (UAE mobile)")
-        email = c2.text_input("Email")
+        phone = c1.text_input(t("acct.phone"))
+        email = c2.text_input(t("acct.email"))
         if st.form_submit_button("Save") and (phone or email):
             r = api(
                 "POST",
@@ -418,7 +470,7 @@ def account() -> None:
                 },
             )
             st.write(r.json().get("problems") or f"Saved. Lead status: {r.json().get('status')}")
-    st.markdown("**Bookings**")
+    st.markdown(t("acct.bookings"))
     r = api("GET", "/bookings", params={"user_id": st.session_state.user_id})
     bookings = r.json() if r.status_code == 200 else []
     if bookings:
@@ -434,17 +486,17 @@ def account() -> None:
             ]
         )
     else:
-        st.caption("No viewings yet. Ask the chat to book one.")
-    with st.expander("Not you?"), st.form("switch", border=False):
-        other = st.text_input("Your name", placeholder="Layla")
+        st.caption(t("acct.no_bookings"))
+    with st.expander(t("acct.not_you")), st.form("switch", border=False):
+        other = st.text_input(t("acct.your_name"), placeholder="Layla")
         if st.form_submit_button("Switch", use_container_width=True) and other.strip():
             identify(other.strip())
             st.rerun()
     if st.button(
-        "Forget me",
+        t("acct.forget"),
         type="tertiary",
         icon=":material/delete:",
-        help="Deletes your profile, searches, likes, bookings, and contact details.",
+        help=t("acct.forget_help"),
     ):
         forget()
         st.rerun()
@@ -476,16 +528,26 @@ def sidebar(h: dict[str, Any]) -> None:
             help="Your name, contact details, and bookings.",
         ):
             account()
+        picked_lang = st.segmented_control(
+            t("side.language"),
+            options=list(LANGS),
+            format_func=lambda c: "English" if c == "en" else "العربية",
+            default=lang(),
+            key="lang_pick",
+        )
+        if picked_lang and picked_lang != lang():
+            set_lang(picked_lang)
+            st.rerun()
         on = st.toggle(
-            "Demo mode",
+            t("side.demo"),
             value=demo(),
-            help="Shows the trace, prompt, retrieval, grounding, and memory under every reply, plus the admin page.",
+            help=t("side.demo_help"),
         )
         if on != demo():
             set_mode("demo" if on else "user")
             st.rerun()
         if demo() and not h.get("debug_endpoints"):
-            st.caption("Admin needs DEBUG_ENDPOINTS=true on the backend")
+            st.caption(t("side.admin_flag"))
         if demo():
             st.divider()
             llm = h["llm"]
@@ -597,26 +659,35 @@ def car_card(c: dict[str, Any], show_index: bool = True, show_id: bool = True) -
         if photo
         else f'<a class="imglink" href="{href}" target="_self"><div class="img"></div></a>'
     )
-    price = money(c.get("price_aed")) or "Price not listed"
-    monthly = f" <small>or {money(c.get('monthly_aed'))}/mo</small>" if c.get("monthly_aed") else ""
+    ar = lang() == "ar"
+    price = money(c.get("price_aed")) or t("card.no_price")
+    monthly = (
+        f" <small>{t('card.per_mo', amount=money(c.get('monthly_aed')))}</small>"
+        if c.get("monthly_aed")
+        else ""
+    )
     body = str(c.get("body_type") or "")
     meta = " · ".join(
         p
         for p in (
-            f"{int(c['mileage_km']):,} km" if c.get("mileage_km") is not None else "",
-            body.upper() if body == "suv" else body.title(),
-            str(c.get("regional_spec") or "").upper(),
-            str(c.get("exterior_color") or "").title(),
+            t("card.km", km=f"{int(c['mileage_km']):,}") if c.get("mileage_km") is not None else "",
+            enum_label(body, lang()) if ar else (body.upper() if body == "suv" else body.title()),
+            enum_label(c.get("regional_spec"), lang())
+            if ar
+            else str(c.get("regional_spec") or "").upper(),
+            enum_label(c.get("exterior_color"), lang())
+            if ar
+            else str(c.get("exterior_color") or "").title(),
         )
         if p
     )
     badges = []
     if c.get("has_warranty"):
-        badges.append('<span class="badge">Warranty</span>')
+        badges.append(f'<span class="badge">{html.escape(t("badge.warranty"))}</span>')
     if c.get("is_dubizzle_managed"):
-        badges.append('<span class="badge ok">dubizzle inspected</span>')
+        badges.append(f'<span class="badge ok">{html.escape(t("badge.inspected"))}</span>')
     if c.get("is_brand_new"):
-        badges.append('<span class="badge ok">Brand new</span>')
+        badges.append(f'<span class="badge ok">{html.escape(t("badge.new"))}</span>')
     if show_id:
         badges.append(f'<span class="badge id">{html.escape(str(c.get("id")))}</span>')
     idx = (
@@ -647,13 +718,11 @@ def render_cards(
                 continue
             b1, b2 = col.columns(2)
             picked = None
-            if b1.button(
-                "Ask about it", key=f"{key_prefix}_ask_{c['id']}", use_container_width=True
-            ):
+            if b1.button(t("btn.ask"), key=f"{key_prefix}_ask_{c['id']}", use_container_width=True):
                 # The id in brackets lets the resolver pin the car even when it is not on screen yet.
                 picked = f"Tell me more about the {car_name(c)} ({c['id']})"
             if b2.button(
-                "Book a viewing", key=f"{key_prefix}_book_{c['id']}", use_container_width=True
+                t("btn.book"), key=f"{key_prefix}_book_{c['id']}", use_container_width=True
             ):
                 picked = f"Book a viewing for the {car_name(c)} ({c['id']})"
             if picked:

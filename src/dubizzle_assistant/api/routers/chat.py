@@ -12,7 +12,7 @@ import json
 import secrets
 import sqlite3
 from datetime import timedelta
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -30,6 +30,9 @@ class ChatRequest(BaseModel):
     user_id: str | None = Field(None, description="Known user id. Omit on first contact.")
     session_id: str | None = Field(None, description="Omit to start a new session")
     name: str | None = Field(None, description="Display name when there is no user id yet")
+    locale: Literal["en", "ar"] = Field(
+        "en", description="Language for the reply and the canned declines"
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -164,6 +167,7 @@ def chat(
             message=prep["text"],
             request_id=secrets.token_hex(6),
             embedder=getattr(request.app.state, "embedder", None),
+            locale=req.locale,
         )
     except ChatUnavailableError as e:
         request.app.state.llm_error = str(e)

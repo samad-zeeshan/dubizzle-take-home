@@ -118,7 +118,7 @@ def provenance(picked: str) -> None:
 
 
 def page(h: dict[str, Any]) -> None:
-    st.markdown("### Inventory")
+    st.markdown(f"### {common.t('inv.title')}")
     params = filters()
     if common.demo() and st.checkbox("Compare retrieval modes on this query"):
         cols = st.columns(4)

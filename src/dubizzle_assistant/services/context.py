@@ -32,6 +32,7 @@ class TurnContext:
     embedder: Callable[[str], list[float]] | None = None
     user_name: str | None = None
     raw_message: str = ""
+    locale: str = "en"
     on_token: Callable[[str], None] | None = None
     streamed_text: str | None = None
 

@@ -16,7 +16,7 @@ HIDDEN_KEYS = ("stage", "at_ms", "ms", "blocks")
 
 
 def send(text: str) -> None:
-    body: dict[str, Any] = {"message": text}
+    body: dict[str, Any] = {"message": text, "locale": common.lang()}
     if st.session_state.user_id:
         body["user_id"] = st.session_state.user_id
     if st.session_state.session_id:
@@ -31,7 +31,7 @@ def send(text: str) -> None:
     envelope: dict[str, Any] | None = None
     error: str | None = None
     with st.chat_message("assistant"):
-        status = st.status("Thinking", expanded=common.demo())
+        status = st.status(common.t("chat.thinking"), expanded=common.demo())
         draft = st.empty()
         draft_text = ""
         try:
@@ -66,7 +66,7 @@ def send(text: str) -> None:
             error = f"backend not reachable: {e}"
         draft.empty()
         status.update(
-            label="Done" if envelope else "Failed",
+            label=common.t("chat.done") if envelope else common.t("chat.failed"),
             state="complete" if envelope else "error",
             expanded=False,
         )
@@ -85,7 +85,7 @@ def send(text: str) -> None:
         st.session_state.messages.append(
             {
                 "role": "assistant",
-                "content": f"Sorry, that did not go through. {error}",
+                "content": common.t("chat.error", error=error),
                 "envelope": None,
             }
         )
@@ -254,19 +254,20 @@ def welcome() -> None:
                 break
         for c in (prof.get("liked_cars") or [])[:1]:
             car = common.car_name(c)
-            recall.append((f"More on the {car}", f"Tell me more about the {car} ({c['id']})"))
+            recall.append(
+                (f"{common.t('chat.more_on')} {car}", f"Tell me more about the {car} ({c['id']})")
+            )
     if recall:
-        title, sub = f"Welcome back, {name}.", "Pick up where you left off, or start something new."
+        title, sub = common.t("chat.welcome_back", name=name), common.t("chat.welcome_back_sub")
     elif name:
         title, sub = (
-            f"Hi {name}, what are you looking for?",
-            "Search the inventory, compare listings, or book a viewing.",
+            common.t("chat.hi_name", name=name),
+            common.t("chat.hi_sub"),
         )
     else:
         title, sub = (
-            "What are you looking for?",
-            "Search the inventory, compare listings, or book a viewing. "
-            "Say hi with your name and I will remember you next time.",
+            common.t("chat.hi"),
+            common.t("chat.hi_sub_new"),
         )
     with st.container(key="welcome"):
         st.markdown(
@@ -274,11 +275,11 @@ def welcome() -> None:
             unsafe_allow_html=True,
         )
         if recall:
-            st.caption("Where you left off")
+            st.caption(common.t("chat.where_left"))
             for col, (label, text) in zip(st.columns(len(recall)), recall, strict=True):
                 if col.button(label, key=f"recall_{text}", use_container_width=True):
                     st.session_state.pending_prompt = text
-            st.caption("Or try one of these")
+            st.caption(common.t("chat.or_try"))
         starters = [s for s in common.STARTERS if s not in {text for _, text in recall}]
         cols = st.columns(2)
         for i, s in enumerate(starters):
@@ -319,9 +320,7 @@ def page(h: dict[str, Any]) -> None:
             if col.button(label, key=f"chip_{len(msgs)}_{label}", use_container_width=True):
                 st.session_state.pending_prompt = label
     prompt = st.chat_input(
-        "Ask about a car, or say hi"
-        if st.session_state.user_id
-        else "Ask about a car, or say hi and tell me your name"
+        common.t("chat.input_known") if st.session_state.user_id else common.t("chat.input_new")
     )
     text = prompt or st.session_state.pending_prompt
     if text:

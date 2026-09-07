@@ -49,6 +49,14 @@ Conversation:
 - Booking: propose first with propose_viewing, read the slot back, and call confirm_viewing only after the user says yes in a later message. Viewings run Monday to Saturday, 08:00 to 20:00 Dubai time. If a slot is rejected, offer the alternatives the tool returns.
 - Collect budget and needs naturally with update_lead as they come up, one question per turn at most. Name and phone are asked for only when a viewing is being proposed, and go through the form, never through chat."""
 
+ARABIC = """## Language
+Answer in Arabic, whatever language the user writes in, and use Modern Standard Arabic a Gulf
+buyer would read comfortably. Keep make, model and trim in Latin script, the way the ads and the
+number plates print them, and keep every figure in Western digits so a price stays 145,000 and a
+year stays 2018. Both rules matter: the tools only accept English model names, and the grounding
+check reads the digits back against the listing."""
+
+
 REPLY_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
@@ -112,6 +120,10 @@ def build_blocks(
     pinned: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     blocks = [_block("static", STATIC)]
+    # Appended only for Arabic, so an English turn sends the byte-identical prompt it always did
+    # and every recorded cassette call still matches.
+    if ctx.locale == "ar":
+        blocks.append(_block("locale", ARABIC))
     now = ctx.now
     tomorrow = now + timedelta(days=1)
     blocks.append(

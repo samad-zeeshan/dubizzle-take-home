@@ -36,19 +36,21 @@ FEATURES = [
 def page(h: dict[str, Any]) -> None:
     st.markdown(
         f'<div class="hero"><div class="eyebrow">{html.escape(common.APP_NAME)}</div>'
-        "<h1>Find your next car.</h1>"
-        "<p>Ask in plain English or Arabic, compare listings, and book a viewing.</p></div>",
+        f"<h1>{common.t('home.title')}</h1>"
+        f"<p>{common.t('home.sub')}</p></div>",
         unsafe_allow_html=True,
     )
     ask = st.container(key="ask")
     with ask.form("hero_ask", border=False):
         c1, c2 = st.columns([4, 1], vertical_alignment="bottom")
         text = c1.text_input(
-            "Ask about a car",
-            placeholder="Try: a white SUV under AED 100k with warranty",
+            common.t("home.ask_label"),
+            placeholder=common.t("home.ask_ph"),
             label_visibility="collapsed",
         )
-        go = c2.form_submit_button("Ask", use_container_width=True, type="primary")
+        go = c2.form_submit_button(
+            common.t("home.ask_btn"), use_container_width=True, type="primary"
+        )
     if go and text.strip():
         st.session_state.pending_prompt = text.strip()
         st.switch_page(common.pages()["chat"])
@@ -59,23 +61,23 @@ def page(h: dict[str, Any]) -> None:
             st.session_state.pending_prompt = s
             st.switch_page(common.pages()["chat"])
 
-    st.markdown('<div class="section">What it does</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section">{common.t("home.what")}</div>', unsafe_allow_html=True)
     st.markdown(common.bento(FEATURES), unsafe_allow_html=True)
 
     st.write("")
     c1, c2 = st.columns([3, 1], vertical_alignment="center")
     c1.markdown(
-        '<div class="reviewer"><h3>Reviewing this build?</h3>'
+        f'<div class="reviewer"><h3>{common.t("home.review_t")}</h3>'
         "<p>Demo mode shows the work behind every reply: the trace with timings, the exact prompt, the SQL and relaxation ladder, "
         "the grounding check on each figure, and what memory was read and written. It also unlocks the inventory explorer's provenance view and the admin page.</p></div>",
         unsafe_allow_html=True,
     )
     with c2:
-        if st.button("Open demo mode", type="primary", use_container_width=True):
+        if st.button(common.t("home.review_btn"), type="primary", use_container_width=True):
             common.set_mode("demo")
             st.switch_page(common.pages()["chat"])
         st.page_link(
-            common.pages()["inventory"], label="Browse the inventory", use_container_width=True
+            common.pages()["inventory"], label=common.t("home.browse"), use_container_width=True
         )
 
     llm = h["llm"]
@@ -83,10 +85,10 @@ def page(h: dict[str, Any]) -> None:
     clock = '<span class="live"></span>live' if not h.get("demo_clock") else "frozen"
     st.markdown(
         '<div class="stats">'
-        f'<div class="stat"><b>{h["inventory_count"]}</b><span>listings, both sheets merged</span></div>'
-        f'<div class="stat"><b>{html.escape(h["retrieval_mode"])}</b><span>retrieval mode</span></div>'
-        f'<div class="stat"><b title="{html.escape(llm["model"])}">{html.escape(model)}</b><span>model behind the replies</span></div>'
-        f'<div class="stat"><b>{clock}</b><span>booking clock</span></div>'
+        f'<div class="stat"><b>{h["inventory_count"]}</b><span>{common.t("stat.listings")}</span></div>'
+        f'<div class="stat"><b>{html.escape(h["retrieval_mode"])}</b><span>{common.t("stat.retrieval")}</span></div>'
+        f'<div class="stat"><b title="{html.escape(llm["model"])}">{html.escape(model)}</b><span>{common.t("stat.model")}</span></div>'
+        f'<div class="stat"><b>{clock}</b><span>{common.t("stat.clock")}</span></div>'
         "</div>",
         unsafe_allow_html=True,
     )

@@ -387,6 +387,7 @@ def run_turn(
     on_stage: Callable[[dict[str, Any]], None] | None = None,
     embedder: Callable[[str], list[float]] | None = None,
     on_token: Callable[[str], None] | None = None,
+    locale: str = "en",
 ) -> dict[str, Any]:
     started = time.monotonic()
     now = settings.now()
@@ -408,6 +409,7 @@ def run_turn(
         shown=saved["shown"],
         focus_id=saved["focus_id"],
         pending_booking=saved["pending_booking"],
+        locale=locale,
         embedder=embedder,
         user_name=user["name"] if user else None,
         raw_message=message,
@@ -421,7 +423,7 @@ def run_turn(
         trace.add("prefilter", result="skipped (ablated)")
     else:
         with trace.stage("prefilter") as rec:
-            hit = guardrails.prefilter(message)
+            hit = guardrails.prefilter(message, locale)
             rec["result"] = "declined" if hit else "passed"
             if hit:
                 rec["rule"], rec["match"] = hit["rule"], hit["match"]
