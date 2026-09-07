@@ -126,6 +126,27 @@ SEARCH_SCHEMA = {
 }
 
 
+def _add_cards(
+    ctx: TurnContext, cards: list[dict[str, Any]], *, earlier_turns: bool = True
+) -> None:
+    """Add cards, never the same car twice in one turn.
+
+    Two entries for one car take the same display number, which collides the per-card key the
+    grid renders with and leaves the resolver two answers for "the fourth one". The running set
+    has to grow inside the loop, or a batch that repeats a car still slips both through.
+
+    earlier_turns is False for a search, which is expected to draw its own results again even
+    when the customer has seen that car before. The rest suppress a car already on screen.
+    """
+    seen = {c["id"] for c in ctx.new_cards}
+    if earlier_turns:
+        seen |= {c["id"] for c in ctx.shown}
+    for c in cards:
+        if c["id"] not in seen:
+            seen.add(c["id"])
+            ctx.new_cards.append(c)
+
+
 def _compact(card: dict[str, Any]) -> dict[str, Any]:
     keep = (
         "id",
@@ -176,7 +197,7 @@ def _search(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
         and not ctx.stock_request
     )
     if not only_focus:
-        ctx.new_cards.extend(result.results)
+        _add_cards(ctx, result.results, earlier_turns=False)
     memory.record_search(
         ctx.conn,
         ctx.user_id,
@@ -258,8 +279,7 @@ def _get(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
     if row is None:
         return {"error": f"no listing {lid or '(missing id)'} in the inventory"}
     ctx.focus_id = row["id"]
-    if row["id"] not in {c["id"] for c in ctx.shown} | {c["id"] for c in ctx.new_cards}:
-        ctx.new_cards.append(inv.card(row))
+    _add_cards(ctx, [inv.card(row)])
     fields = row.get("fields", {})
     out = _compact(row)
     out.update(
@@ -327,9 +347,7 @@ def _compare(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
             f"Only the first {MAX_COMPARE} were compared. {', '.join(dropped)} are in the "
             "inventory but were not included. Call get_listing for each, or compare again."
         )
-    for c in out["cards"]:
-        if c["id"] not in {x["id"] for x in ctx.shown} | {x["id"] for x in ctx.new_cards}:
-            ctx.new_cards.append(c)
+    _add_cards(ctx, out["cards"])
     out["cards"] = [_compact(c) for c in out["cards"]]
     return out
 
@@ -341,7 +359,9 @@ def _similar(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
     if out is None:
         return {"error": f"no listing {lid or '(missing id)'} in the inventory"}
     ctx.focus_id = lid
-    ctx.new_cards.extend(out["results"])
+    # The anchor is excluded by the SQL, but the cars beside it are usually the ones the search
+    # that led here already put on screen, so this was the loudest of the four.
+    _add_cards(ctx, out["results"])
     for c in out["results"][:2]:
         ctx.suggested_actions.append(f"Tell me more about {c['id']}")
     return {

@@ -959,7 +959,13 @@ def _finish(
         for w in ctx.memory_writes:
             trace.add("memory_write", **w)
     index = {c["id"]: c["display_index"] for c in shown}
-    cars = [{**c, "display_index": index.get(c["id"])} for c in ctx.new_cards]
+    # push_shown already dedupes what is persisted, so a repeat here would hand two cards the
+    # same display number and the grid would key them identically. The tools guard this now, and
+    # this is the last place it can reach the client.
+    cars = [
+        {**c, "display_index": index.get(c["id"])}
+        for c in {c["id"]: c for c in ctx.new_cards}.values()
+    ]
     trace.add("reply", chars=len(reply), intent=intent, cited=cited)
 
     last_search = next(
