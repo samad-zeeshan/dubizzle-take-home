@@ -16,6 +16,17 @@ def test_health(client):
     assert body["llm"]["configured"] is True
     assert body["retrieval_mode"] == "hybrid"
     assert body["ablations_active"] == []
+    assert body["inventory"]["source_file"] == "cars.xlsx"
+    assert body["inventory"]["listings"] == 189
+    assert body["inventory"]["llm_model"]
+
+
+def test_every_router_is_mounted(client):
+    # These four used to be imported in a try/except that swallowed any ImportError,
+    # so a typo inside one of them removed its routes without a word.
+    paths = client.get("/openapi.json").json()["paths"]
+    for p in ("/bookings", "/leads.csv", "/chat/stream", "/inventory/{listing_id}/availability"):
+        assert p in paths, p
 
 
 def test_search_honda(client):

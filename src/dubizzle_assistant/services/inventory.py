@@ -110,6 +110,19 @@ def thumb_url(photo_url: str) -> str:
     return re.sub(r"\?.*$", "", photo_url) + "?imwidth=400" if photo_url else photo_url
 
 
+def inventory_meta(path: Path) -> dict[str, Any]:
+    """The provenance block the build wrote, so /health can name the workbook behind an answer."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    meta = data.get("meta") or {}
+    return {
+        "source_file": meta.get("source_file"),
+        "source_sha256": (meta.get("source_sha256") or "")[:12],
+        "generated_at": meta.get("generated_at"),
+        "llm_model": meta.get("llm_model"),
+        "listings": len(data.get("listings") or []),
+    }
+
+
 def load_inventory(conn: sqlite3.Connection, path: Path) -> int:
     data = json.loads(path.read_text(encoding="utf-8"))
     # The resolver learns this inventory's makes and models, so another dataset resolves "the civic" too.

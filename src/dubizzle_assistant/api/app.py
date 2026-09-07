@@ -8,6 +8,7 @@ a cursor. Debug and admin routers exist only when DEBUG_ENDPOINTS is on.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -16,13 +17,37 @@ from datetime import UTC, datetime
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from dubizzle_assistant.api.routers import chat, debug, health, inventory, sessions, users
+from dubizzle_assistant.api.routers import (
+    admin,
+    bookings,
+    chat,
+    debug,
+    health,
+    inventory,
+    leads,
+    sessions,
+    stream,
+    users,
+)
 from dubizzle_assistant.config import Settings, get_settings
 from dubizzle_assistant.db import connect, init_db
-from dubizzle_assistant.services.inventory import RetrievalUnavailableError, load_inventory
+from dubizzle_assistant.services.inventory import (
+    RetrievalUnavailableError,
+    inventory_meta,
+    load_inventory,
+)
 from dubizzle_assistant.services.llm import build_embedder, build_llm
 
 log = logging.getLogger("dubizzle")
+
+
+def _workbook_drifted(settings: Settings, meta: dict[str, object]) -> bool:
+    """True when data/cars.xlsx is not the workbook the committed inventory was built from."""
+    workbook = settings.data_dir / "cars.xlsx"
+    stored = str(meta.get("source_sha256") or "")
+    if not workbook.exists() or not stored:
+        return False
+    return not hashlib.sha256(workbook.read_bytes()).hexdigest().startswith(stored)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -39,6 +64,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             app.state.inventory_count = load_inventory(conn, settings.inventory_path)
         finally:
             conn.close()
+        app.state.inventory = inventory_meta(settings.inventory_path)
         app.state.started_at = datetime.now(UTC).isoformat(timespec="seconds")
         app.state.llm = build_llm(settings)
         app.state.embedder = build_embedder(settings, app.state.llm)
@@ -48,6 +74,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             log.warning(
                 "GEMINI_API_KEY not set. Get a free key at https://aistudio.google.com/apikey and copy "
                 ".env.example to .env, or run with LLM_PROVIDER=mock. Chat is disabled until then."
+            )
+        if _workbook_drifted(settings, app.state.inventory):
+            log.warning(
+                "data/cars.xlsx is not the workbook inventory.json was built from (%s). "
+                "Rebuild with: uv run python scripts/build_inventory.py",
+                app.state.inventory["source_sha256"],
             )
         log.info(
             "inventory loaded: %d listings, retrieval=%s, provider=%s, model=%s, cassette=%s, ablations=%s",
@@ -67,22 +99,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.settings = settings
-    for r in (health.router, chat.router, sessions.router, users.router, inventory.router):
+    for r in (
+        health.router,
+        chat.router,
+        stream.router,
+        sessions.router,
+        users.router,
+        inventory.router,
+        bookings.router,
+        leads.router,
+    ):
         app.include_router(r)
     if settings.debug_endpoints:
         app.include_router(debug.router)
-        try:
-            from dubizzle_assistant.api.routers import admin
-
-            app.include_router(admin.router)
-        except ImportError:
-            pass
-    for name in ("bookings", "leads", "stream"):
-        try:
-            module = __import__(f"dubizzle_assistant.api.routers.{name}", fromlist=["router"])
-            app.include_router(module.router)
-        except ImportError:
-            pass
+        app.include_router(admin.router)
 
     async def retrieval_unavailable(_: Request, exc: Exception) -> JSONResponse:
         return JSONResponse(status_code=503, content={"detail": str(exc)})

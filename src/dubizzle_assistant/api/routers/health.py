@@ -29,6 +29,7 @@ def health(
         "now": settings.now().isoformat(timespec="minutes"),
         "started_at": getattr(request.app.state, "started_at", None),
         "inventory_count": getattr(request.app.state, "inventory_count", 0),
+        "inventory": getattr(request.app.state, "inventory", {}),
         "db_ok": db_ok,
         "llm": {
             "configured": settings.llm_configured,
