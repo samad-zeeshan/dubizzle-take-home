@@ -8,7 +8,7 @@
 "transmission": "automatic",
 "keywords_en": "ford explorer 2013 silver color GCC car"
 },
-"8fce62d7a650d58da5832d2f2f3daf649903399e3059d29340aea581d732066e": {
+"1c12349cf8e88aa8197cbdf68aaf87bf7f3ae5ef285f2afc9ad12c5b803b1d50": {
 "id": "C-002",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -53,7 +53,7 @@
 "transmission": "automatic",
 "keywords_en": "mini cooper 2018 GCC keyless open keyless start parking sensor bluetooth panoramic roof"
 },
-"3e8d2516b88048fd19ee8e6ebf0edeccb9333b113186e0a6366e78a3d6f9bbd1": {
+"0d91171fe75baa6652eecb622d7019de95c48ed8e0dcc50c0d1fdefbef425472": {
 "id": "C-007",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -62,7 +62,7 @@
 "transmission": "automatic",
 "keywords_en": "mercedes-benz g-class brabus 2024 P900 Rocket one of ten official my last unit of production"
 },
-"ddf1af9b2cc6a9818b642bc65a7bf1733c834388057e091b067dd93b9b6a192d": {
+"f493a7d36ad919b0f4a926619dd17f320463ac1ecc6b8d5753bc07ec03fc4199": {
 "id": "C-008",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -80,7 +80,7 @@
 "english_summary": "2022 Bentley Bentayga with Mansory modifications. Fully loaded and in excellent condition.",
 "keywords_en": "Bentley, Bentayga, Mansory, SUV, Excellent Condition"
 },
-"18e5539d35f395cd69aacd61077f93e2ca72bdfa1deb22711e2663bcd8fcf8c5": {
+"87d5974e7a886a26524ec3f01d41606585bde7fb07fa51300c8b5b879bee666e": {
 "id": "C-010",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -98,7 +98,7 @@
 "english_summary": "2016 Nissan Altima SV mid option. Accident-free and in excellent condition.",
 "keywords_en": "Nissan, Altima, Sedan, Excellent Condition"
 },
-"1688b42724146f70fdc1e3fdd257e78c3c4f8f2975b9dca99202d9ee9dd4e035": {
+"b416f98d5e9c278203c7e77f8f0f85ec5feafabaa92da8bd4e3c36f2636a583f": {
 "id": "C-012",
 "price_aed": 35000,
 "monthly_aed": -1,
@@ -125,7 +125,7 @@
 "english_summary": "2020 Mercedes-Benz C 200 in excellent condition. Features include 19-inch black wheels, panoramic roof, digital light projector, and various driver assistance systems.",
 "keywords_en": "Mercedes-Benz, C-Class, Sedan, Panoramic Roof, Digital Light"
 },
-"2c5aaba54ab98295eed2e1862d38369504cb8d6bdac0a8a9becfec685e8447e2": {
+"854afddff6426eef0e3d8a9c4d89cbc02eb9730b9dfd71392e4a1b9955809937": {
 "id": "C-015",
 "price_aed": 1349999,
 "monthly_aed": 25683,
@@ -150,7 +150,7 @@
 "transmission": "automatic",
 "keywords_en": "Bentley Continental GTC W12, 4.0L V8 Twin Turbo, 542 Hp, 318 km/h max speed, 4.0s 0-100km/h, Rotating Display, Naim Premium Audio, Mulliner Interior, Convertible"
 },
-"5394df38bb3f8bd3c13d7da631c577c579dbf919deb88206d4598db4aa1dc546": {
+"853ab8a3ababb860b56a4b28b99c5121cb77144ba4803b7273eb5cd96c87ea29": {
 "id": "C-018",
 "price_aed": -1,
 "mileage_km": -1,
@@ -206,14 +206,14 @@
 "transmission": "automatic",
 "keywords_en": "BMW X6M, 4.4L, 567 HP, Agency Service, Original Paint, Accident Free, CarPlay, Touch Screen, 5 Cameras, Lane Departure Assistant, Radar, Anti-collision System, Adaptive Cruise Control, Moving Object Detection, New Shocks, New Brake Discs, New Brake Pads"
 },
-"b9247b9dc4e632401c540cf83af10572e9db5cfa64f046555c2b281e100e2b06": {
+"2c1d123f1944d8df50d062989b0027c2c38fbee21e1899dc459af79b0b9368e2": {
 "id": "C-026",
 "body_type": "suv",
 "fuel_type": "petrol",
 "transmission": "automatic",
 "keywords_en": "Lincoln Aviator, Korea Specs"
 },
-"438c8debd7a99c64bafde0a2e855b42d183e75c9b5718703a6f288ec56fbf225": {
+"a7f45beb0feefe31c14e539ecb00303b8f2966fcad20d1072233b6ddfe20ff5b": {
 "id": "C-027",
 "body_type": "suv",
 "fuel_type": "petrol",
@@ -227,7 +227,7 @@
 "transmission": "automatic",
 "keywords_en": "Hyundai Tucson, 0km"
 },
-"5f243b8eb8b2baf80989933ec82505597f52cf6b6959d068dbb2fb98295aa998": {
+"ca2192b34d1618dc21e27e1f9cd7f95508a34d9952e8bcf579fa7841e8706490": {
 "id": "C-029",
 "body_type": "pickup",
 "fuel_type": "petrol",
@@ -248,7 +248,7 @@
 "transmission": "automatic",
 "keywords_en": "Jaguar XE F Sport, GCC, Excellent Condition"
 },
-"9d9938162b4326cbe3fa167414046775fbf028bab521050357e5985ebbe65ba2": {
+"9f31a34d61a1440eaef7285dba25f4dd33eac9a83673fd9812dac26b3e925620": {
 "id": "C-032",
 "body_type": "suv",
 "fuel_type": "petrol",
@@ -264,7 +264,7 @@
 "english_summary": "Mercedes-Benz C300 in brand new condition. Pre-owned and fully loaded.",
 "keywords_en": "C300, Brandnew, Fully Loaded"
 },
-"2e1df111b18c5f6a1f8ea4a9b814221c753a508f45c12dce83b6c1df74232b93": {
+"93e9d2759e484b8a1439b2122db6de5924b59556c8c711db44528998ec6268e0": {
 "id": "C-034",
 "price_aed": -1,
 "mileage_km": 4000,
@@ -300,7 +300,7 @@
 "english_summary": "2019 Chevrolet Camaro with V6 engine. Original chassis condition (no repairs), regularly serviced, new tires, and 2 keys.",
 "keywords_en": "Camaro, V6, New Tires, Original Chassis"
 },
-"67f2452c7d395621fb87da79f93cb29306f343bb99807e46102d92d025677a6e": {
+"63ae90e9b4767809ba6f27b5aeae586f5af48c47de5821d9c4685dac31dda663": {
 "id": "C-038",
 "price_aed": -1,
 "mileage_km": -1,
@@ -309,7 +309,7 @@
 "english_summary": "2022 Ferrari SF90 Spider with Assetto Fiorano Package. Features a 4.0L V8 Twin-Turbocharged engine with eMotor, carbon fiber details, and leather/Alcantara interior.",
 "keywords_en": "SF90 Spider, Assetto Fiorano, Hybrid, Carbon Fiber"
 },
-"b6bd1d3c5ccba373ead818eb7e5d3124bb9a6a0e5576bb6acf27d33cb9c5fe2f": {
+"5c97ab870d33e56bdf6c70c30dd234372452b43c1b2af3f60cd5b3623f68f53a": {
 "id": "C-039",
 "price_aed": -1,
 "mileage_km": -1,
@@ -334,7 +334,7 @@
 "transmission": "automatic",
 "keywords_en": "GCC Specs, 4x4, FSH, Original KM and paint, Dubai Registration, 2 Original Keys, 1 Owner, Screen with reverse Camera, No faults, No accidents, No Flood"
 },
-"2fd569ab0b765640cc5304807efbaa0c935db4c2d223c6e2423d285bb9f544a9": {
+"d4729aeeb644c6e89faf753af47d939a8a2318950a55b6bb11b65e2388be66da": {
 "id": "C-042",
 "mileage_km": -1,
 "body_type": "sedan",
@@ -362,14 +362,14 @@
 "transmission": "automatic",
 "keywords_en": "1 year warranty, Very good condition, Full options"
 },
-"97be21b35789db46875c0786d1e3f3c901269e0ebde7845dbe5a1b3cff584d91": {
+"b0287937630a35e29e288382f575652f98cf096f5cd6c18c280fe94e26075131": {
 "id": "C-046",
 "mileage_km": 12000,
 "body_type": "convertible",
 "transmission": "automatic",
 "keywords_en": "MCLAREN ROADSTER, GCC DONE"
 },
-"ea62ecb008e2e6e55854200fb3ba2c5adc269770ba0a4a42a6b8e48347a03d4e": {
+"d9e0988059858567c7b6aaae88d3891956e843aa5e6645e0bb7d4c4f28c2514d": {
 "id": "C-047",
 "mileage_km": -1,
 "body_type": "suv",
@@ -391,7 +391,7 @@
 "transmission": "automatic",
 "keywords_en": "Lamborghini Aventador Ultimae Roadster GCC specification"
 },
-"37e05d84f221813ff2856fadbc5d2bef66534d55a35083d874e718c82202a256": {
+"1ef6094e22fe767c13de04d2a4a831e98492b6eb52bdf3539fc74c7ded8a4197": {
 "id": "C-050",
 "price_aed": -1,
 "mileage_km": -1,
@@ -399,7 +399,7 @@
 "transmission": "manual",
 "keywords_en": "Mercedes-Benz E240 V6 Japan Import"
 },
-"b1767a12fe1ccc74ed8f5dd352d0d58599cb8c7bef8792fe0ee8925764333a6a": {
+"d0cadde804a632288896d40c17eac15137cb16a718690becb18aeb9ddceb1a8e": {
 "id": "C-051",
 "price_aed": -1,
 "mileage_km": -1,
@@ -407,7 +407,7 @@
 "transmission": "manual",
 "keywords_en": "Mercedes-Benz E320 Japan Import"
 },
-"3cc5be3d3b7a88d54f0da86addde18e6e4ac19bba266fb0fc3c8e9c4de7f5fa9": {
+"49a6f2f5608d0f7b0f96d2222b210cedc721999d2feb818a06e223f8cc4a785f": {
 "id": "C-052",
 "price_aed": -1,
 "mileage_km": -1,
@@ -415,7 +415,7 @@
 "transmission": "automatic",
 "keywords_en": "Mercedes-Benz S63 AMG Japan Import"
 },
-"f28108a4d3e11410c7ff1435497eed56f45b5af108d98234895687c4aea987af": {
+"e4dfa8bc4663f127081a9da6fa986cd0711edc8ca5eece8479028d7e624dd6ea": {
 "id": "C-053",
 "price_aed": -1,
 "mileage_km": -1,
@@ -423,7 +423,7 @@
 "transmission": "automatic",
 "keywords_en": "Ford Explorer XLT Black Interior Japan Import"
 },
-"d379f74229300eebfd338b17150cead91cd393735e961c4b68f5146f7c1edba7": {
+"08c9cd7ee6d34dcf8514f2f303cb72148ba5a840abd691911fe3fabca8a27bf7": {
 "id": "C-054",
 "price_aed": -1,
 "mileage_km": 0,
@@ -431,7 +431,7 @@
 "transmission": "automatic",
 "keywords_en": "Kaiyi X7 7 Seats 1.6 Turbo Silver"
 },
-"579c633da3da281db02d08eba6111393c64d18fc30ff264fc505abaf1b6a3816": {
+"d17a05252cc2bb881a39fccd2503ca8c011ba23780f89672cebd8dd6946f51b8": {
 "id": "C-055",
 "price_aed": -1,
 "mileage_km": -1,
@@ -439,7 +439,7 @@
 "transmission": "automatic",
 "keywords_en": "Ford Explorer XLT Japan Import"
 },
-"6b63b6d5a0cc0b682e7b3787153a108762bfcca59899267b22f0be84120f18f5": {
+"41df1c439b6fce62b79b47c8cbbe57b3d95bb0c5878fa152c98a42b38dc3b569": {
 "id": "C-056",
 "price_aed": -1,
 "mileage_km": -1,
@@ -447,7 +447,7 @@
 "transmission": "automatic",
 "keywords_en": "BMW 320i"
 },
-"a10615a2f8b81ca983a99e432afc08f31fc94ed57a9dd44652326f86d2bfe25e": {
+"269207fb99831c2f71fe9c8907a0d5cac6217ee87f0a3dfd46f9be23b8483fc1": {
 "id": "C-057",
 "price_aed": -1,
 "mileage_km": -1,
@@ -455,7 +455,7 @@
 "english_summary": "MCLAREN 675LT SPIDER SOLIS YELLOW 2016 FULL CARBON EXCELLENT CONDITION. Features a Solis Yellow exterior and black interior with carbon fiber components.",
 "keywords_en": "McLaren, 675LT Spider, Carbon Fiber, V8, Convertible"
 },
-"52c4b8caf17fa7dfd0a0c19ccd22904e401aac084e9e6e09f5ed0cb11d3555f9": {
+"9f1705bf7fae47de2aae0fd79381920d429ade54dd38a4987848f5a9c06f61f0": {
 "id": "C-058",
 "price_aed": -1,
 "mileage_km": -1,
@@ -471,7 +471,7 @@
 "english_summary": "2014 Mini Countryman S model with GCC specifications and a panoramic roof.",
 "keywords_en": "Mini, Countryman, GCC, Panorama"
 },
-"f75b8abd803ce2c13d57d8144a71af8ffbd69a1a318e8fa6e313140982724c95": {
+"ccdadcdc01f6f4c7dd91b12404fccde19140a0f86dd48401e8cb2aa1fb30cf3c": {
 "id": "C-060",
 "price_aed": 32000,
 "mileage_km": 36000,
@@ -487,7 +487,7 @@
 "english_summary": "2018 Toyota Camry in blue with a 2500 Cc engine.",
 "keywords_en": "Toyota, Camry, Blue"
 },
-"502246e25994a37cfcd71dfa62d292f65a116ecc37349fb1985cf0ec320096f6": {
+"b9b2733954349da04fa6f07cc199220e746948961572fc667bc2bca5ea22b322": {
 "id": "C-062",
 "price_aed": -1,
 "mileage_km": -1,
@@ -495,7 +495,7 @@
 "english_summary": "2010 Ford Explorer XLT with a black interior, imported from Japan.",
 "keywords_en": "Ford, Explorer, Black Interior"
 },
-"37761f86dc88a1228a47eee0152e6d2d2eb08e45cfcabde02a50ff1586df356a": {
+"8768cd13a3be2ed36a3cc0712edbf01493e9be245e3931f14085d0ccda76c78e": {
 "id": "C-063",
 "price_aed": -1,
 "mileage_km": -1,
@@ -520,7 +520,7 @@
 "transmission": "automatic",
 "keywords_en": "Dodge Challenger SXT, Warranty"
 },
-"7a7e9bae7671ac57fcb5dd9520148f6fc54a6adb350b13186838f8726c98e9ce": {
+"423d82fc2188e22eea7157933af4e574b0d21f25ba9ca8c4e561fd27c1f8547f": {
 "id": "C-066",
 "price_aed": 79999,
 "monthly_aed": 1300,
@@ -556,7 +556,7 @@
 "transmission": "automatic",
 "keywords_en": "Mitsubishi Pajero, White, GCC"
 },
-"66a60155a9e841aaf45ec6e630919cfbbad77225b53d5274a38cca9e2b4c02bf": {
+"7ece476e555c16a9a7f7c53421fed609c84e165c035523d6904b7c0e05f25c2c": {
 "id": "C-070",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -565,7 +565,7 @@
 "transmission": "automatic",
 "keywords_en": "Mercedes-Benz GLK350, Japan Import"
 },
-"d431f0772bb1b78c6682282fa3b84a7cb1e15d748d795500f4def31f1d2c9d7c": {
+"b462c09eed78e5d85aa85c4d2f8f6f3e77d19c7662806fdea88ebcd72787b149": {
 "id": "C-071",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -583,7 +583,7 @@
 "transmission": "automatic",
 "keywords_en": "Mercedes-Benz C63s AMG, V8 Biturbo, Japan Specs"
 },
-"8815114f02c0bb680735d05b58874a59b2e81537b321e25f37a5a608db61cb16": {
+"78ad1cb9274ebde064309c59a687b9644c7ca29d7ac96d2803e1d3fa22d4ab68": {
 "id": "C-081",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -601,7 +601,7 @@
 "transmission": "automatic",
 "keywords_en": "black_badge, gcc, dealer_warranty, full_service_history, excellent_condition, special_ordered"
 },
-"b76e78232b3b28bd976e006b8f8bbab6174b9d49fd974f2bdb4229cbb010000f": {
+"5824cf22b49c233c27cee8a4b6fb3c9b385d91bbe159bcd400e718639731d93f": {
 "id": "C-083",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -610,7 +610,7 @@
 "transmission": "automatic",
 "keywords_en": "s63s_amg, 6_buttons, clean_car, japan_import"
 },
-"b27f99e36286bb675cae67fd488e23a9e1554b45bba70ea42193d2f6c7755937": {
+"e76bcae04304c2bf680e7b2e0f81322c2c90bbe809fef780f65603339de4e636": {
 "id": "C-084",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -619,7 +619,7 @@
 "transmission": "automatic",
 "keywords_en": "brand_new, limited_edition, gcc, warranty, service"
 },
-"e3ed1dc9da375e7151fce5c4d3046f1700feda5b99ef9cd094441e3df28b9780": {
+"297fa4301ae9c6f09e4dbaae3f8ea8c6fda9d948cae8c91af05257f38c46b898": {
 "id": "C-085",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -628,7 +628,7 @@
 "transmission": "automatic",
 "keywords_en": "brabus_rocket_900, 1_of_10, low_mileage, burmester_sound"
 },
-"5b3255c4828ed496e2533c32faff82ce8e4a384e4749ed0424d31754ed69a305": {
+"ae4671a0b2d7956282378ae0d0b1c6f31bccec62aeca3cbb16e4d78e5362f0b2": {
 "id": "C-086",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -646,7 +646,7 @@
 "transmission": "automatic",
 "keywords_en": "panoramic_roof, original_airbags, full_option, leather_seats, reverse_camera, excellent_condition"
 },
-"3062dcffab8ec7f1f74e627d68f7f02f38bc9c89371ce1f613c8d400b7989853": {
+"a890254d82bb056903829a72bfabe68c2c545fd34d6e68be93fbb385824f21a4": {
 "id": "C-088",
 "price_aed": 115000,
 "monthly_aed": 1850,
@@ -655,7 +655,7 @@
 "transmission": "automatic",
 "keywords_en": "warranty_2_years, korean_spec, v6_3.0l"
 },
-"60ce7e4de578eaa51a80e4d22f56de193ebda8fbc911ec39c65c35af77b7a57e": {
+"4a696c6cebcc506883ce0a9c03299fbd51e24c53daef7abe27196f640c9e0bce": {
 "id": "C-089",
 "body_type": "convertible",
 "transmission": "automatic",
@@ -678,7 +678,7 @@
 "seats": 5,
 "keywords_en": "toyota land cruiser v6 4.0l gcc leather seats front tv 360 camera push start"
 },
-"c9df2ac91d6c6e322e0b38fb55bef679f831863fb595358229f0d6cd40208136": {
+"3392d51ed85c50fecc14fd4112018cb99f6f5d73f37f512fff6b8cbfb15c29d4": {
 "id": "C-092",
 "mileage_km": 23900,
 "exterior_color": "diamond white",
@@ -687,7 +687,7 @@
 "seats": 5,
 "keywords_en": "mercedes-benz gls 63 amg japanese specification"
 },
-"3e97e1b9bb3076a751fcc6a46d3f33b8dd375553ad02e6169c14eb31440bca46": {
+"c04e652c9e51f8c2b32589103204598a4dd27be1b7438461754d9347bd9cd436": {
 "id": "C-093",
 "body_type": "suv",
 "transmission": "automatic",
@@ -702,7 +702,7 @@
 "seats": 5,
 "keywords_en": "mitsubishi pajero gold gcc"
 },
-"afd1f3405be846e1e4a100ce80d77d850929c15d0d7f6e06c71b54757c7b1ce2": {
+"32b42b0304d04b9d2dd0fcea426ddf68a73a3fd001073e2661e8bf0d2fb79369": {
 "id": "C-095",
 "mileage_km": 970,
 "exterior_color": "null",
@@ -711,7 +711,7 @@
 "seats": 5,
 "keywords_en": "toyota wildlander rav4 awd korea specification v4 2.5l"
 },
-"c5833bebf7befe39e47aeaba5595cbfabdcd151c5112ad30c0aa036663e7fd9b": {
+"b6e7835e0b61d5a1288458297595ae39ad52db8e933b98664bd31946c72dd0b8": {
 "id": "C-096",
 "mileage_km": 10000,
 "exterior_color": "null",
@@ -720,7 +720,7 @@
 "seats": 5,
 "keywords_en": "volvo xc60 b5 fwd momentum gcc"
 },
-"37bd586af141482d8f7be1b62b1f997ee216e769daffbda830bcca0bd96bd461": {
+"9394bcfa1f4a79a4d15764235f464a72a9e48dc0ec31be279ccbd3a56dc4e53e": {
 "id": "C-097",
 "price_aed": 299000,
 "mileage_km": 65699,
@@ -730,7 +730,7 @@
 "english_summary": "2015 Aston Martin Vanquish Volante V12 Convertible with 6.0L engine and automatic transmission.",
 "keywords_en": "Aston Martin, Vanquish, Convertible, V12, Automatic, Bang & Olufsen, Navigation"
 },
-"27dcb34c7a5052843721ce033df99175d41132cbadd7b4b1409202fa10ce9931": {
+"47ad99a2e0bdbc8c50dd97429870295e0001ae9d861faeb2836f1b07fa6406d6": {
 "id": "C-098",
 "price_aed": 1430,
 "mileage_km": 0,
@@ -740,7 +740,7 @@
 "english_summary": "2020 Toyota Hiace.",
 "keywords_en": "Toyota, Hiace, Van"
 },
-"d57d82555095851fa152f5226f6a562d35e5a02d8b4adc7d6959a7833a97ec36": {
+"767e253190b85347fc2612f61fe800448def0b026224b2998a94df5cb6bf0a0b": {
 "id": "C-099",
 "price_aed": 1430,
 "mileage_km": 0,
@@ -760,7 +760,7 @@
 "english_summary": "2016 Bentley Continental GTC Speed.",
 "keywords_en": "Bentley, Continental, GTC"
 },
-"d1568f9db43e3f614810841875ffe2656ee1d5b1b454d1c0b533e6babcc82c50": {
+"d9852b5f9040770ffe96ef980ee3568cfa4612014532c7b1227d8c7a8e4fd57f": {
 "id": "R-001",
 "price_aed": 1430,
 "mileage_km": 0,
@@ -827,7 +827,7 @@
 "transmission": "automatic",
 "keywords_en": "Audi Q8, 3.0L V6 TFSI, Quattro All-Wheel Drive, 8-Speed Tiptronic, S Line Package, Virtual Cockpit Plus, MMI Navigation Plus, Apple CarPlay, Android Auto, Bang & Olufsen Sound System, Panoramic Glass Sunroof, 360° Camera, Parking Sensors, Keyless Entry, Push Start, Leather Sports Seats, Heating & Cooling Seats, Head-Up Display"
 },
-"6e5579c2549155921f49becddb1dcf9863da1828afc1432e7bf4de5673ce1896": {
+"e2fad8430fd6d90f08ab0f7af513746820c1f84671973f9bb022ed08a8e9d876": {
 "id": "R-008",
 "price_aed": 12500,
 "monthly_aed": 12500,
@@ -863,7 +863,7 @@
 "transmission": "automatic",
 "keywords_en": "Mazda CX-5, Push Start, Cruise Control, Rear Camera, Bluetooth"
 },
-"bf7cc05f4d66938c057bbea299546374d752fcb018e6a1d3c3ecf23eda19cc23": {
+"91c62f2b1ebe545cada2b9c87ae4eb9a08308173c43fdddb06642bf1c98d8f63": {
 "id": "R-012",
 "price_aed": 12500,
 "monthly_aed": 12500,
@@ -892,7 +892,7 @@
 "transmission": "automatic",
 "keywords_en": "BYD Han L, 701KM Range, Laser Radar, Premium Edition, Rotating Touchscreen, Arabic Voice Support"
 },
-"a20b7cb1b30721d145a4caf1401aa346ea35826b835a448f5960a68874337b3a": {
+"2b2aff6a8fe9e3dc17d9b4d39500856cae824f8689c776d3047e32f6f54db993": {
 "id": "R-015",
 "price_aed": -1,
 "monthly_aed": 3580,
@@ -922,7 +922,7 @@
 "transmission": "automatic",
 "keywords_en": "Nissan Sunny, Fuel Efficient, Keyless Entry, Rear Parking Sensors"
 },
-"3932abb014dc25b8fda9539df54b055cbf2fda757030ff4663c2ea16fa359835": {
+"eecdaf9cbc27bb2fd8497b64f27724296e60666dae3e1c3a082b14e67fec77a4": {
 "id": "R-018",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -952,7 +952,7 @@
 "transmission": "automatic",
 "keywords_en": "Rolls-Royce Cullinan Black Badge, V12 Twin-Turbocharged, 600 HP, Starlight Headliner"
 },
-"d144d2773a3bfa283ad4fc97301a35d89cbd5ae3cf915d4f9321449711020e00": {
+"b478c1d67145bb7c64f42d3f3403f073b312c7a25c5cb9900e2c06307de395da": {
 "id": "R-021",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -962,7 +962,7 @@
 "seats": -1,
 "keywords_en": "dodge, challenger, scatpack, v8, muscle car, 2021 model, warranty package, free service"
 },
-"ddaf5b14bb04244ad2da3362957f63ef5a325b7ed4729a68a6091d946606ca9a": {
+"aaa7d8c3d19ad4b1774d7492d0b9d48adcd6f4b8b62baff1f331ff2e362f9037": {
 "id": "R-022",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -1002,7 +1002,7 @@
 "seats": -1,
 "keywords_en": "nissan, patrol safari, vtc, gcc specs, white exterior, grey interior, sunroof, diff-lock, refrigerator"
 },
-"ee0a6b63b2e8617fdd49f622d14d7ab0ec6e734583228f5b49e82c7226a79d0f": {
+"810c9248f6d1f3337bf13617b09a427cc9498952b5247f39b31a5529c9e85909": {
 "id": "R-026",
 "price_aed": 234999,
 "monthly_aed": 3834,
@@ -1022,7 +1022,7 @@
 "seats": -1,
 "keywords_en": "gwm, wingle 5, 4x4, petrol, export only"
 },
-"289326ae4ce6661f3a85f3f0142b2b41252cb745a09ac4aa4bc9361ece42c5f6": {
+"dc8fd58aff20847a32b0d713ed42252ceb54f58c659fd69e439e964a224a0226": {
 "id": "R-028",
 "price_aed": -1,
 "monthly_aed": 1375,
@@ -1043,7 +1043,7 @@
 "seats": -1,
 "keywords_en": "Toyota Hilux Adventure, 2.7L V4 Petrol, Tiptronic Gears, 360 Degree Camera, Dual-Zone Auto Climate Control, 4 Wheel Drive, Side Steps, Fog Lights, Keyless Entry and Start, Park Assist, Front and Rear Parking Sensors"
 },
-"668927fb4dc539bf040de1481881d892ef175866b2da4dda7fea070311f11b4c": {
+"ca4d5a910175d16f6588af084b6660ad28eef3d03984bb5d01c8f8d8ba9d8217": {
 "id": "R-030",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -1076,7 +1076,7 @@
 "seats": -1,
 "keywords_en": "Rolls-Royce Wraith, Burgundy Red exterior with Nardo Grey wrap, Beige interior, GCC, 4 wheels, Star roof"
 },
-"008810e4a705622cd7c3e5f6ca9ae92a0087c6eb6cdfd363cb147ae2c33074c7": {
+"61e00fd92cb658cb24b32766ba8a0793305050eccfac74645aa8c2a75d9ef368": {
 "id": "R-033",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -1087,7 +1087,7 @@
 "seats": -1,
 "keywords_en": "Mercedes-Benz C200 Coupe, Full Option, GCC, Red Interior, Panoramic Roof"
 },
-"3ecbdfd80a7fbdb270124eb07bfbbf84924f62b65fdf8dd787deeeec9355c343": {
+"5c38b24ac5a9ea17a6f2fb6a1210c370e1648949dba20297959627a196408f47": {
 "id": "R-034",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -1098,7 +1098,7 @@
 "seats": -1,
 "keywords_en": "Dodge Charger R/T Scat Pack Swinger Wide Body, 6.4L V8, 485HP, Green exterior, Black leather interior, Full Service History, GCC Specifications"
 },
-"1733f851d5d5a54a31d90225347a4e16aaa992390d71c9cb9f1b9fa95018ab9d": {
+"34760389c502bf1f168bc45f0db7acf80b99648c896f1fe31f2ff196b7b844ce": {
 "id": "R-035",
 "price_aed": 224999,
 "monthly_aed": 4446,
@@ -1120,7 +1120,7 @@
 "seats": -1,
 "keywords_en": "Chevrolet Tahoe RST, 4000+ cc, 8 cylinders, 400-499 HP, White exterior, Leather Interior, Tiptronic Gears, Park Assist, Lane Change Assist, Blind Spot Indicator, Adaptive Suspension, Power Seats, Heated and Cooled Seats, Height Control, Panoramic Sunroof, Keyless Entry and Start, 360 Degree Camera"
 },
-"621c43ac256f761128762846e318608d2d3fd89b46d81dcd87260c5a77163b37": {
+"0ca6f122b6d6275024eb3072ff33c1e1c9080c198e25b190ee8008fe3ab56bd1": {
 "id": "R-037",
 "price_aed": 225000,
 "mileage_km": 500,
@@ -1160,7 +1160,7 @@
 "transmission": "automatic",
 "keywords_en": "Nissan Patrol LE T2, GCC Specs, Leather Interior, Power Sunroof"
 },
-"f112f0dea3d96dd0deb73d222583111598191d5b47ebd8942709a5338ff3f71c": {
+"5dc5dfa850039084aea44a3635fd340b06809be415fa691e7a09a6d9232f0e26": {
 "id": "R-042",
 "price_aed": 100000,
 "mileage_km": 53000,
@@ -1176,7 +1176,7 @@
 "transmission": "automatic",
 "keywords_en": "Range Rover Autobiography, V8 Supercharged, Luxury Interior"
 },
-"0be100fcd7de16d26137c714cf5a47f188db7bcabe0785ee62b11502f3dc443e": {
+"23482268d7776c62c52b2b95de4613e392cf686c56b80b245c6b6aa38a911a42": {
 "id": "R-044",
 "price_aed": 120000,
 "mileage_km": 34277,
@@ -1229,7 +1229,7 @@
 "transmission": "automatic",
 "keywords_en": "mercedes-benz e-class 2014 2.0l turbocharged engine 184 hp rear-wheel drive leather interior"
 },
-"c0d745f4b0db2d85e4be1b085c94c33f46e597ee1b323eadf230675e95cef691": {
+"20b03e8a65cb638d44ee8c511487be63744c93b08d870f979e1cb835bcf1ae9b": {
 "id": "R-050",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -1238,7 +1238,7 @@
 "transmission": "automatic",
 "keywords_en": "toyota tundra 2024 crewmax sr5 3.4l v6 awd 4x4 leather seat rear camera"
 },
-"1dc488f42b40e56f9dd739af13fa6ada31d7f016d89575965207e222469c4850": {
+"a7435497dd085f3c255d2b152ae6f0e848488506613c2a77f6a76b82360aecbe": {
 "id": "R-051",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -1264,7 +1264,7 @@
 "transmission": "automatic",
 "keywords_en": "Full option, Panorama roof, Digital dashboard, Paddle shifters, Eco mode, Steering wheel controls, Heads-up display, Red and black interior"
 },
-"a16d5811d73f7ed04c3704d5087ce39722a4cd091e99f7971635189767cde587": {
+"763067bfa3d8150f0fa89ac13ce5f2064d408c4e169fe0350e93c307f813c1ee": {
 "id": "R-054",
 "mileage_km": 138000,
 "body_type": "sedan",
@@ -1276,7 +1276,7 @@
 "body_type": "suv",
 "keywords_en": "Very good condition, no maintenance needed"
 },
-"b7d71e89dbbb5b3a49949c854121e29b9ca485a1e321b033b3acedafda19298a": {
+"94267b05944fb057ef8fa7d3393ad20fffb14bd4561a92ed0b5790bc0a505748": {
 "id": "R-056",
 "monthly_aed": 2650,
 "mileage_km": 1194,
@@ -1291,7 +1291,7 @@
 "transmission": "automatic",
 "keywords_en": "GCC Specs, Black with Leather Interior, Bluetooth System, Premium Sound System, Adaptive Cruise Control, Tiptronic Gears, Park Assist, Lane Change Assist, Blind Spot Indicator, Power Seats, Heated and Cooled Seats, Panoramic Sunroof, Keyless Entry and Start, Rear view Camera, Front and Rear Parking Sensors, All Wheel Drive"
 },
-"8994815d765cfb3d1ce68e3213fec59caab3ad2ea48a9c75b28ff5401e563284": {
+"05a2371a68bed30640b6560c43c1c9ec9dd8335592c37de0e09d599e0f7413ad": {
 "id": "R-058",
 "body_type": "suv",
 "keywords_en": "Creative 2025"
@@ -1302,7 +1302,7 @@
 "body_type": "coupe",
 "keywords_en": "White color, Grade 4.5, Japan Import, Heating and cooling seat, No accident, No paint"
 },
-"54759492e4de0f94fc54a8b5b73043e0c9e9eb5333694fc83e37c3a38c577682": {
+"25fa96ee024f732d7e9bc725a6a56fbe515acf99118a26759f45b655da650fc0": {
 "id": "R-061",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -1338,7 +1338,7 @@
 "seats": -1,
 "keywords_en": "BMW 325I 2008, M.KIT, Low Mileage, Japan Imported"
 },
-"ea16d50742153e13221afa29d9a283bc669e88a99ffb52bf179d1f7ad40ba8d6": {
+"0f7c89faf4a1e18ec84802dceeaf9fff7dfe6c0bf559dc0774216459ce8c4090": {
 "id": "R-065",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -1356,7 +1356,7 @@
 "seats": -1,
 "keywords_en": "Toyota Corolla 2020, Leather interior, Rims, Screen, Camera"
 },
-"d797f23b96e1bc79f0fc6877b1ae83776593db36a7805457a8972f6e8a24009a": {
+"e890ace33c5257ea34cd02dd31de05a7359572c44f67b44ec2bbadd958e06d87": {
 "id": "R-067",
 "price_aed": -1,
 "monthly_aed": -1,
@@ -1382,7 +1382,7 @@
 "body_type": "hatchback",
 "keywords_en": "Range Rover Evoque SE P200 R-Dynamic, luxury compact SUV, 2.0L Turbocharged Ingenium Engine, 9-Speed Automatic Transmission, All-Wheel Drive System, Meridian Sound System, Panoramic Sunroof, 360° Camera, Leather Seats"
 },
-"d0e42db15f041888f899ac99718f2570644a233f194a78993690e5da88498444": {
+"aff5e27d0aa02bdc1756247a60e807916a176eaec5b58476c19c25814a7d5310": {
 "id": "R-070",
 "price_aed": 149999,
 "monthly_aed": 2400,
@@ -1398,7 +1398,7 @@
 "body_type": "suv",
 "keywords_en": "Range Rover Sport HST SC, Clean title, Original paint, Black Edition"
 },
-"ccd25029d4f3881dc6d167233322557f12dfbb0ebb28db5ffad50999e7d588bb": {
+"1f6f23871c2933abfe265538762b76b254a3ee926154eecf222ede386892a6ee": {
 "id": "R-072",
 "price_aed": 179000,
 "monthly_aed": 2340,
@@ -1414,7 +1414,7 @@
 "body_type": "sedan",
 "keywords_en": "Xiaomi Yu7, Fully electric car, 690 HP, Sports car style"
 },
-"c4f8d0656841cf95527b60631491413ee0078745ad1d915b2f9e35ff7f672aa8": {
+"52cc0023440969a81fbcd457c3bdf104c1706660a687425f3ba90c742de31d77": {
 "id": "R-074",
 "price_aed": 149999,
 "monthly_aed": 2400,
@@ -1510,21 +1510,21 @@
 "transmission": "automatic",
 "keywords_en": "Chery Arizzo 5, Gasoline, Leather Seats, Large Touchscreen, LED Headlights, Keyless Entry"
 },
-"5ec071ce091da48b05c9efb8d98b2ab590004fa995f8d8e4f7c163b17d74047b": {
+"a099b85073e03e8c565ebd9a5125af378b3907f1cd367692cb940ade38509328": {
 "id": "R-085",
 "price_aed": 89900,
 "monthly_aed": 1380,
 "mileage_km": 39000,
 "body_type": "coupe"
 },
-"ba2c1f647ff631296edaf0a6ef52e15b1ce6e85e7f5aa7bc732d2121f85b9016": {
+"b1e6c599a4cf995103b0d64d530c82d15620e7f2fcbd4c4c97e36c5f51d4ed6e": {
 "id": "R-086",
 "price_aed": 0,
 "monthly_aed": 3819,
 "mileage_km": 100,
 "body_type": "suv"
 },
-"18793ba7e971ba1999a64ba00fdf34d69a240d63a50ed227bdd20c288e8dd434": {
+"99eded905277d6b02217aa924153114965b67453ac1826412285ffa0c548966a": {
 "id": "R-087",
 "price_aed": 0,
 "monthly_aed": 0,
