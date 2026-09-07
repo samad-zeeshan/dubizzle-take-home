@@ -9,6 +9,7 @@ docs/guardrail_log.md, which is the evidence file for the README.
 from __future__ import annotations
 
 import os
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -37,6 +38,9 @@ _ENV_KEYS = {
     "llm_fallback_model": "LLM_FALLBACK_MODEL",
 }
 ENDPOINT = {k: os.environ[v] for k, v in _ENV_KEYS.items() if v in os.environ}
+# Twelve probes back to back overrun a free tier's requests a minute. A local endpoint
+# has no such cap, so the wait only applies when the probes go to a provider.
+PAUSE = float(os.environ.get("LIVE_PROBE_PAUSE", "0" if API_BASE else "6"))
 
 PROBES = [
     ("show me hondas", lambda e: [c["id"] for c in e["cars"]] == ["R-078"]),
@@ -81,7 +85,9 @@ def test_live_probes(tmp_path: Path) -> None:
     ]
     failures: list[str] = []
     with TestClient(create_app(settings)) as c:
-        for text, check in PROBES:
+        for i, (text, check) in enumerate(PROBES):
+            if i and PAUSE:
+                time.sleep(PAUSE)
             r = c.post("/chat", json={"message": text, "name": "Probe"})
             if r.status_code != 200:
                 lines += [f"## {text}", "", f"HTTP {r.status_code}: {r.text[:300]}", ""]
