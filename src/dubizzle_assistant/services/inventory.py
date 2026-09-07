@@ -100,6 +100,7 @@ class SearchResult:
     normalization: list[str]
     executed: dict[str, Any]
     results: list[dict[str, Any]] = field(default_factory=list)
+    sort_caveat: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -258,15 +259,18 @@ def _where(f: SearchFilters, mode: str) -> tuple[list[str], dict[str, Any]]:
     if f.fuel_type:
         clauses.append("fuel_type = :fuel")
         params["fuel"] = f.fuel_type
-    if f.has_warranty:
-        clauses.append("has_warranty = 1")
+    # These three are tri-state. A truthiness test read "nothing brand new" as no filter at all,
+    # so a customer who said it twice in one sentence got 0 km cars in the grid, with no clause,
+    # no applied filter and no relaxation step to show that anything had been dropped.
+    if f.has_warranty is not None:
+        clauses.append(f"has_warranty = {int(f.has_warranty)}")
     if f.mileage_max_km is not None:
         clauses.append("mileage_km IS NOT NULL AND mileage_km <= :mileage_max")
         params["mileage_max"] = f.mileage_max_km
-    if f.is_brand_new:
-        clauses.append("is_brand_new = 1")
-    if f.is_dubizzle_managed:
-        clauses.append("is_dubizzle_managed = 1")
+    if f.is_brand_new is not None:
+        clauses.append(f"is_brand_new = {int(f.is_brand_new)}")
+    if f.is_dubizzle_managed is not None:
+        clauses.append(f"is_dubizzle_managed = {int(f.is_dubizzle_managed)}")
     if f.exclude_export_only:
         clauses.append("is_export_only = 0")
     return clauses, params
@@ -558,6 +562,16 @@ def search(
         "price_not_listed": len(rows) - within,
         "excluded_over_budget": excluded,
     }
+    # A price sort puts the unpriced rows last, so "the cheapest Rolls-Royce" is really the
+    # cheapest of the one that states a price out of eleven. The count was already in the
+    # payload, but nothing tied it to the superlative the customer actually asked for.
+    sort_caveat = None
+    if current.sort in ("price_asc", "price_desc") and buckets["price_not_listed"]:
+        sort_caveat = (
+            f"{buckets['price_not_listed']} of {len(rows)} matches state no cash price and sort "
+            "last, so this ranking covers listed prices only. Say so before calling one cheapest "
+            "or most expensive."
+        )
 
     page = rows[offset : offset + limit]
     results = []
@@ -577,6 +591,7 @@ def search(
         normalization=steps,
         executed=executed,
         results=results,
+        sort_caveat=sort_caveat,
     )
 
 

@@ -61,3 +61,16 @@ def client(app_settings: Settings) -> Iterator[TestClient]:
 
     with TestClient(create_app(app_settings)) as c:
         yield c
+
+
+@pytest.fixture(scope="session")
+def inventory_conn(app_settings: Settings, tmp_path_factory: pytest.TempPathFactory):
+    """A loaded read-only inventory, for the retrieval tests that need no chat turn."""
+    from dubizzle_assistant.db import connect, init_db
+    from dubizzle_assistant.services import inventory
+
+    db = tmp_path_factory.mktemp("inv") / "inv.db"
+    init_db(db)
+    conn = connect(db)
+    inventory.load_inventory(conn, app_settings.inventory_path)
+    return conn
