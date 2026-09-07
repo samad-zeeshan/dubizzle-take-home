@@ -59,3 +59,15 @@ def test_the_english_prompt_is_untouched_by_the_locale_block(client):
     # English has to stay byte-identical, or every recorded cassette call stops matching.
     assert "locale" not in blocks("en")
     assert "locale" in blocks("ar")
+
+
+def test_the_static_block_carries_the_price_labelling_rule(client):
+    r = client.post("/chat", json={"message": "any hondas?", "name": "Static"})
+    stage = next(
+        s for s in r.json()["trace"]["stages"] if s["stage"] == "prompt" and s.get("blocks")
+    )
+    static = next(b["text"] for b in stage["blocks"] if b["name"] == "static")
+    assert "Copy the year, make, and model verbatim from the tool result." in static
+    assert '"price not listed" rather than placing it under a budget' in static
+    # The greeting rule is turn-dependent, so it must not sit in the cached prefix.
+    assert "Greet" not in static

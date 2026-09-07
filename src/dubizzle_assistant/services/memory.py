@@ -646,7 +646,9 @@ def recall_block(p: dict[str, Any]) -> str | None:
         and not p["upcoming_bookings"]
     ):
         return None
-    lines = [f"Name: {p['name']}. Sessions so far: {p['sessions']}."]
+    # The name is quoted rather than described, because a model asked to greet "Sara" sometimes
+    # returns "Sarah" and the customer reads that as being mistaken for someone else.
+    lines = [f"Name, spell it exactly: {p['name']}. Sessions so far: {p['sessions']}."]
     prefs = p["preferences"]
     if prefs:
         parts = []

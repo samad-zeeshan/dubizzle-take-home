@@ -171,6 +171,8 @@ def test_recall_says_yesterday(tmp_path, app_settings):
     assert "yesterday" in block
     assert "C-003" in block and "white SUV under AED 73k" in block
     assert "Never apply stored preferences as silent filters" in block
+    # Gemini turned Sara into Sarah often enough that the name is quoted, not described.
+    assert "Name, spell it exactly: Sara." in block
 
 
 def test_history_window_keeps_whole_turns(tmp_path, app_settings):
@@ -212,3 +214,29 @@ def test_forget_user_cascades(tmp_path, app_settings):
     counts = memory.forget_user(conn, "u4")
     assert counts["users"] == 1 and counts["liked_cars"] == 1 and counts["messages"] == 1
     assert memory.get_user(conn, "u4") is None
+
+
+def test_the_greeting_rule_only_applies_to_the_first_turn(tmp_path):
+    """Told to greet on every turn, the model opened all of them with "Welcome back, Sara"."""
+    from fastapi.testclient import TestClient
+
+    from dubizzle_assistant.api.app import create_app
+    from tests.conftest import make_settings
+
+    def recall_of(client, sid):
+        blocks = client.get(f"/debug/prompt/{sid}").json()["blocks"]
+        return next((b["text"] for b in blocks if b["name"] == "recall"), None)
+
+    with TestClient(create_app(make_settings(tmp_path))) as c:
+        first = c.post("/chat", json={"message": "I like the velar", "name": "Sara"}).json()
+        uid = first["user_id"]
+        # A brand new session for the same person is where the recall block appears.
+        e = c.post("/chat", json={"message": "hi, it's Sara again", "user_id": uid}).json()
+        sid = e["session_id"]
+        turn1 = recall_of(c, sid)
+        c.post("/chat", json={"message": "show me hondas", "user_id": uid, "session_id": sid})
+        turn2 = recall_of(c, sid)
+
+    assert turn1 and "Greet them by name once" in turn1
+    assert turn2 and "already greeted them this session" in turn2
+    assert "Greet them by name once" not in turn2
