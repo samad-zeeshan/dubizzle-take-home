@@ -13,6 +13,30 @@ import streamlit as st
 from views import common
 
 HIDDEN_KEYS = ("stage", "at_ms", "ms", "blocks")
+_MAX_ERROR = 160
+
+
+def one_line(text: object) -> str:
+    """A failure reaches the customer as one sentence. A pasted JSON body helps nobody read it."""
+    s = str(text or "").strip()
+    if s.startswith(("{", "[")):
+        try:
+            payload = json.loads(s)
+        except json.JSONDecodeError:
+            payload = None
+        if isinstance(payload, dict):
+            detail = payload.get("detail")
+            if isinstance(detail, list) and detail:  # a 422 arrives as a list of field errors
+                first = detail[0]
+                detail = first.get("msg") if isinstance(first, dict) else first
+            if isinstance(detail, str | int | float):
+                s = str(detail)
+            elif isinstance(payload.get("message"), str):
+                s = payload["message"]
+    s = " ".join(s.split())
+    if not s or s.startswith(("{", "[")):
+        return "the backend did not say why"
+    return s[: _MAX_ERROR - 1] + "…" if len(s) > _MAX_ERROR else s
 
 
 def send(text: str) -> None:
@@ -43,7 +67,7 @@ def send(text: str) -> None:
                 timeout=common.TIMEOUT,
             ) as r:
                 if r.status_code != 200:
-                    error = f"{r.status_code}: {r.read().decode('utf-8', 'replace')[:300]}"
+                    error = f"{r.status_code}: {one_line(r.read().decode('utf-8', 'replace'))}"
                 else:
                     event = None
                     for line in r.iter_lines():
@@ -61,9 +85,9 @@ def send(text: str) -> None:
                             elif event == "envelope":
                                 envelope = data
                             elif event == "error":
-                                error = f"{data.get('status')}: {data.get('detail')}"
+                                error = f"{data.get('status')}: {one_line(data.get('detail'))}"
         except httpx.HTTPError as e:
-            error = f"backend not reachable: {e}"
+            error = one_line(f"backend not reachable: {e}")
         draft.empty()
         status.update(
             label=common.t("chat.done") if envelope else common.t("chat.failed"),

@@ -45,7 +45,9 @@ class LiteLLMClient:
         fallback_model: str | None = None,
         embedding_model: str = "gemini/gemini-embedding-001",
         embedding_dimensions: int | None = None,
-        max_retry_wait: float = 20.0,
+        # Gemini's free tier asks for 23 to 29 seconds under load; a 20 second ceiling
+        # turned every one of those into a failed turn.
+        max_retry_wait: float = 45.0,
     ) -> None:
         self.model = model
         self.fallback_model = fallback_model
@@ -81,8 +83,17 @@ class LiteLLMClient:
 
     def _raise_mapped(self, e: Exception) -> NoReturn:
         litellm = self._lib()
-        if isinstance(e, litellm.RateLimitError):  # type: ignore[attr-defined]
-            text = str(e)
+        text = str(e)
+        # A 429 raised inside a stream, or during a fallback hop, arrives under a different class
+        # with the original body stapled on. Reading the text keeps the retryDelay and the retry
+        # instead of surfacing a quota pause as a dead turn.
+        mid = getattr(litellm, "MidStreamFallbackError", None)
+        if (
+            isinstance(e, litellm.RateLimitError)  # type: ignore[attr-defined]
+            or (mid is not None and isinstance(e, mid))
+            or "RateLimitError" in text
+            or "RESOURCE_EXHAUSTED" in text
+        ):
             m = _RETRY_RE.search(text)
             raise RateLimitedError(
                 "model rate limit hit",

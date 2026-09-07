@@ -10,7 +10,7 @@ import pytest
 
 from dubizzle_assistant.config import Settings, gemini_generation
 from dubizzle_assistant.services.llm import build_llm
-from dubizzle_assistant.services.llm.base import LLMError
+from dubizzle_assistant.services.llm.base import LLMError, RateLimitedError
 from dubizzle_assistant.services.llm.litellm_client import LiteLLMClient
 from tests.conftest import make_settings
 
@@ -86,6 +86,10 @@ class FakeLiteLLM:
     class BadRequestError(Exception): ...
 
     class APIConnectionError(Exception): ...
+
+    class MidStreamFallbackError(Exception): ...
+
+    class InternalServerError(Exception): ...
 
     suppress_debug_info = False
     drop_params = False
@@ -163,6 +167,44 @@ def test_schema_rejection_retries_as_plain_text(monkeypatch: pytest.MonkeyPatch)
     assert len(fake.calls) == 2
     assert "response_format" in fake.calls[0] and "response_format" not in fake.calls[1]
     assert r.text == "ok" and r.note is not None and "fell back to text" in r.note
+
+
+def test_a_wrapped_rate_limit_keeps_its_retry_delay(monkeypatch: pytest.MonkeyPatch) -> None:
+    # litellm re-raises a streamed 429 under its own class, so only the body still says 429.
+    wrapped = FakeLiteLLM.MidStreamFallbackError(
+        "fallback failed: RateLimitError - {'error': {'code': 429, 'status': "
+        "'RESOURCE_EXHAUSTED', 'details': [{'retryDelay': '27s'}]}}"
+    )
+    monkeypatch.setattr("dubizzle_assistant.services.llm.litellm_client.time.sleep", lambda _: None)
+    fake = FakeLiteLLM(fail=wrapped)
+    c = make_client(monkeypatch, fake)
+    with pytest.raises(RateLimitedError) as got:
+        c.complete([{"role": "user", "content": "hi"}], None)
+    assert got.value.retry_after == 27.0 and not got.value.daily
+    assert len(fake.calls) == 2  # the wait is worth one retry, not a dead turn
+
+
+def test_a_quota_body_under_any_class_is_a_rate_limit(monkeypatch: pytest.MonkeyPatch) -> None:
+    fake = FakeLiteLLM(
+        fail=FakeLiteLLM.InternalServerError(
+            "VertexAIException: RESOURCE_EXHAUSTED quota_exceeded per_day"
+        )
+    )
+    c = make_client(monkeypatch, fake)
+    with pytest.raises(RateLimitedError) as got:
+        c.complete([{"role": "user", "content": "hi"}], None)
+    assert got.value.daily and got.value.retry_after is None
+
+
+def test_a_retry_delay_under_the_ceiling_is_waited_out(monkeypatch: pytest.MonkeyPatch) -> None:
+    # 23 to 29 seconds is what the free tier asks for; the old 20 second ceiling refused them all.
+    slept: list[float] = []
+    monkeypatch.setattr("dubizzle_assistant.services.llm.litellm_client.time.sleep", slept.append)
+    fake = FakeLiteLLM(fail=FakeLiteLLM.RateLimitError("429 retryDelay: 29s"), once=True)
+    c = make_client(monkeypatch, fake)
+    r = c.complete([{"role": "user", "content": "hi"}], None)
+    assert r.text == "ok" and len(fake.calls) == 2
+    assert slept == [29.5] and c.max_retry_wait == 45.0
 
 
 def test_factory_builds_local_client(tmp_path: Path) -> None:
