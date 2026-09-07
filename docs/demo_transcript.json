@@ -3,11 +3,11 @@
   "scenario": "A",
   "message": "hi",
   "envelope": {
-   "session_id": "s_D7MUWF7S",
-   "user_id": "u_f18e7f8e",
+   "session_id": "s_v5gRAaLy",
+   "user_id": "u_e31b4785",
    "turn": 1,
-   "request_id": "ff95fc1470d9",
-   "reply": "Hi there! Welcome to dubizzle cars. Are you looking to buy a car today, or perhaps sell one?",
+   "request_id": "f49ea1bf6fb8",
+   "reply": "Hi! Welcome to dubizzle cars. Are you looking to buy a car today, or would you like to explore our inventory?",
    "streamed": null,
    "intent": "chitchat",
    "cars": [],
@@ -19,9 +19,9 @@
    },
    "query_explain": null,
    "trace": {
-    "session_id": "s_D7MUWF7S",
+    "session_id": "s_v5gRAaLy",
     "turn": 1,
-    "request_id": "ff95fc1470d9",
+    "request_id": "f49ea1bf6fb8",
     "stages": [
      {
       "stage": "received",
@@ -80,22 +80,22 @@
       "n": 1,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 3250,
+      "latency_ms": 3375,
       "tokens": {
        "prompt_tokens": 3160,
-       "completion_tokens": 23
+       "completion_tokens": 26
       },
       "finish_reason": "stop",
       "emitted": "text",
       "tool_names": [],
-      "text_chars": 92,
-      "cassette_hit": true,
+      "text_chars": 109,
+      "cassette_hit": false,
       "note": null,
-      "ms": 0
+      "ms": 3375
      },
      {
       "stage": "structured_reply",
-      "at_ms": 0,
+      "at_ms": 3375,
       "ms": 0,
       "structured": false,
       "cited": [],
@@ -103,20 +103,20 @@
      },
      {
       "stage": "postfilter",
-      "at_ms": 0,
+      "at_ms": 3375,
       "ms": 0,
       "hits": []
      },
      {
       "stage": "id_check",
-      "at_ms": 0,
+      "at_ms": 3375,
       "ms": 0,
       "leaked": [],
       "id_leak": false
      },
      {
       "stage": "grounding",
-      "at_ms": 0,
+      "at_ms": 3375,
       "checked": 0,
       "grounded": 0,
       "ungrounded": [],
@@ -124,7 +124,7 @@
      },
      {
       "stage": "persist",
-      "at_ms": 0,
+      "at_ms": 3375,
       "messages": 2,
       "shown_total": 0,
       "focus_id": null,
@@ -132,15 +132,15 @@
      },
      {
       "stage": "reply",
-      "at_ms": 0,
+      "at_ms": 3375,
       "ms": 0,
-      "chars": 92,
+      "chars": 109,
       "intent": "chitchat",
       "cited": []
      }
     ],
     "ablations_active": [],
-    "total_ms": 0
+    "total_ms": 3375
    },
    "grounding": {
     "checked": 0,
@@ -166,9 +166,9 @@
    "model": "gemini/gemini-3.5-flash-lite",
    "usage": {
     "prompt_tokens": 3160,
-    "completion_tokens": 23
+    "completion_tokens": 26
    },
-   "latency_ms": 0,
+   "latency_ms": 3375,
    "new_session": true,
    "degraded": false
   }
@@ -177,11 +177,11 @@
   "scenario": "A",
   "message": "show me SUVs with warranty under AED 150k",
   "envelope": {
-   "session_id": "s_D7MUWF7S",
-   "user_id": "u_f18e7f8e",
+   "session_id": "s_v5gRAaLy",
+   "user_id": "u_e31b4785",
    "turn": 2,
-   "request_id": "a8ba04ec8b47",
-   "reply": "Here are a few SUVs under AED 150,000 with a warranty:\n\n- 2026 Haval H9 (AED 115,750, 18 km)\n- 2024 Opel Grandland Ultimate (AED 79,999, 0 km)\n- 2024 Ford Territory Titanium (AED 93,000, 34,277 km)\n- 2024 Volkswagen T-Roc Style (AED 89,900, 39,000 km, black)\n- 2023 Toyota Wildlander (AED 95,000, 970 km)",
+   "request_id": "86891672a345",
+   "reply": "Here are some SUVs with warranty under AED 150,000:\n\n- 2026 Haval H9 for AED 115,750\n- 2024 Opel Grandland Ultimate for AED 79,999\n- 2024 Ford Territory Titanium for AED 93,000\n- 2024 Volkswagen T-Roc Style for AED 89,900\n- 2023 Toyota Wildlander for AED 95,000",
    "streamed": null,
    "intent": "inventory_search",
    "cars": [
@@ -399,9 +399,9 @@
     "relaxed": []
    },
    "trace": {
-    "session_id": "s_D7MUWF7S",
+    "session_id": "s_v5gRAaLy",
     "turn": 2,
-    "request_id": "a8ba04ec8b47",
+    "request_id": "86891672a345",
     "stages": [
      {
       "stage": "received",
@@ -450,8 +450,8 @@
        }
       ],
       "history_messages": 2,
-      "history_tokens_estimate": 106,
-      "total_tokens_estimate": 1374,
+      "history_tokens_estimate": 110,
+      "total_tokens_estimate": 1378,
       "ms": 0
      },
      {
@@ -460,9 +460,9 @@
       "n": 1,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1031,
+      "latency_ms": 969,
       "tokens": {
-       "prompt_tokens": 3197,
+       "prompt_tokens": 3200,
        "completion_tokens": 52
       },
       "finish_reason": "tool_calls",
@@ -471,19 +471,19 @@
        "search_inventory"
       ],
       "text_chars": 0,
-      "cassette_hit": true,
+      "cassette_hit": false,
       "note": null,
-      "ms": 0
+      "ms": 969
      },
      {
       "stage": "tool",
-      "at_ms": 0,
+      "at_ms": 983,
       "name": "search_inventory",
       "args": {
-       "budget_text": "under 150k",
-       "price_max_aed": 150000,
        "has_warranty": true,
-       "body_type": "suv"
+       "price_max_aed": 150000,
+       "body_type": "suv",
+       "budget_text": "under 150k"
       },
       "executed": {
        "sql": "SELECT * FROM listings WHERE (price_aed IS NULL OR price_aed <= :price_max) AND body_type = :body_type AND has_warranty = 1",
@@ -512,26 +512,26 @@
      },
      {
       "stage": "llm_call",
-      "at_ms": 0,
+      "at_ms": 983,
       "n": 2,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
       "latency_ms": 1500,
       "tokens": {
-       "prompt_tokens": 4233,
-       "completion_tokens": 285
+       "prompt_tokens": 4236,
+       "completion_tokens": 241
       },
       "finish_reason": "stop",
       "emitted": "text",
       "tool_names": [],
-      "text_chars": 559,
-      "cassette_hit": true,
+      "text_chars": 495,
+      "cassette_hit": false,
       "note": null,
-      "ms": 0
+      "ms": 1500
      },
      {
       "stage": "structured_reply",
-      "at_ms": 0,
+      "at_ms": 2483,
       "ms": 0,
       "structured": true,
       "cited": [
@@ -545,28 +545,28 @@
      },
      {
       "stage": "postfilter",
-      "at_ms": 0,
+      "at_ms": 2483,
       "ms": 0,
       "hits": []
      },
      {
       "stage": "id_check",
-      "at_ms": 0,
+      "at_ms": 2483,
       "ms": 0,
       "leaked": [],
       "id_leak": false
      },
      {
       "stage": "grounding",
-      "at_ms": 0,
-      "checked": 14,
-      "grounded": 14,
+      "at_ms": 2483,
+      "checked": 11,
+      "grounded": 11,
       "ungrounded": [],
       "ms": 0
      },
      {
       "stage": "memory_write",
-      "at_ms": 0,
+      "at_ms": 2500,
       "ms": 0,
       "table": "search_history",
       "by": "search_inventory",
@@ -575,17 +575,17 @@
      },
      {
       "stage": "persist",
-      "at_ms": 0,
+      "at_ms": 2483,
       "messages": 4,
       "shown_total": 5,
       "focus_id": null,
-      "ms": 0
+      "ms": 16
      },
      {
       "stage": "reply",
-      "at_ms": 0,
+      "at_ms": 2500,
       "ms": 0,
-      "chars": 304,
+      "chars": 261,
       "intent": "inventory_search",
       "cited": [
        "R-005",
@@ -597,17 +597,17 @@
      }
     ],
     "ablations_active": [],
-    "total_ms": 0
+    "total_ms": 2500
    },
    "grounding": {
-    "checked": 14,
-    "grounded": 14,
+    "checked": 11,
+    "grounded": 11,
     "ungrounded": [],
     "spans": [
      {
       "text": "150,000",
-      "start": 30,
-      "end": 37,
+      "start": 43,
+      "end": 50,
       "grounded": true,
       "source": {
        "listing_id": null,
@@ -616,8 +616,8 @@
      },
      {
       "text": "2026",
-      "start": 58,
-      "end": 62,
+      "start": 55,
+      "end": 59,
       "grounded": true,
       "source": {
        "listing_id": "R-005",
@@ -636,8 +636,8 @@
      },
      {
       "text": "2024",
-      "start": 95,
-      "end": 99,
+      "start": 87,
+      "end": 91,
       "grounded": true,
       "source": {
        "listing_id": "C-066",
@@ -646,8 +646,8 @@
      },
      {
       "text": "79,999",
-      "start": 129,
-      "end": 135,
+      "start": 124,
+      "end": 130,
       "grounded": true,
       "source": {
        "listing_id": "C-066",
@@ -656,8 +656,8 @@
      },
      {
       "text": "2024",
-      "start": 145,
-      "end": 149,
+      "start": 133,
+      "end": 137,
       "grounded": true,
       "source": {
        "listing_id": "C-066",
@@ -666,8 +666,8 @@
      },
      {
       "text": "93,000",
-      "start": 179,
-      "end": 185,
+      "start": 170,
+      "end": 176,
       "grounded": true,
       "source": {
        "listing_id": "R-044",
@@ -675,19 +675,9 @@
       }
      },
      {
-      "text": "34,277",
-      "start": 187,
-      "end": 193,
-      "grounded": true,
-      "source": {
-       "listing_id": "R-044",
-       "field": "mileage_km"
-      }
-     },
-     {
       "text": "2024",
-      "start": 200,
-      "end": 204,
+      "start": 179,
+      "end": 183,
       "grounded": true,
       "source": {
        "listing_id": "C-066",
@@ -696,8 +686,8 @@
      },
      {
       "text": "89,900",
-      "start": 233,
-      "end": 239,
+      "start": 215,
+      "end": 221,
       "grounded": true,
       "source": {
        "listing_id": "R-085",
@@ -705,19 +695,9 @@
       }
      },
      {
-      "text": "39,000",
-      "start": 241,
-      "end": 247,
-      "grounded": true,
-      "source": {
-       "listing_id": "R-085",
-       "field": "mileage_km"
-      }
-     },
-     {
       "text": "2023",
-      "start": 261,
-      "end": 265,
+      "start": 224,
+      "end": 228,
       "grounded": true,
       "source": {
        "listing_id": "C-095",
@@ -726,22 +706,12 @@
      },
      {
       "text": "95,000",
-      "start": 289,
-      "end": 295,
+      "start": 255,
+      "end": 261,
       "grounded": true,
       "source": {
        "listing_id": "C-095",
        "field": "price_aed"
-      }
-     },
-     {
-      "text": "970",
-      "start": 297,
-      "end": 300,
-      "grounded": true,
-      "source": {
-       "listing_id": "C-095",
-       "field": "mileage_km"
       }
      }
     ]
@@ -776,10 +746,10 @@
    "llm_used": true,
    "model": "gemini/gemini-3.5-flash-lite",
    "usage": {
-    "prompt_tokens": 7430,
-    "completion_tokens": 337
+    "prompt_tokens": 7436,
+    "completion_tokens": 293
    },
-   "latency_ms": 0,
+   "latency_ms": 2500,
    "new_session": false,
    "degraded": false
   }
@@ -788,10 +758,10 @@
   "scenario": "A",
   "message": "what's the mileage on the first one?",
   "envelope": {
-   "session_id": "s_D7MUWF7S",
-   "user_id": "u_f18e7f8e",
+   "session_id": "s_v5gRAaLy",
+   "user_id": "u_e31b4785",
    "turn": 3,
-   "request_id": "c4f7245da18b",
+   "request_id": "03ab1ac00cfa",
    "reply": "The 2026 Haval H9 has a mileage of 18 km.",
    "streamed": null,
    "intent": "listing_question",
@@ -807,9 +777,9 @@
    },
    "query_explain": null,
    "trace": {
-    "session_id": "s_D7MUWF7S",
+    "session_id": "s_v5gRAaLy",
     "turn": 3,
-    "request_id": "c4f7245da18b",
+    "request_id": "03ab1ac00cfa",
     "stages": [
      {
       "stage": "received",
@@ -873,8 +843,8 @@
        }
       ],
       "history_messages": 6,
-      "history_tokens_estimate": 1315,
-      "total_tokens_estimate": 2770,
+      "history_tokens_estimate": 1308,
+      "total_tokens_estimate": 2763,
       "ms": 0
      },
      {
@@ -883,9 +853,9 @@
       "n": 1,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 983,
+      "latency_ms": 953,
       "tokens": {
-       "prompt_tokens": 4702,
+       "prompt_tokens": 4663,
        "completion_tokens": 22
       },
       "finish_reason": "tool_calls",
@@ -894,13 +864,13 @@
        "get_listing"
       ],
       "text_chars": 0,
-      "cassette_hit": true,
+      "cassette_hit": false,
       "note": null,
-      "ms": 0
+      "ms": 953
      },
      {
       "stage": "tool",
-      "at_ms": 0,
+      "at_ms": 953,
       "name": "get_listing",
       "args": {
        "listing_id": "R-005"
@@ -912,26 +882,26 @@
      },
      {
       "stage": "llm_call",
-      "at_ms": 0,
+      "at_ms": 953,
       "n": 2,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 7733,
+      "latency_ms": 1155,
       "tokens": {
-       "prompt_tokens": 5711,
+       "prompt_tokens": 5672,
        "completion_tokens": 71
       },
       "finish_reason": "stop",
       "emitted": "text",
       "tool_names": [],
       "text_chars": 150,
-      "cassette_hit": true,
+      "cassette_hit": false,
       "note": null,
-      "ms": 0
+      "ms": 1155
      },
      {
       "stage": "structured_reply",
-      "at_ms": 0,
+      "at_ms": 2108,
       "ms": 0,
       "structured": true,
       "cited": [
@@ -941,20 +911,20 @@
      },
      {
       "stage": "postfilter",
-      "at_ms": 0,
+      "at_ms": 2108,
       "ms": 0,
       "hits": []
      },
      {
       "stage": "id_check",
-      "at_ms": 0,
+      "at_ms": 2108,
       "ms": 0,
       "leaked": [],
       "id_leak": false
      },
      {
       "stage": "grounding",
-      "at_ms": 0,
+      "at_ms": 2108,
       "checked": 1,
       "grounded": 1,
       "ungrounded": [],
@@ -962,7 +932,7 @@
      },
      {
       "stage": "persist",
-      "at_ms": 0,
+      "at_ms": 2108,
       "messages": 4,
       "shown_total": 5,
       "focus_id": "R-005",
@@ -970,7 +940,7 @@
      },
      {
       "stage": "reply",
-      "at_ms": 0,
+      "at_ms": 2108,
       "ms": 0,
       "chars": 41,
       "intent": "listing_question",
@@ -980,7 +950,7 @@
      }
     ],
     "ablations_active": [],
-    "total_ms": 0
+    "total_ms": 2108
    },
    "grounding": {
     "checked": 1,
@@ -1018,10 +988,10 @@
    "llm_used": true,
    "model": "gemini/gemini-3.5-flash-lite",
    "usage": {
-    "prompt_tokens": 10413,
+    "prompt_tokens": 10335,
     "completion_tokens": 93
    },
-   "latency_ms": 0,
+   "latency_ms": 2108,
    "new_session": false,
    "degraded": false
   }
@@ -1030,11 +1000,11 @@
   "scenario": "A",
   "message": "does it have a warranty?",
   "envelope": {
-   "session_id": "s_D7MUWF7S",
-   "user_id": "u_f18e7f8e",
+   "session_id": "s_v5gRAaLy",
+   "user_id": "u_e31b4785",
    "turn": 4,
-   "request_id": "75a609ed2116",
-   "reply": "The listing states that the agency warranty covers 6 years.",
+   "request_id": "853f8cf65914",
+   "reply": "The agency warranty covers 6 years.",
    "streamed": null,
    "intent": "chitchat",
    "cars": [],
@@ -1046,9 +1016,9 @@
    },
    "query_explain": null,
    "trace": {
-    "session_id": "s_D7MUWF7S",
+    "session_id": "s_v5gRAaLy",
     "turn": 4,
-    "request_id": "75a609ed2116",
+    "request_id": "853f8cf65914",
     "stages": [
      {
       "stage": "received",
@@ -1070,11 +1040,11 @@
       "resolved": "R-005",
       "rule": "pronoun:focus",
       "candidates": 5,
-      "ms": 15
+      "ms": 0
      },
      {
       "stage": "memory_read",
-      "at_ms": 15,
+      "at_ms": 0,
       "recall": "Name: Sara. Sessions so far: 1.\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nUse this only when relevant. Never apply stored preferences as silent filters.",
       "lead_block": null,
       "summary_present": false,
@@ -1083,7 +1053,7 @@
      },
      {
       "stage": "prompt",
-      "at_ms": 15,
+      "at_ms": 0,
       "blocks": [
        {
         "name": "static",
@@ -1112,32 +1082,32 @@
        }
       ],
       "history_messages": 10,
-      "history_tokens_estimate": 2613,
-      "total_tokens_estimate": 4063,
+      "history_tokens_estimate": 2606,
+      "total_tokens_estimate": 4056,
       "ms": 0
      },
      {
       "stage": "llm_call",
-      "at_ms": 15,
+      "at_ms": 0,
       "n": 1,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1202,
+      "latency_ms": 1125,
       "tokens": {
-       "prompt_tokens": 5736,
+       "prompt_tokens": 5697,
        "completion_tokens": 32
       },
       "finish_reason": "stop",
       "emitted": "text",
       "tool_names": [],
       "text_chars": 84,
-      "cassette_hit": true,
+      "cassette_hit": false,
       "note": null,
-      "ms": 0
+      "ms": 1140
      },
      {
       "stage": "structured_reply",
-      "at_ms": 15,
+      "at_ms": 1140,
       "ms": 0,
       "structured": false,
       "cited": [],
@@ -1145,20 +1115,20 @@
      },
      {
       "stage": "postfilter",
-      "at_ms": 15,
+      "at_ms": 1140,
       "ms": 0,
       "hits": []
      },
      {
       "stage": "id_check",
-      "at_ms": 15,
+      "at_ms": 1140,
       "ms": 0,
       "leaked": [],
       "id_leak": false
      },
      {
       "stage": "grounding",
-      "at_ms": 15,
+      "at_ms": 1140,
       "checked": 2,
       "grounded": 1,
       "ungrounded": [
@@ -1168,26 +1138,26 @@
      },
      {
       "stage": "llm_call",
-      "at_ms": 15,
+      "at_ms": 1140,
       "n": 2,
       "purpose": "regenerate",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 3078,
+      "latency_ms": 875,
       "tokens": {
-       "prompt_tokens": 3832,
-       "completion_tokens": 12
+       "prompt_tokens": 3793,
+       "completion_tokens": 8
       },
       "finish_reason": "stop",
       "emitted": "text",
       "tool_names": [],
-      "text_chars": 59,
+      "text_chars": 35,
       "cassette_hit": false,
       "note": null,
-      "ms": 3078
+      "ms": 875
      },
      {
       "stage": "grounding_retry",
-      "at_ms": 3094,
+      "at_ms": 2015,
       "checked": 0,
       "grounded": 0,
       "ungrounded": [],
@@ -1195,7 +1165,7 @@
      },
      {
       "stage": "persist",
-      "at_ms": 3094,
+      "at_ms": 2015,
       "messages": 2,
       "shown_total": 5,
       "focus_id": "R-005",
@@ -1203,15 +1173,15 @@
      },
      {
       "stage": "reply",
-      "at_ms": 3094,
+      "at_ms": 2015,
       "ms": 0,
-      "chars": 59,
+      "chars": 35,
       "intent": "chitchat",
       "cited": []
      }
     ],
     "ablations_active": [],
-    "total_ms": 3094
+    "total_ms": 2015
    },
    "grounding": {
     "checked": 0,
@@ -1236,10 +1206,10 @@
    "llm_used": true,
    "model": "gemini/gemini-3.5-flash-lite",
    "usage": {
-    "prompt_tokens": 9568,
-    "completion_tokens": 44
+    "prompt_tokens": 9490,
+    "completion_tokens": 40
    },
-   "latency_ms": 3094,
+   "latency_ms": 2015,
    "new_session": false,
    "degraded": false
   }
@@ -1248,11 +1218,11 @@
   "scenario": "A",
   "message": "compare it with the second one",
   "envelope": {
-   "session_id": "s_D7MUWF7S",
-   "user_id": "u_f18e7f8e",
+   "session_id": "s_v5gRAaLy",
+   "user_id": "u_e31b4785",
    "turn": 5,
-   "request_id": "03434c56eb68",
-   "reply": "Here is a comparison between the 2026 Haval H9 and the 2024 Opel Grandland X:\n\n- **Price:** The Haval H9 is listed at AED 115,750 cash (excluding 5% VAT), while the Opel Grandland X is priced at AED 79,999 cash.\n- **Year & Mileage:** The Haval H9 is a 2026 model with 18 km, whereas the Opel Grandland X is a 2024 model with 0 km.\n- **Warranty:** Both come with an agency warranty—the Haval H9 has a 6-year or 200,000 km warranty, and the Opel Grandland X has a 5-year agency warranty.\n- **Specs:** Both are GCC specifications and feature automatic transmissions.",
+   "request_id": "3a677dbba2cd",
+   "reply": "Here is a comparison between the 2026 Haval H9 and the 2024 Opel Grandland X:\n\n- **Price**: The Haval H9 is priced at AED 115,750 (cash), while the Opel Grandland X is priced at AED 79,999 (cash).\n- **Year & Mileage**: The Haval H9 is a 2026 model with 18 km, whereas the Opel Grandland X is a 2024 model with 0 km.\n- **Warranty**: The Haval H9 comes with a 6-year or 200,000 km agency warranty, and the Opel Grandland X has a 5-year agency warranty.\n- **Specs**: Both are GCC spec SUVs.",
    "streamed": null,
    "intent": "compare",
    "cars": [],
@@ -1267,9 +1237,9 @@
    },
    "query_explain": null,
    "trace": {
-    "session_id": "s_D7MUWF7S",
+    "session_id": "s_v5gRAaLy",
     "turn": 5,
-    "request_id": "03434c56eb68",
+    "request_id": "3a677dbba2cd",
     "stages": [
      {
       "stage": "received",
@@ -1333,8 +1303,8 @@
        }
       ],
       "history_messages": 12,
-      "history_tokens_estimate": 2716,
-      "total_tokens_estimate": 4167,
+      "history_tokens_estimate": 2703,
+      "total_tokens_estimate": 4154,
       "ms": 0
      },
      {
@@ -1343,9 +1313,9 @@
       "n": 1,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1265,
+      "latency_ms": 1016,
       "tokens": {
-       "prompt_tokens": 5755,
+       "prompt_tokens": 5712,
        "completion_tokens": 22
       },
       "finish_reason": "tool_calls",
@@ -1356,11 +1326,11 @@
       "text_chars": 0,
       "cassette_hit": false,
       "note": null,
-      "ms": 1265
+      "ms": 1030
      },
      {
       "stage": "tool",
-      "at_ms": 1265,
+      "at_ms": 1030,
       "name": "get_listing",
       "args": {
        "listing_id": "C-066"
@@ -1372,13 +1342,13 @@
      },
      {
       "stage": "llm_call",
-      "at_ms": 1265,
+      "at_ms": 1030,
       "n": 2,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1141,
+      "latency_ms": 1062,
       "tokens": {
-       "prompt_tokens": 6430,
+       "prompt_tokens": 6387,
        "completion_tokens": 30
       },
       "finish_reason": "tool_calls",
@@ -1389,11 +1359,11 @@
       "text_chars": 0,
       "cassette_hit": false,
       "note": null,
-      "ms": 1141
+      "ms": 1062
      },
      {
       "stage": "tool",
-      "at_ms": 2406,
+      "at_ms": 2093,
       "name": "compare_listings",
       "args": {
        "listing_ids": [
@@ -1409,26 +1379,26 @@
      },
      {
       "stage": "llm_call",
-      "at_ms": 2406,
+      "at_ms": 2093,
       "n": 3,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1828,
+      "latency_ms": 2094,
       "tokens": {
-       "prompt_tokens": 6981,
-       "completion_tokens": 280
+       "prompt_tokens": 6938,
+       "completion_tokens": 270
       },
       "finish_reason": "stop",
       "emitted": "text",
       "tool_names": [],
-      "text_chars": 781,
+      "text_chars": 702,
       "cassette_hit": false,
       "note": null,
-      "ms": 1828
+      "ms": 2094
      },
      {
       "stage": "structured_reply",
-      "at_ms": 4234,
+      "at_ms": 4187,
       "ms": 0,
       "structured": true,
       "cited": [
@@ -1439,20 +1409,20 @@
      },
      {
       "stage": "postfilter",
-      "at_ms": 4234,
+      "at_ms": 4187,
       "ms": 0,
       "hits": []
      },
      {
       "stage": "id_check",
-      "at_ms": 4234,
+      "at_ms": 4187,
       "ms": 0,
       "leaked": [],
       "id_leak": false
      },
      {
       "stage": "grounding",
-      "at_ms": 4234,
+      "at_ms": 4187,
       "checked": 7,
       "grounded": 7,
       "ungrounded": [],
@@ -1460,7 +1430,7 @@
      },
      {
       "stage": "persist",
-      "at_ms": 4234,
+      "at_ms": 4187,
       "messages": 6,
       "shown_total": 5,
       "focus_id": "C-066",
@@ -1468,9 +1438,9 @@
      },
      {
       "stage": "reply",
-      "at_ms": 4234,
+      "at_ms": 4187,
       "ms": 0,
-      "chars": 563,
+      "chars": 487,
       "intent": "compare",
       "cited": [
        "R-005",
@@ -1479,7 +1449,7 @@
      }
     ],
     "ablations_active": [],
-    "total_ms": 4234
+    "total_ms": 4187
    },
    "grounding": {
     "checked": 7,
@@ -1518,8 +1488,8 @@
      },
      {
       "text": "79,999",
-      "start": 199,
-      "end": 205,
+      "start": 182,
+      "end": 188,
       "grounded": true,
       "source": {
        "listing_id": "C-066",
@@ -1528,8 +1498,8 @@
      },
      {
       "text": "2026",
-      "start": 252,
-      "end": 256,
+      "start": 237,
+      "end": 241,
       "grounded": true,
       "source": {
        "listing_id": "R-005",
@@ -1538,8 +1508,8 @@
      },
      {
       "text": "2024",
-      "start": 309,
-      "end": 313,
+      "start": 294,
+      "end": 298,
       "grounded": true,
       "source": {
        "listing_id": "C-066",
@@ -1548,8 +1518,8 @@
      },
      {
       "text": "200,000",
-      "start": 410,
-      "end": 417,
+      "start": 368,
+      "end": 375,
       "grounded": true,
       "source": {
        "listing_id": "R-005",
@@ -1578,10 +1548,10 @@
    "llm_used": true,
    "model": "gemini/gemini-3.5-flash-lite",
    "usage": {
-    "prompt_tokens": 19166,
-    "completion_tokens": 332
+    "prompt_tokens": 19037,
+    "completion_tokens": 322
    },
-   "latency_ms": 4234,
+   "latency_ms": 4187,
    "new_session": false,
    "degraded": false
   }
@@ -1590,11 +1560,11 @@
   "scenario": "A",
   "message": "what about that first Honda?",
   "envelope": {
-   "session_id": "s_D7MUWF7S",
-   "user_id": "u_f18e7f8e",
+   "session_id": "s_v5gRAaLy",
+   "user_id": "u_e31b4785",
    "turn": 6,
-   "request_id": "9ca4c4621c4c",
-   "reply": "We don't have a Honda in the current search results or on your screen, but we do have a 2021 Honda CR-V EX-L available in stock with 79,000 km.",
+   "request_id": "df85e88124d8",
+   "reply": "We have a 2021 Honda CR-V EX-L in white with 79,000 km. It is a GCC spec SUV featuring a full agency service history, 2 original keys, and a clean beige interior. The listing does not state a warranty.",
    "streamed": null,
    "intent": "inventory_search",
    "cars": [
@@ -1624,7 +1594,8 @@
      "thumb_url": "https://dbz-images.dubizzle.com/images/2026/02/02/9635f44f37034c7d97a7b2f176d94e09-.jpeg?imwidth=400",
      "explain": {
       "matched_filters": [
-       "make"
+       "make",
+       "price_max_aed (price not listed, soft pass)"
       ],
       "admitted_at_stage": "exact",
       "bm25": null,
@@ -1635,7 +1606,9 @@
     }
    ],
    "suggested_actions": [
-    "Tell me more about R-078"
+    "Tell me more about R-078",
+    "Book a viewing for R-078",
+    "Similar cars to R-078"
    ],
    "resolver": {
     "input": "what about that first Honda?",
@@ -1643,11 +1616,14 @@
     "rule": "not_on_screen:honda"
    },
    "query_explain": {
-    "normalization": [],
+    "normalization": [
+     "150k -> 150,000 AED"
+    ],
     "executed": {
-     "sql": "SELECT * FROM listings WHERE make = :make",
+     "sql": "SELECT * FROM listings WHERE make = :make AND (price_aed IS NULL OR price_aed <= :price_max)",
      "params": {
-      "make": "honda"
+      "make": "honda",
+      "price_max": 150000
      },
      "fts": null
     },
@@ -1657,9 +1633,9 @@
     "relaxed": []
    },
    "trace": {
-    "session_id": "s_D7MUWF7S",
+    "session_id": "s_v5gRAaLy",
     "turn": 6,
-    "request_id": "9ca4c4621c4c",
+    "request_id": "df85e88124d8",
     "stages": [
      {
       "stage": "received",
@@ -1718,8 +1694,8 @@
        }
       ],
       "history_messages": 18,
-      "history_tokens_estimate": 4431,
-      "total_tokens_estimate": 5823,
+      "history_tokens_estimate": 4398,
+      "total_tokens_estimate": 5790,
       "ms": 0
      },
      {
@@ -1728,10 +1704,10 @@
       "n": 1,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1031,
+      "latency_ms": 1156,
       "tokens": {
-       "prompt_tokens": 7119,
-       "completion_tokens": 17
+       "prompt_tokens": 7064,
+       "completion_tokens": 30
       },
       "finish_reason": "tool_calls",
       "emitted": "tool_calls",
@@ -1741,19 +1717,21 @@
       "text_chars": 0,
       "cassette_hit": false,
       "note": null,
-      "ms": 1031
+      "ms": 1156
      },
      {
       "stage": "tool",
-      "at_ms": 1031,
+      "at_ms": 1156,
       "name": "search_inventory",
       "args": {
+       "budget_text": "under 150k",
        "make": "honda"
       },
       "executed": {
-       "sql": "SELECT * FROM listings WHERE make = :make",
+       "sql": "SELECT * FROM listings WHERE make = :make AND (price_aed IS NULL OR price_aed <= :price_max)",
        "params": {
-        "make": "honda"
+        "make": "honda",
+        "price_max": 150000
        },
        "fts": null
       },
@@ -1765,31 +1743,66 @@
        "R-078"
       ],
       "total_matches": 1,
-      "normalization": [],
+      "normalization": [
+       "150k -> 150,000 AED"
+      ],
       "ms": 0
      },
      {
       "stage": "llm_call",
-      "at_ms": 1031,
+      "at_ms": 1156,
       "n": 2,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1375,
+      "latency_ms": 1000,
       "tokens": {
-       "prompt_tokens": 7387,
-       "completion_tokens": 119
+       "prompt_tokens": 7375,
+       "completion_tokens": 22
+      },
+      "finish_reason": "tool_calls",
+      "emitted": "tool_calls",
+      "tool_names": [
+       "get_listing"
+      ],
+      "text_chars": 0,
+      "cassette_hit": false,
+      "note": null,
+      "ms": 1000
+     },
+     {
+      "stage": "tool",
+      "at_ms": 2156,
+      "name": "get_listing",
+      "args": {
+       "listing_id": "R-078"
+      },
+      "result_ids": [
+       "R-078"
+      ],
+      "ms": 0
+     },
+     {
+      "stage": "llm_call",
+      "at_ms": 2156,
+      "n": 3,
+      "purpose": "chat",
+      "model": "gemini/gemini-3.5-flash-lite",
+      "latency_ms": 1733,
+      "tokens": {
+       "prompt_tokens": 8027,
+       "completion_tokens": 166
       },
       "finish_reason": "stop",
       "emitted": "text",
       "tool_names": [],
-      "text_chars": 301,
+      "text_chars": 467,
       "cassette_hit": false,
       "note": null,
-      "ms": 1375
+      "ms": 1733
      },
      {
       "stage": "structured_reply",
-      "at_ms": 2406,
+      "at_ms": 3890,
       "ms": 0,
       "structured": true,
       "cited": [
@@ -1799,20 +1812,20 @@
      },
      {
       "stage": "postfilter",
-      "at_ms": 2406,
+      "at_ms": 3890,
       "ms": 0,
       "hits": []
      },
      {
       "stage": "id_check",
-      "at_ms": 2406,
+      "at_ms": 3890,
       "ms": 0,
       "leaked": [],
       "id_leak": false
      },
      {
       "stage": "grounding",
-      "at_ms": 2406,
+      "at_ms": 3890,
       "checked": 2,
       "grounded": 2,
       "ungrounded": [],
@@ -1820,7 +1833,7 @@
      },
      {
       "stage": "memory_write",
-      "at_ms": 2406,
+      "at_ms": 3890,
       "ms": 0,
       "table": "search_history",
       "by": "search_inventory",
@@ -1829,17 +1842,17 @@
      },
      {
       "stage": "persist",
-      "at_ms": 2406,
-      "messages": 4,
+      "at_ms": 3890,
+      "messages": 6,
       "shown_total": 6,
-      "focus_id": "C-066",
+      "focus_id": "R-078",
       "ms": 0
      },
      {
       "stage": "reply",
-      "at_ms": 2406,
+      "at_ms": 3890,
       "ms": 0,
-      "chars": 143,
+      "chars": 201,
       "intent": "inventory_search",
       "cited": [
        "R-078"
@@ -1847,7 +1860,7 @@
      }
     ],
     "ablations_active": [],
-    "total_ms": 2406
+    "total_ms": 3890
    },
    "grounding": {
     "checked": 2,
@@ -1856,8 +1869,8 @@
     "spans": [
      {
       "text": "2021",
-      "start": 88,
-      "end": 92,
+      "start": 10,
+      "end": 14,
       "grounded": true,
       "source": {
        "listing_id": "R-078",
@@ -1866,8 +1879,8 @@
      },
      {
       "text": "79,000",
-      "start": 133,
-      "end": 139,
+      "start": 45,
+      "end": 51,
       "grounded": true,
       "source": {
        "listing_id": "R-078",
@@ -1896,16 +1909,16 @@
    "cited_listing_ids": [
     "R-078"
    ],
-   "focus_id": "C-066",
+   "focus_id": "R-078",
    "pending_booking": null,
    "identified_user": null,
    "llm_used": true,
    "model": "gemini/gemini-3.5-flash-lite",
    "usage": {
-    "prompt_tokens": 14506,
-    "completion_tokens": 136
+    "prompt_tokens": 22466,
+    "completion_tokens": 218
    },
-   "latency_ms": 2406,
+   "latency_ms": 3890,
    "new_session": false,
    "degraded": false
   }
@@ -1914,13 +1927,13 @@
   "scenario": "A",
   "message": "I like the velar",
   "envelope": {
-   "session_id": "s_D7MUWF7S",
-   "user_id": "u_f18e7f8e",
+   "session_id": "s_v5gRAaLy",
+   "user_id": "u_e31b4785",
    "turn": 7,
-   "request_id": "2074606fc1dd",
-   "reply": "I've saved the 2018 Land Rover Range Rover Velar to your liked cars. It's a 2018 model with 68,000 km, priced at AED 119,750.",
+   "request_id": "ccfb4ebea89d",
+   "reply": "We have a 2018 Land Rover Range Rover Velar R-Dynamic SE available for AED 119,750 in cash. It has 68,000 km, GCC specs, automatic AWD, a beige interior, and a GCC warranty.",
    "streamed": null,
-   "intent": "lead",
+   "intent": "inventory_search",
    "cars": [
     {
      "id": "C-003",
@@ -1960,7 +1973,9 @@
     }
    ],
    "suggested_actions": [
-    "Tell me more about C-003"
+    "Tell me more about C-003",
+    "Book a viewing for C-003",
+    "Similar cars to C-003"
    ],
    "resolver": {
     "input": "I like the velar",
@@ -1985,9 +2000,9 @@
     "relaxed": []
    },
    "trace": {
-    "session_id": "s_D7MUWF7S",
+    "session_id": "s_v5gRAaLy",
     "turn": 7,
-    "request_id": "2074606fc1dd",
+    "request_id": "ccfb4ebea89d",
     "stages": [
      {
       "stage": "received",
@@ -2041,13 +2056,13 @@
        },
        {
         "name": "focus",
-        "text": "## Cars on screen\n#1 R-005 2026 haval h9 4wd, AED 115,750, 18 km\n#2 C-066 2024 opel grandland x, AED 79,999, 0 km\n#3 R-044 2024 ford territory titanium, AED 93,000, 34,277 km\n#4 R-085 2024 volkswagen t-roc style, AED 89,900, 39,000 km\n#5 C-095 2023 toyota rav 4, AED 95,000, 970 km\n#6 R-078 2021 honda cr-v ex-l, price not listed, 79,000 km\nCurrent focus: C-066",
+        "text": "## Cars on screen\n#1 R-005 2026 haval h9 4wd, AED 115,750, 18 km\n#2 C-066 2024 opel grandland x, AED 79,999, 0 km\n#3 R-044 2024 ford territory titanium, AED 93,000, 34,277 km\n#4 R-085 2024 volkswagen t-roc style, AED 89,900, 39,000 km\n#5 C-095 2023 toyota rav 4, AED 95,000, 970 km\n#6 R-078 2021 honda cr-v ex-l, price not listed, 79,000 km\nCurrent focus: R-078",
         "tokens": 90
        }
       ],
-      "history_messages": 22,
-      "history_tokens_estimate": 5011,
-      "total_tokens_estimate": 6432,
+      "history_messages": 24,
+      "history_tokens_estimate": 5921,
+      "total_tokens_estimate": 7342,
       "ms": 0
      },
      {
@@ -2056,9 +2071,9 @@
       "n": 1,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1078,
+      "latency_ms": 1671,
       "tokens": {
-       "prompt_tokens": 7491,
+       "prompt_tokens": 8143,
        "completion_tokens": 19
       },
       "finish_reason": "tool_calls",
@@ -2069,11 +2084,11 @@
       "text_chars": 0,
       "cassette_hit": false,
       "note": null,
-      "ms": 1078
+      "ms": 1671
      },
      {
       "stage": "tool",
-      "at_ms": 1078,
+      "at_ms": 1671,
       "name": "search_inventory",
       "args": {
        "model": "range rover velar"
@@ -2097,92 +2112,63 @@
       "normalization": [
        "range rover velar -> make land rover, model range rover velar (alias)"
       ],
-      "ms": 16
+      "ms": 0
      },
      {
       "stage": "llm_call",
-      "at_ms": 1094,
+      "at_ms": 1671,
       "n": 2,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1171,
+      "latency_ms": 1108,
       "tokens": {
-       "prompt_tokens": 7789,
+       "prompt_tokens": 8441,
        "completion_tokens": 22
       },
       "finish_reason": "tool_calls",
       "emitted": "tool_calls",
       "tool_names": [
-       "like_listing"
+       "get_listing"
       ],
       "text_chars": 0,
       "cassette_hit": false,
       "note": null,
-      "ms": 1171
+      "ms": 1108
      },
      {
       "stage": "tool",
-      "at_ms": 2266,
-      "name": "like_listing",
+      "at_ms": 2780,
+      "name": "get_listing",
       "args": {
        "listing_id": "C-003"
       },
-      "result_ids": [],
+      "result_ids": [
+       "C-003"
+      ],
       "ms": 0
      },
      {
       "stage": "llm_call",
-      "at_ms": 2266,
+      "at_ms": 2780,
       "n": 3,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1078,
+      "latency_ms": 1608,
       "tokens": {
-       "prompt_tokens": 7864,
-       "completion_tokens": 19
-      },
-      "finish_reason": "tool_calls",
-      "emitted": "tool_calls",
-      "tool_names": [
-       "update_lead"
-      ],
-      "text_chars": 0,
-      "cassette_hit": false,
-      "note": null,
-      "ms": 1078
-     },
-     {
-      "stage": "tool",
-      "at_ms": 3344,
-      "name": "update_lead",
-      "args": {
-       "preferred_makes": "land rover"
-      },
-      "result_ids": [],
-      "ms": 0
-     },
-     {
-      "stage": "llm_call",
-      "at_ms": 3344,
-      "n": 4,
-      "purpose": "chat",
-      "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1391,
-      "tokens": {
-       "prompt_tokens": 7968,
-       "completion_tokens": 133
+       "prompt_tokens": 9242,
+       "completion_tokens": 152
       },
       "finish_reason": "stop",
       "emitted": "text",
       "tool_names": [],
-      "text_chars": 298,
+      "text_chars": 390,
       "cassette_hit": false,
       "note": null,
-      "ms": 1391
+      "ms": 1608
      },
      {
       "stage": "structured_reply",
-      "at_ms": 4735,
+      "at_ms": 4389,
       "ms": 0,
       "structured": true,
       "cited": [
@@ -2192,28 +2178,28 @@
      },
      {
       "stage": "postfilter",
-      "at_ms": 4735,
+      "at_ms": 4389,
       "ms": 0,
       "hits": []
      },
      {
       "stage": "id_check",
-      "at_ms": 4735,
+      "at_ms": 4389,
       "ms": 0,
       "leaked": [],
       "id_leak": false
      },
      {
       "stage": "grounding",
-      "at_ms": 4735,
-      "checked": 4,
-      "grounded": 4,
+      "at_ms": 4389,
+      "checked": 3,
+      "grounded": 3,
       "ungrounded": [],
       "ms": 0
      },
      {
       "stage": "memory_write",
-      "at_ms": 4735,
+      "at_ms": 4389,
       "ms": 0,
       "table": "search_history",
       "by": "search_inventory",
@@ -2221,90 +2207,60 @@
       "results": 1
      },
      {
-      "stage": "memory_write",
-      "at_ms": 4735,
-      "ms": 0,
-      "table": "liked_cars",
-      "by": "like_listing",
-      "listing_id": "C-003"
-     },
-     {
-      "stage": "memory_write",
-      "at_ms": 4735,
-      "ms": 0,
-      "table": "leads",
-      "by": "update_lead",
-      "fields": [
-       "interested_listing_ids",
-       "preferred_makes"
-      ],
-      "status": "partial"
-     },
-     {
       "stage": "persist",
-      "at_ms": 4735,
-      "messages": 8,
+      "at_ms": 4389,
+      "messages": 6,
       "shown_total": 7,
       "focus_id": "C-003",
       "ms": 0
      },
      {
       "stage": "reply",
-      "at_ms": 4735,
+      "at_ms": 4389,
       "ms": 0,
-      "chars": 125,
-      "intent": "lead",
+      "chars": 173,
+      "intent": "inventory_search",
       "cited": [
        "C-003"
       ]
      }
     ],
     "ablations_active": [],
-    "total_ms": 4735
+    "total_ms": 4389
    },
    "grounding": {
-    "checked": 4,
-    "grounded": 4,
+    "checked": 3,
+    "grounded": 3,
     "ungrounded": [],
     "spans": [
      {
       "text": "2018",
-      "start": 15,
-      "end": 19,
+      "start": 10,
+      "end": 14,
       "grounded": true,
       "source": {
        "listing_id": "C-003",
        "field": "year"
-      }
-     },
-     {
-      "text": "2018",
-      "start": 76,
-      "end": 80,
-      "grounded": true,
-      "source": {
-       "listing_id": "C-003",
-       "field": "year"
-      }
-     },
-     {
-      "text": "68,000",
-      "start": 92,
-      "end": 98,
-      "grounded": true,
-      "source": {
-       "listing_id": "C-003",
-       "field": "mileage_km"
       }
      },
      {
       "text": "119,750",
-      "start": 117,
-      "end": 124,
+      "start": 75,
+      "end": 82,
       "grounded": true,
       "source": {
        "listing_id": "C-003",
        "field": "price_aed"
+      }
+     },
+     {
+      "text": "68,000",
+      "start": 99,
+      "end": 105,
+      "grounded": true,
+      "source": {
+       "listing_id": "C-003",
+       "field": "mileage_km"
       }
      }
     ]
@@ -2321,20 +2277,6 @@
       "by": "search_inventory",
       "query": "I like the velar",
       "results": 1
-     },
-     {
-      "table": "liked_cars",
-      "by": "like_listing",
-      "listing_id": "C-003"
-     },
-     {
-      "table": "leads",
-      "by": "update_lead",
-      "fields": [
-       "interested_listing_ids",
-       "preferred_makes"
-      ],
-      "status": "partial"
      }
     ]
    },
@@ -2349,10 +2291,10 @@
    "llm_used": true,
    "model": "gemini/gemini-3.5-flash-lite",
    "usage": {
-    "prompt_tokens": 31112,
+    "prompt_tokens": 25826,
     "completion_tokens": 193
    },
-   "latency_ms": 4735,
+   "latency_ms": 4389,
    "new_session": false,
    "degraded": false
   }
@@ -2361,10 +2303,10 @@
   "scenario": "A",
   "message": "book a viewing for the velar tomorrow at 9am",
   "envelope": {
-   "session_id": "s_D7MUWF7S",
-   "user_id": "u_f18e7f8e",
+   "session_id": "s_v5gRAaLy",
+   "user_id": "u_e31b4785",
    "turn": 8,
-   "request_id": "00e6544dc31a",
+   "request_id": "b0a327c5fad5",
    "reply": "Viewings are not available on Sundays since the schedule runs Monday to Saturday. Would Monday at 9:00 AM work for you instead?",
    "streamed": null,
    "intent": "booking",
@@ -2377,9 +2319,9 @@
    },
    "query_explain": null,
    "trace": {
-    "session_id": "s_D7MUWF7S",
+    "session_id": "s_v5gRAaLy",
     "turn": 8,
-    "request_id": "00e6544dc31a",
+    "request_id": "b0a327c5fad5",
     "stages": [
      {
       "stage": "received",
@@ -2406,8 +2348,8 @@
      {
       "stage": "memory_read",
       "at_ms": 0,
-      "recall": "Name: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nLiked earlier today: 2018 land rover range rover velar (C-003).\nLead status: partial (missing: phone or email, budget, timeline within 3 months).\nUse this only when relevant. Never apply stored preferences as silent filters.",
-      "lead_block": "preferred makes: land rover; interested in C-003. no contact details yet (collected via the form, not chat). Status: partial (missing: phone or email, budget, timeline within 3 months). Ask at most one qualifying question per turn.",
+      "recall": "Name: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nUse this only when relevant. Never apply stored preferences as silent filters.",
+      "lead_block": null,
       "summary_present": false,
       "returning": true,
       "ms": 0
@@ -2428,8 +2370,8 @@
        },
        {
         "name": "recall",
-        "text": "## Returning user\nName: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nLiked earlier today: 2018 land rover range rover velar (C-003).\nLead status: partial (missing: phone or email, budget, timeline within 3 months).\nUse this only when relevant. Never apply stored preferences as silent filters.",
-        "tokens": 120
+        "text": "## Returning user\nName: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nUse this only when relevant. Never apply stored preferences as silent filters.",
+        "tokens": 83
        },
        {
         "name": "focus",
@@ -2440,16 +2382,11 @@
         "name": "resolved",
         "text": "## Resolved reference\nResolved reference: the user's phrase 'book a viewing for the velar tomorrow at 9am' refers to listing C-003 (rule: make_or_model). Use get_listing on it before answering attribute questions, and similar_listings for other cars like it.",
         "tokens": 64
-       },
-       {
-        "name": "lead",
-        "text": "## Lead profile so far\npreferred makes: land rover; interested in C-003. no contact details yet (collected via the form, not chat). Status: partial (missing: phone or email, budget, timeline within 3 months). Ask at most one qualifying question per turn.",
-        "tokens": 63
        }
       ],
       "history_messages": 30,
-      "history_tokens_estimate": 6221,
-      "total_tokens_estimate": 7844,
+      "history_tokens_estimate": 7498,
+      "total_tokens_estimate": 9021,
       "ms": 0
      },
      {
@@ -2458,9 +2395,9 @@
       "n": 1,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1733,
+      "latency_ms": 1156,
       "tokens": {
-       "prompt_tokens": 8259,
+       "prompt_tokens": 9434,
        "completion_tokens": 36
       },
       "finish_reason": "tool_calls",
@@ -2471,15 +2408,15 @@
       "text_chars": 0,
       "cassette_hit": false,
       "note": null,
-      "ms": 1733
+      "ms": 1156
      },
      {
       "stage": "tool",
-      "at_ms": 1733,
+      "at_ms": 1156,
       "name": "propose_viewing",
       "args": {
-       "listing_id": "C-003",
        "date_text": "tomorrow",
+       "listing_id": "C-003",
        "hour": 9
       },
       "result_ids": [],
@@ -2487,26 +2424,26 @@
      },
      {
       "stage": "llm_call",
-      "at_ms": 1733,
+      "at_ms": 1156,
       "n": 2,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1297,
+      "latency_ms": 1796,
       "tokens": {
-       "prompt_tokens": 8697,
-       "completion_tokens": 64
+       "prompt_tokens": 9872,
+       "completion_tokens": 70
       },
       "finish_reason": "stop",
       "emitted": "text",
       "tool_names": [],
-      "text_chars": 208,
+      "text_chars": 216,
       "cassette_hit": false,
       "note": null,
-      "ms": 1297
+      "ms": 1796
      },
      {
       "stage": "structured_reply",
-      "at_ms": 3031,
+      "at_ms": 2953,
       "ms": 0,
       "structured": true,
       "cited": [
@@ -2516,20 +2453,20 @@
      },
      {
       "stage": "postfilter",
-      "at_ms": 3031,
+      "at_ms": 2953,
       "ms": 0,
       "hits": []
      },
      {
       "stage": "id_check",
-      "at_ms": 3031,
+      "at_ms": 2953,
       "ms": 0,
       "leaked": [],
       "id_leak": false
      },
      {
       "stage": "grounding",
-      "at_ms": 3031,
+      "at_ms": 2953,
       "checked": 0,
       "grounded": 0,
       "ungrounded": [],
@@ -2537,7 +2474,7 @@
      },
      {
       "stage": "persist",
-      "at_ms": 3031,
+      "at_ms": 2953,
       "messages": 4,
       "shown_total": 7,
       "focus_id": "C-003",
@@ -2545,7 +2482,7 @@
      },
      {
       "stage": "reply",
-      "at_ms": 3031,
+      "at_ms": 2953,
       "ms": 0,
       "chars": 127,
       "intent": "booking",
@@ -2555,7 +2492,7 @@
      }
     ],
     "ablations_active": [],
-    "total_ms": 3031
+    "total_ms": 2953
    },
    "grounding": {
     "checked": 0,
@@ -2568,7 +2505,7 @@
     "leaked_ids": []
    },
    "memory": {
-    "read": "Name: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nLiked earlier today: 2018 land rover range rover velar (C-003).\nLead status: partial (missing: phone or email, budget, timeline within 3 months).\nUse this only when relevant. Never apply stored preferences as silent filters.",
+    "read": "Name: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nUse this only when relevant. Never apply stored preferences as silent filters.",
     "writes": []
    },
    "verification": null,
@@ -2582,10 +2519,10 @@
    "llm_used": true,
    "model": "gemini/gemini-3.5-flash-lite",
    "usage": {
-    "prompt_tokens": 16956,
-    "completion_tokens": 100
+    "prompt_tokens": 19306,
+    "completion_tokens": 106
    },
-   "latency_ms": 3031,
+   "latency_ms": 2953,
    "new_session": false,
    "degraded": false
   }
@@ -2594,11 +2531,11 @@
   "scenario": "A",
   "message": "book it for monday at 9am then",
   "envelope": {
-   "session_id": "s_D7MUWF7S",
-   "user_id": "u_f18e7f8e",
+   "session_id": "s_v5gRAaLy",
+   "user_id": "u_e31b4785",
    "turn": 9,
-   "request_id": "a101aa8caee4",
-   "reply": "To confirm: a viewing of the 2018 Land Rover Range Rover Velar on Monday 07 Sep 2026, 09:00 to 10:00. Shall I book it?",
+   "request_id": "17ee4004282a",
+   "reply": "To confirm: a viewing of the 2018 Land Rover Range Rover Velar on Monday 07 Sep 2026, from 09:00 to 10:00. Shall I book it?",
    "streamed": null,
    "intent": "booking",
    "cars": [],
@@ -2612,9 +2549,9 @@
    },
    "query_explain": null,
    "trace": {
-    "session_id": "s_D7MUWF7S",
+    "session_id": "s_v5gRAaLy",
     "turn": 9,
-    "request_id": "a101aa8caee4",
+    "request_id": "17ee4004282a",
     "stages": [
      {
       "stage": "received",
@@ -2641,8 +2578,8 @@
      {
       "stage": "memory_read",
       "at_ms": 0,
-      "recall": "Name: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nLiked earlier today: 2018 land rover range rover velar (C-003).\nLead status: partial (missing: phone or email, budget, timeline within 3 months).\nUse this only when relevant. Never apply stored preferences as silent filters.",
-      "lead_block": "preferred makes: land rover; interested in C-003. no contact details yet (collected via the form, not chat). Status: partial (missing: phone or email, budget, timeline within 3 months). Ask at most one qualifying question per turn.",
+      "recall": "Name: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nUse this only when relevant. Never apply stored preferences as silent filters.",
+      "lead_block": null,
       "summary_present": false,
       "returning": true,
       "ms": 0
@@ -2663,8 +2600,8 @@
        },
        {
         "name": "recall",
-        "text": "## Returning user\nName: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nLiked earlier today: 2018 land rover range rover velar (C-003).\nLead status: partial (missing: phone or email, budget, timeline within 3 months).\nUse this only when relevant. Never apply stored preferences as silent filters.",
-        "tokens": 120
+        "text": "## Returning user\nName: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nUse this only when relevant. Never apply stored preferences as silent filters.",
+        "tokens": 83
        },
        {
         "name": "focus",
@@ -2675,16 +2612,11 @@
         "name": "resolved",
         "text": "## Resolved reference\nResolved reference: the user's phrase 'book it for monday at 9am then' refers to listing C-003 (rule: pronoun:focus). Use get_listing on it before answering attribute questions, and similar_listings for other cars like it.",
         "tokens": 61
-       },
-       {
-        "name": "lead",
-        "text": "## Lead profile so far\npreferred makes: land rover; interested in C-003. no contact details yet (collected via the form, not chat). Status: partial (missing: phone or email, budget, timeline within 3 months). Ask at most one qualifying question per turn.",
-        "tokens": 63
        }
       ],
       "history_messages": 34,
-      "history_tokens_estimate": 6810,
-      "total_tokens_estimate": 8426,
+      "history_tokens_estimate": 8087,
+      "total_tokens_estimate": 9603,
       "ms": 0
      },
      {
@@ -2693,9 +2625,9 @@
       "n": 1,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 7953,
+      "latency_ms": 1312,
       "tokens": {
-       "prompt_tokens": 8732,
+       "prompt_tokens": 9907,
        "completion_tokens": 36
       },
       "finish_reason": "tool_calls",
@@ -2706,15 +2638,15 @@
       "text_chars": 0,
       "cassette_hit": false,
       "note": null,
-      "ms": 7953
+      "ms": 1344
      },
      {
       "stage": "tool",
-      "at_ms": 7953,
+      "at_ms": 1344,
       "name": "propose_viewing",
       "args": {
-       "listing_id": "C-003",
        "date_text": "monday",
+       "listing_id": "C-003",
        "hour": 9
       },
       "result_ids": [],
@@ -2722,13 +2654,13 @@
      },
      {
       "stage": "llm_call",
-      "at_ms": 7953,
+      "at_ms": 1344,
       "n": 2,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1092,
+      "latency_ms": 1016,
       "tokens": {
-       "prompt_tokens": 8964,
+       "prompt_tokens": 10139,
        "completion_tokens": 11
       },
       "finish_reason": "tool_calls",
@@ -2739,11 +2671,11 @@
       "text_chars": 0,
       "cassette_hit": false,
       "note": null,
-      "ms": 1092
+      "ms": 1016
      },
      {
       "stage": "tool",
-      "at_ms": 9046,
+      "at_ms": 2360,
       "name": "confirm_viewing",
       "args": {},
       "result_ids": [],
@@ -2751,26 +2683,26 @@
      },
      {
       "stage": "llm_call",
-      "at_ms": 9046,
+      "at_ms": 2360,
       "n": 3,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1250,
+      "latency_ms": 1405,
       "tokens": {
-       "prompt_tokens": 9014,
-       "completion_tokens": 82
+       "prompt_tokens": 10189,
+       "completion_tokens": 109
       },
       "finish_reason": "stop",
       "emitted": "text",
       "tool_names": [],
-      "text_chars": 186,
+      "text_chars": 251,
       "cassette_hit": false,
       "note": null,
-      "ms": 1250
+      "ms": 1405
      },
      {
       "stage": "structured_reply",
-      "at_ms": 10296,
+      "at_ms": 3766,
       "ms": 0,
       "structured": true,
       "cited": [
@@ -2780,20 +2712,20 @@
      },
      {
       "stage": "postfilter",
-      "at_ms": 10296,
+      "at_ms": 3766,
       "ms": 0,
       "hits": []
      },
      {
       "stage": "id_check",
-      "at_ms": 10296,
+      "at_ms": 3766,
       "ms": 0,
       "leaked": [],
       "id_leak": false
      },
      {
       "stage": "grounding",
-      "at_ms": 10296,
+      "at_ms": 3766,
       "checked": 2,
       "grounded": 2,
       "ungrounded": [],
@@ -2801,7 +2733,7 @@
      },
      {
       "stage": "persist",
-      "at_ms": 10296,
+      "at_ms": 3766,
       "messages": 6,
       "shown_total": 7,
       "focus_id": "C-003",
@@ -2809,9 +2741,9 @@
      },
      {
       "stage": "reply",
-      "at_ms": 10296,
+      "at_ms": 3766,
       "ms": 0,
-      "chars": 118,
+      "chars": 123,
       "intent": "booking",
       "cited": [
        "C-003"
@@ -2819,7 +2751,7 @@
      }
     ],
     "ablations_active": [],
-    "total_ms": 10296
+    "total_ms": 3766
    },
    "grounding": {
     "checked": 2,
@@ -2853,7 +2785,7 @@
     "leaked_ids": []
    },
    "memory": {
-    "read": "Name: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nLiked earlier today: 2018 land rover range rover velar (C-003).\nLead status: partial (missing: phone or email, budget, timeline within 3 months).\nUse this only when relevant. Never apply stored preferences as silent filters.",
+    "read": "Name: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nUse this only when relevant. Never apply stored preferences as silent filters.",
     "writes": []
    },
    "verification": null,
@@ -2873,10 +2805,10 @@
    "llm_used": true,
    "model": "gemini/gemini-3.5-flash-lite",
    "usage": {
-    "prompt_tokens": 26710,
-    "completion_tokens": 129
+    "prompt_tokens": 30235,
+    "completion_tokens": 156
    },
-   "latency_ms": 10296,
+   "latency_ms": 3766,
    "new_session": false,
    "degraded": false
   }
@@ -2885,11 +2817,11 @@
   "scenario": "A",
   "message": "yes please",
   "envelope": {
-   "session_id": "s_D7MUWF7S",
-   "user_id": "u_f18e7f8e",
+   "session_id": "s_v5gRAaLy",
+   "user_id": "u_e31b4785",
    "turn": 10,
-   "request_id": "84777de324eb",
-   "reply": "Your viewing for the 2018 Land Rover Range Rover Velar has been booked for Monday, September 7, 2026, from 09:00 to 10:00. Your reference number is BK-0001.",
+   "request_id": "f186befa0199",
+   "reply": "Your viewing for the 2018 Land Rover Range Rover Velar has been booked for Monday, 7 September 2026, from 09:00 to 10:00. Your reference number is BK-0001.",
    "streamed": null,
    "intent": "booking",
    "cars": [],
@@ -2901,9 +2833,9 @@
    },
    "query_explain": null,
    "trace": {
-    "session_id": "s_D7MUWF7S",
+    "session_id": "s_v5gRAaLy",
     "turn": 10,
-    "request_id": "84777de324eb",
+    "request_id": "f186befa0199",
     "stages": [
      {
       "stage": "received",
@@ -2930,8 +2862,8 @@
      {
       "stage": "memory_read",
       "at_ms": 0,
-      "recall": "Name: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nLiked earlier today: 2018 land rover range rover velar (C-003).\nLead status: partial (missing: phone or email, budget, timeline within 3 months).\nUse this only when relevant. Never apply stored preferences as silent filters.",
-      "lead_block": "preferred makes: land rover; interested in C-003. no contact details yet (collected via the form, not chat). Status: partial (missing: phone or email, budget, timeline within 3 months). Ask at most one qualifying question per turn.",
+      "recall": "Name: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nUse this only when relevant. Never apply stored preferences as silent filters.",
+      "lead_block": null,
       "summary_present": false,
       "returning": true,
       "ms": 0
@@ -2952,18 +2884,13 @@
        },
        {
         "name": "recall",
-        "text": "## Returning user\nName: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nLiked earlier today: 2018 land rover range rover velar (C-003).\nLead status: partial (missing: phone or email, budget, timeline within 3 months).\nUse this only when relevant. Never apply stored preferences as silent filters.",
-        "tokens": 120
+        "text": "## Returning user\nName: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nUse this only when relevant. Never apply stored preferences as silent filters.",
+        "tokens": 83
        },
        {
         "name": "focus",
         "text": "## Cars on screen\n#1 R-005 2026 haval h9 4wd, AED 115,750, 18 km\n#2 C-066 2024 opel grandland x, AED 79,999, 0 km\n#3 R-044 2024 ford territory titanium, AED 93,000, 34,277 km\n#4 R-085 2024 volkswagen t-roc style, AED 89,900, 39,000 km\n#5 C-095 2023 toyota rav 4, AED 95,000, 970 km\n#6 R-078 2021 honda cr-v ex-l, price not listed, 79,000 km\n#7 C-003 2018 land rover range rover velar, AED 119,750, 68,000 km\nCurrent focus: C-003",
         "tokens": 107
-       },
-       {
-        "name": "lead",
-        "text": "## Lead profile so far\npreferred makes: land rover; interested in C-003. no contact details yet (collected via the form, not chat). Status: partial (missing: phone or email, budget, timeline within 3 months). Ask at most one qualifying question per turn.",
-        "tokens": 63
        },
        {
         "name": "pending_booking",
@@ -2972,8 +2899,8 @@
        }
       ],
       "history_messages": 40,
-      "history_tokens_estimate": 7581,
-      "total_tokens_estimate": 9167,
+      "history_tokens_estimate": 8859,
+      "total_tokens_estimate": 10345,
       "ms": 0
      },
      {
@@ -2982,9 +2909,9 @@
       "n": 1,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1266,
+      "latency_ms": 1250,
       "tokens": {
-       "prompt_tokens": 9063,
+       "prompt_tokens": 10239,
        "completion_tokens": 11
       },
       "finish_reason": "tool_calls",
@@ -2995,26 +2922,57 @@
       "text_chars": 0,
       "cassette_hit": false,
       "note": null,
-      "ms": 1266
+      "ms": 1250
      },
      {
       "stage": "tool",
-      "at_ms": 1266,
+      "at_ms": 1250,
       "name": "confirm_viewing",
       "args": {},
+      "result_ids": [],
+      "ms": 15
+     },
+     {
+      "stage": "llm_call",
+      "at_ms": 1265,
+      "n": 2,
+      "purpose": "chat",
+      "model": "gemini/gemini-3.5-flash-lite",
+      "latency_ms": 1421,
+      "tokens": {
+       "prompt_tokens": 10429,
+       "completion_tokens": 22
+      },
+      "finish_reason": "tool_calls",
+      "emitted": "tool_calls",
+      "tool_names": [
+       "like_listing"
+      ],
+      "text_chars": 0,
+      "cassette_hit": false,
+      "note": null,
+      "ms": 1421
+     },
+     {
+      "stage": "tool",
+      "at_ms": 2687,
+      "name": "like_listing",
+      "args": {
+       "listing_id": "C-003"
+      },
       "result_ids": [],
       "ms": 0
      },
      {
       "stage": "llm_call",
-      "at_ms": 1266,
-      "n": 2,
+      "at_ms": 2687,
+      "n": 3,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1515,
+      "latency_ms": 1233,
       "tokens": {
-       "prompt_tokens": 9253,
-       "completion_tokens": 16
+       "prompt_tokens": 10504,
+       "completion_tokens": 55
       },
       "finish_reason": "tool_calls",
       "emitted": "tool_calls",
@@ -3024,40 +2982,43 @@
       "text_chars": 0,
       "cassette_hit": false,
       "note": null,
-      "ms": 1515
+      "ms": 1233
      },
      {
       "stage": "tool",
-      "at_ms": 2781,
+      "at_ms": 3921,
       "name": "update_lead",
       "args": {
-       "timeline": "now"
+       "body_type": "suv",
+       "budget_max_aed": 150000,
+       "budget_text": "under 150k",
+       "preferred_makes": "land rover"
       },
       "result_ids": [],
       "ms": 0
      },
      {
       "stage": "llm_call",
-      "at_ms": 2781,
-      "n": 3,
+      "at_ms": 3921,
+      "n": 4,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1343,
+      "latency_ms": 1344,
       "tokens": {
-       "prompt_tokens": 9339,
-       "completion_tokens": 108
+       "prompt_tokens": 10710,
+       "completion_tokens": 115
       },
       "finish_reason": "stop",
       "emitted": "text",
       "tool_names": [],
-      "text_chars": 265,
+      "text_chars": 283,
       "cassette_hit": false,
       "note": null,
-      "ms": 1343
+      "ms": 1344
      },
      {
       "stage": "structured_reply",
-      "at_ms": 4125,
+      "at_ms": 5265,
       "ms": 0,
       "structured": true,
       "cited": [
@@ -3067,20 +3028,20 @@
      },
      {
       "stage": "postfilter",
-      "at_ms": 4125,
+      "at_ms": 5265,
       "ms": 0,
       "hits": []
      },
      {
       "stage": "id_check",
-      "at_ms": 4125,
+      "at_ms": 5265,
       "ms": 0,
       "leaked": [],
       "id_leak": false
      },
      {
       "stage": "grounding",
-      "at_ms": 4125,
+      "at_ms": 5265,
       "checked": 2,
       "grounded": 2,
       "ungrounded": [],
@@ -3088,7 +3049,7 @@
      },
      {
       "stage": "memory_write",
-      "at_ms": 4125,
+      "at_ms": 5265,
       "ms": 0,
       "table": "liked_cars",
       "by": "confirm_viewing",
@@ -3096,7 +3057,7 @@
      },
      {
       "stage": "memory_write",
-      "at_ms": 4125,
+      "at_ms": 5265,
       "ms": 0,
       "table": "bookings",
       "by": "confirm_viewing",
@@ -3105,7 +3066,7 @@
      },
      {
       "stage": "memory_write",
-      "at_ms": 4125,
+      "at_ms": 5265,
       "ms": 0,
       "table": "leads",
       "by": "confirm_viewing",
@@ -3113,29 +3074,41 @@
      },
      {
       "stage": "memory_write",
-      "at_ms": 4125,
+      "at_ms": 5265,
+      "ms": 0,
+      "table": "liked_cars",
+      "by": "like_listing",
+      "listing_id": "C-003"
+     },
+     {
+      "stage": "memory_write",
+      "at_ms": 5265,
       "ms": 0,
       "table": "leads",
       "by": "update_lead",
       "fields": [
+       "body_type",
+       "budget_max_aed",
+       "budget_mode",
+       "budget_original_text",
        "interested_listing_ids",
-       "timeline"
+       "preferred_makes"
       ],
       "status": "qualified"
      },
      {
       "stage": "persist",
-      "at_ms": 4125,
-      "messages": 6,
+      "at_ms": 5265,
+      "messages": 8,
       "shown_total": 7,
       "focus_id": "C-003",
       "ms": 0
      },
      {
       "stage": "reply",
-      "at_ms": 4125,
+      "at_ms": 5265,
       "ms": 0,
-      "chars": 156,
+      "chars": 155,
       "intent": "booking",
       "cited": [
        "C-003"
@@ -3143,7 +3116,7 @@
      }
     ],
     "ablations_active": [],
-    "total_ms": 4125
+    "total_ms": 5265
    },
    "grounding": {
     "checked": 2,
@@ -3162,8 +3135,8 @@
      },
      {
       "text": "2026",
-      "start": 96,
-      "end": 100,
+      "start": 95,
+      "end": 99,
       "grounded": true,
       "source": {
        "listing_id": null,
@@ -3177,7 +3150,7 @@
     "leaked_ids": []
    },
    "memory": {
-    "read": "Name: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nLiked earlier today: 2018 land rover range rover velar (C-003).\nLead status: partial (missing: phone or email, budget, timeline within 3 months).\nUse this only when relevant. Never apply stored preferences as silent filters.",
+    "read": "Name: Sara. Sessions so far: 1.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nUse this only when relevant. Never apply stored preferences as silent filters.",
     "writes": [
      {
       "table": "liked_cars",
@@ -3196,11 +3169,20 @@
       "status": "qualified"
      },
      {
+      "table": "liked_cars",
+      "by": "like_listing",
+      "listing_id": "C-003"
+     },
+     {
       "table": "leads",
       "by": "update_lead",
       "fields": [
+       "body_type",
+       "budget_max_aed",
+       "budget_mode",
+       "budget_original_text",
        "interested_listing_ids",
-       "timeline"
+       "preferred_makes"
       ],
       "status": "qualified"
      }
@@ -3217,10 +3199,10 @@
    "llm_used": true,
    "model": "gemini/gemini-3.5-flash-lite",
    "usage": {
-    "prompt_tokens": 27655,
-    "completion_tokens": 135
+    "prompt_tokens": 41882,
+    "completion_tokens": 203
    },
-   "latency_ms": 4125,
+   "latency_ms": 5265,
    "new_session": false,
    "degraded": false
   }
@@ -3229,10 +3211,10 @@
   "scenario": "A",
   "message": "write me a python scraper for car prices",
   "envelope": {
-   "session_id": "s_D7MUWF7S",
-   "user_id": "u_f18e7f8e",
+   "session_id": "s_v5gRAaLy",
+   "user_id": "u_e31b4785",
    "turn": 11,
-   "request_id": "210ad7de8a8a",
+   "request_id": "7e94aa845146",
    "reply": "Writing code is outside what I do here. I can help you find, compare, and book cars from our inventory. Would you like me to pull up cars in your budget, or tell you more about one you have seen?",
    "streamed": null,
    "intent": "out_of_scope",
@@ -3241,9 +3223,9 @@
    "resolver": null,
    "query_explain": null,
    "trace": {
-    "session_id": "s_D7MUWF7S",
+    "session_id": "s_v5gRAaLy",
     "turn": 11,
-    "request_id": "210ad7de8a8a",
+    "request_id": "7e94aa845146",
     "stages": [
      {
       "stage": "received",
@@ -3307,10 +3289,10 @@
   "scenario": "A",
   "message": "is it cheaper on other sites?",
   "envelope": {
-   "session_id": "s_D7MUWF7S",
-   "user_id": "u_f18e7f8e",
+   "session_id": "s_v5gRAaLy",
+   "user_id": "u_e31b4785",
    "turn": 12,
-   "request_id": "560eb3a7d6e4",
+   "request_id": "a4b39241ebce",
    "reply": "I can only speak to the listings here on dubizzle, so I cannot compare with other sites. Would you like me to pull up cars in your budget, or tell you more about one you have seen?",
    "streamed": null,
    "intent": "competitor",
@@ -3319,9 +3301,9 @@
    "resolver": null,
    "query_explain": null,
    "trace": {
-    "session_id": "s_D7MUWF7S",
+    "session_id": "s_v5gRAaLy",
     "turn": 12,
-    "request_id": "560eb3a7d6e4",
+    "request_id": "a4b39241ebce",
     "stages": [
      {
       "stage": "received",
@@ -3385,10 +3367,10 @@
   "scenario": "A",
   "message": "who won the 1998 world cup?",
   "envelope": {
-   "session_id": "s_D7MUWF7S",
-   "user_id": "u_f18e7f8e",
+   "session_id": "s_v5gRAaLy",
+   "user_id": "u_e31b4785",
    "turn": 13,
-   "request_id": "434186e358c0",
+   "request_id": "bf3bb1aedd0b",
    "reply": "That is outside what I can help with here. I stick to the cars in our inventory. Would you like me to pull up cars in your budget, or tell you more about one you have seen?",
    "streamed": null,
    "intent": "out_of_scope",
@@ -3397,9 +3379,9 @@
    "resolver": null,
    "query_explain": null,
    "trace": {
-    "session_id": "s_D7MUWF7S",
+    "session_id": "s_v5gRAaLy",
     "turn": 13,
-    "request_id": "434186e358c0",
+    "request_id": "bf3bb1aedd0b",
     "stages": [
      {
       "stage": "received",
@@ -3422,11 +3404,11 @@
       "messages": 2,
       "shown_total": 7,
       "focus_id": "C-003",
-      "ms": 0
+      "ms": 14
      },
      {
       "stage": "reply",
-      "at_ms": 0,
+      "at_ms": 14,
       "ms": 0,
       "chars": 172,
       "intent": "out_of_scope",
@@ -3434,7 +3416,7 @@
      }
     ],
     "ablations_active": [],
-    "total_ms": 0
+    "total_ms": 14
    },
    "grounding": null,
    "post_filter": {
@@ -3454,7 +3436,7 @@
    "llm_used": false,
    "model": null,
    "usage": {},
-   "latency_ms": 0,
+   "latency_ms": 14,
    "new_session": false,
    "degraded": false
   }
@@ -3463,11 +3445,11 @@
   "scenario": "B",
   "message": "hi, it's Sara again",
   "envelope": {
-   "session_id": "s_JuHwaiw8",
-   "user_id": "u_f18e7f8e",
+   "session_id": "s_hkEal7SN",
+   "user_id": "u_e31b4785",
    "turn": 1,
-   "request_id": "4287be61f872",
-   "reply": "Hi Sara! Good to see you again. I remember you've got your viewing lined up for the Land Rover Range Rover Velar. How can I help you today?",
+   "request_id": "0345fd8df88f",
+   "reply": "Hi Sara! Welcome back. I see you have your viewing for the 2018 Land Rover Range Rover Velar coming up on Monday at 09:00. How can I help you with it today?",
    "streamed": null,
    "intent": "chitchat",
    "cars": [],
@@ -3479,9 +3461,9 @@
    },
    "query_explain": null,
    "trace": {
-    "session_id": "s_JuHwaiw8",
+    "session_id": "s_hkEal7SN",
     "turn": 1,
-    "request_id": "4287be61f872",
+    "request_id": "0345fd8df88f",
     "stages": [
      {
       "stage": "received",
@@ -3509,7 +3491,7 @@
       "stage": "memory_read",
       "at_ms": 0,
       "recall": "Name: Sara. Sessions so far: 2.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nLiked earlier today: 2018 land rover range rover velar (C-003).\nUpcoming viewing: C-003 at 2026-09-07 09:00 (BK-0001).\nLead status: qualified (confirmed viewing booked).\nUse this only when relevant. Never apply stored preferences as silent filters.",
-      "lead_block": "preferred makes: land rover; timeline: now; interested in C-003. no contact details yet (collected via the form, not chat). Status: qualified (confirmed viewing booked). Ask at most one qualifying question per turn.",
+      "lead_block": "budget up to AED 150,000; preferred makes: land rover; body type: suv; timeline: now; interested in C-003. no contact details yet (collected via the form, not chat). Status: qualified (confirmed viewing booked). Ask at most one qualifying question per turn.",
       "summary_present": false,
       "returning": true,
       "ms": 0
@@ -3535,13 +3517,13 @@
        },
        {
         "name": "lead",
-        "text": "## Lead profile so far\npreferred makes: land rover; timeline: now; interested in C-003. no contact details yet (collected via the form, not chat). Status: qualified (confirmed viewing booked). Ask at most one qualifying question per turn.",
-        "tokens": 59
+        "text": "## Lead profile so far\nbudget up to AED 150,000; preferred makes: land rover; body type: suv; timeline: now; interested in C-003. no contact details yet (collected via the form, not chat). Status: qualified (confirmed viewing booked). Ask at most one qualifying question per turn.",
+        "tokens": 70
        }
       ],
       "history_messages": 0,
       "history_tokens_estimate": 0,
-      "total_tokens_estimate": 1447,
+      "total_tokens_estimate": 1458,
       "ms": 0
      },
      {
@@ -3550,22 +3532,22 @@
       "n": 1,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 3140,
+      "latency_ms": 1108,
       "tokens": {
-       "prompt_tokens": 3379,
-       "completion_tokens": 294
+       "prompt_tokens": 3397,
+       "completion_tokens": 46
       },
       "finish_reason": "stop",
       "emitted": "text",
       "tool_names": [],
-      "text_chars": 139,
-      "cassette_hit": true,
+      "text_chars": 156,
+      "cassette_hit": false,
       "note": null,
-      "ms": 0
+      "ms": 1125
      },
      {
       "stage": "structured_reply",
-      "at_ms": 0,
+      "at_ms": 1125,
       "ms": 0,
       "structured": false,
       "cited": [],
@@ -3573,28 +3555,28 @@
      },
      {
       "stage": "postfilter",
-      "at_ms": 0,
+      "at_ms": 1125,
       "ms": 0,
       "hits": []
      },
      {
       "stage": "id_check",
-      "at_ms": 0,
+      "at_ms": 1125,
       "ms": 0,
       "leaked": [],
       "id_leak": false
      },
      {
       "stage": "grounding",
-      "at_ms": 0,
-      "checked": 0,
-      "grounded": 0,
+      "at_ms": 1125,
+      "checked": 1,
+      "grounded": 1,
       "ungrounded": [],
       "ms": 0
      },
      {
       "stage": "persist",
-      "at_ms": 0,
+      "at_ms": 1125,
       "messages": 2,
       "shown_total": 0,
       "focus_id": null,
@@ -3602,21 +3584,32 @@
      },
      {
       "stage": "reply",
-      "at_ms": 0,
+      "at_ms": 1125,
       "ms": 0,
-      "chars": 139,
+      "chars": 156,
       "intent": "chitchat",
       "cited": []
      }
     ],
     "ablations_active": [],
-    "total_ms": 0
+    "total_ms": 1125
    },
    "grounding": {
-    "checked": 0,
-    "grounded": 0,
+    "checked": 1,
+    "grounded": 1,
     "ungrounded": [],
-    "spans": []
+    "spans": [
+     {
+      "text": "2018",
+      "start": 59,
+      "end": 63,
+      "grounded": true,
+      "source": {
+       "listing_id": null,
+       "field": "memory"
+      }
+     }
+    ]
    },
    "post_filter": {
     "id_leak": false,
@@ -3635,10 +3628,10 @@
    "llm_used": true,
    "model": "gemini/gemini-3.5-flash-lite",
    "usage": {
-    "prompt_tokens": 3379,
-    "completion_tokens": 294
+    "prompt_tokens": 3397,
+    "completion_tokens": 46
    },
-   "latency_ms": 0,
+   "latency_ms": 1125,
    "new_session": true,
    "degraded": false
   }
@@ -3647,26 +3640,137 @@
   "scenario": "B",
   "message": "what was I looking at last time?",
   "envelope": {
-   "session_id": "s_JuHwaiw8",
-   "user_id": "u_f18e7f8e",
+   "session_id": "s_hkEal7SN",
+   "user_id": "u_e31b4785",
    "turn": 2,
-   "request_id": "8a56531db0a4",
-   "reply": "Earlier today, you were looking at the 2018 Land Rover Range Rover Velar, which you liked and have booked for a viewing. You also searched for SUVs with a warranty under AED 150k and checked out a Honda.",
+   "request_id": "447495b2f852",
+   "reply": "Earlier today, you searched for SUVs with a warranty under AED 150,000, and you also liked the 2018 Land Rover Range Rover Velar, which you have a viewing booked for on Monday.",
    "streamed": null,
-   "intent": "listing_question",
+   "intent": "inventory_search",
    "cars": [
     {
-     "id": "C-003",
-     "year": 2018,
-     "make": "land rover",
-     "model": "range rover velar",
+     "id": "R-005",
+     "year": 2026,
+     "make": "haval",
+     "model": "h9",
+     "trim": "4wd",
+     "title": "Haval H9 2026 GCC specs | Agency Warranty",
+     "photo_url": "https://dbz-images.dubizzle.com/images/2026/04/02/3c22f57ed4e34b259fb82ccfbb589a95-.jpeg?impolicy=dpv",
+     "price_aed": 115750,
+     "monthly_aed": 1813,
+     "mileage_km": 18,
+     "exterior_color": "null",
+     "body_type": "suv",
+     "regional_spec": "gcc",
+     "fuel_type": "petrol",
+     "has_warranty": true,
+     "service_contract": false,
+     "is_dubizzle_managed": false,
+     "is_export_only": false,
+     "is_brand_new": true,
+     "english_summary": "2026 Haval H9 medium SUV with orange interior, 218 hp petrol engine, 4WD, and agency warranty covering 6 years or 200,000 km.",
+     "language": "en",
+     "description_quality": "ok",
+     "thumb_url": "https://dbz-images.dubizzle.com/images/2026/04/02/3c22f57ed4e34b259fb82ccfbb589a95-.jpeg?imwidth=400",
+     "explain": {
+      "matched_filters": [
+       "price_max_aed",
+       "body_type",
+       "has_warranty"
+      ],
+      "admitted_at_stage": "exact",
+      "bm25": null,
+      "cosine": null,
+      "rank_reason": "#1: listed price, year 2026"
+     },
+     "display_index": 1
+    },
+    {
+     "id": "C-066",
+     "year": 2024,
+     "make": "opel",
+     "model": "grandland x",
      "trim": "other",
-     "title": "Land Rover Range Rover Velar 2018 GCC | Warranty",
-     "photo_url": "https://dbz-images.dubizzle.com/images/2024/03/15/af9594c6dd8a4c6aa1a7bec91c12f80a-.jpeg?imwidth=800",
-     "price_aed": 119750,
-     "monthly_aed": 1876,
-     "mileage_km": 68000,
+     "title": "GCC | Brand New | AED 1300 monthly | Under Agancy Warranty 5 Years | Ref#R000413",
+     "photo_url": "https://dbz-images.dubizzle.com/images/2025/01/30/ecc1c029456a444abbe4d5a1ab35c4e7-.jpeg?impolicy=dpv",
+     "price_aed": 79999,
+     "monthly_aed": 1300,
+     "mileage_km": 0,
+     "exterior_color": "null",
+     "body_type": "suv",
+     "regional_spec": "gcc",
+     "fuel_type": "petrol",
+     "has_warranty": true,
+     "service_contract": false,
+     "is_dubizzle_managed": false,
+     "is_export_only": false,
+     "is_brand_new": true,
+     "english_summary": "Brand new 2024 Opel Grandland Ultimate with 5 years agency warranty and GCC specs.",
+     "language": "en",
+     "description_quality": "ok",
+     "thumb_url": "https://dbz-images.dubizzle.com/images/2025/01/30/ecc1c029456a444abbe4d5a1ab35c4e7-.jpeg?imwidth=400",
+     "explain": {
+      "matched_filters": [
+       "price_max_aed",
+       "body_type",
+       "has_warranty"
+      ],
+      "admitted_at_stage": "exact",
+      "bm25": null,
+      "cosine": null,
+      "rank_reason": "#2: listed price, year 2024"
+     },
+     "display_index": 2
+    },
+    {
+     "id": "R-044",
+     "year": 2024,
+     "make": "ford",
+     "model": "territory",
+     "trim": "titanium",
+     "title": "AED 1,600 P.M | 2024 Ford Territory Titanium | 5 Years Ford Warranty and Service Contract | GCC |",
+     "photo_url": "https://dbz-images.dubizzle.com/images/2026/02/20/78f1cf0aa1414e5ea682f4eb35bacad9-.jpeg?impolicy=dpv",
+     "price_aed": 93000,
+     "monthly_aed": 1600,
+     "mileage_km": 34277,
      "exterior_color": null,
+     "body_type": "suv",
+     "regional_spec": "gcc",
+     "fuel_type": "petrol",
+     "has_warranty": true,
+     "service_contract": true,
+     "is_dubizzle_managed": false,
+     "is_export_only": false,
+     "is_brand_new": false,
+     "english_summary": "2024 Ford Territory Titanium with 1.8L turbo engine, GCC specs, warranty, and service contract.",
+     "language": "en",
+     "description_quality": "ok",
+     "thumb_url": "https://dbz-images.dubizzle.com/images/2026/02/20/78f1cf0aa1414e5ea682f4eb35bacad9-.jpeg?imwidth=400",
+     "explain": {
+      "matched_filters": [
+       "price_max_aed",
+       "body_type",
+       "has_warranty"
+      ],
+      "admitted_at_stage": "exact",
+      "bm25": null,
+      "cosine": null,
+      "rank_reason": "#3: listed price, year 2024"
+     },
+     "display_index": 3
+    },
+    {
+     "id": "R-085",
+     "year": 2024,
+     "make": "volkswagen",
+     "model": "t-roc",
+     "trim": "style",
+     "title": "Downpayment Assist | VW Certified | Fully Inspected | Like New | Warranty Service",
+     "photo_url": "https://dbz-images.dubizzle.com/images/2026/06/10/60b5349368254118b54642c0356d8121-.jpeg?impolicy=dpv",
+     "price_aed": 89900,
+     "monthly_aed": 1380,
+     "mileage_km": 39000,
+     "exterior_color": "black",
      "body_type": "suv",
      "regional_spec": "gcc",
      "fuel_type": "petrol",
@@ -3675,27 +3779,90 @@
      "is_dubizzle_managed": false,
      "is_export_only": false,
      "is_brand_new": false,
-     "english_summary": "2018 Land Rover Range Rover Velar R-Dynamic SE with GCC specs, AWD, and warranty.",
+     "english_summary": "2024 Volkswagen T-Roc 1.4 Style Black Edition in excellent condition with 39000 km mileage and GCC specifications.",
      "language": "en",
      "description_quality": "ok",
-     "thumb_url": "https://dbz-images.dubizzle.com/images/2024/03/15/af9594c6dd8a4c6aa1a7bec91c12f80a-.jpeg?imwidth=400",
-     "display_index": 1
+     "thumb_url": "https://dbz-images.dubizzle.com/images/2026/06/10/60b5349368254118b54642c0356d8121-.jpeg?imwidth=400",
+     "explain": {
+      "matched_filters": [
+       "price_max_aed",
+       "body_type",
+       "has_warranty"
+      ],
+      "admitted_at_stage": "exact",
+      "bm25": null,
+      "cosine": null,
+      "rank_reason": "#4: listed price, year 2024"
+     },
+     "display_index": 4
+    },
+    {
+     "id": "C-095",
+     "year": 2023,
+     "make": "toyota",
+     "model": "rav 4",
+     "trim": "other",
+     "title": "2.5L AWD | Wildlander | Almost New | Free Insurance + Registration | Ref#G064523",
+     "photo_url": "https://dbz-images.dubizzle.com/images/2024/10/20/32cdc25e33ea4e1ea640b88856528734-.jpeg?impolicy=dpv",
+     "price_aed": 95000,
+     "monthly_aed": 1500,
+     "mileage_km": 970,
+     "exterior_color": "null",
+     "body_type": "suv",
+     "regional_spec": null,
+     "fuel_type": "petrol",
+     "has_warranty": true,
+     "service_contract": false,
+     "is_dubizzle_managed": false,
+     "is_export_only": false,
+     "is_brand_new": false,
+     "english_summary": "2023 Toyota Wildlander AWD with 970 kms and 2 years warranty.",
+     "language": "en",
+     "description_quality": "ok",
+     "thumb_url": "https://dbz-images.dubizzle.com/images/2024/10/20/32cdc25e33ea4e1ea640b88856528734-.jpeg?imwidth=400",
+     "explain": {
+      "matched_filters": [
+       "price_max_aed",
+       "body_type",
+       "has_warranty"
+      ],
+      "admitted_at_stage": "exact",
+      "bm25": null,
+      "cosine": null,
+      "rank_reason": "#5: listed price, year 2023"
+     },
+     "display_index": 5
     }
    ],
    "suggested_actions": [
-    "Book a viewing for C-003",
-    "Similar cars to C-003"
+    "Show more",
+    "Tell me more about R-005",
+    "Tell me more about C-066"
    ],
    "resolver": {
     "input": "what was I looking at last time?",
     "resolved": null,
     "rule": "none"
    },
-   "query_explain": null,
+   "query_explain": {
+    "normalization": [],
+    "executed": {
+     "sql": "SELECT * FROM listings WHERE (price_aed IS NULL OR price_aed <= :price_max) AND body_type = :body_type AND has_warranty = 1",
+     "params": {
+      "price_max": 150000,
+      "body_type": "suv"
+     },
+     "fts": null
+    },
+    "stage_counts": {
+     "exact": 26
+    },
+    "relaxed": []
+   },
    "trace": {
-    "session_id": "s_JuHwaiw8",
+    "session_id": "s_hkEal7SN",
     "turn": 2,
-    "request_id": "8a56531db0a4",
+    "request_id": "447495b2f852",
     "stages": [
      {
       "stage": "received",
@@ -3723,7 +3890,7 @@
       "stage": "memory_read",
       "at_ms": 0,
       "recall": "Name: Sara. Sessions so far: 2.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nLiked earlier today: 2018 land rover range rover velar (C-003).\nUpcoming viewing: C-003 at 2026-09-07 09:00 (BK-0001).\nLead status: qualified (confirmed viewing booked).\nUse this only when relevant. Never apply stored preferences as silent filters.",
-      "lead_block": "preferred makes: land rover; timeline: now; interested in C-003. no contact details yet (collected via the form, not chat). Status: qualified (confirmed viewing booked). Ask at most one qualifying question per turn.",
+      "lead_block": "budget up to AED 150,000; preferred makes: land rover; body type: suv; timeline: now; interested in C-003. no contact details yet (collected via the form, not chat). Status: qualified (confirmed viewing booked). Ask at most one qualifying question per turn.",
       "summary_present": false,
       "returning": true,
       "ms": 0
@@ -3749,13 +3916,13 @@
        },
        {
         "name": "lead",
-        "text": "## Lead profile so far\npreferred makes: land rover; timeline: now; interested in C-003. no contact details yet (collected via the form, not chat). Status: qualified (confirmed viewing booked). Ask at most one qualifying question per turn.",
-        "tokens": 59
+        "text": "## Lead profile so far\nbudget up to AED 150,000; preferred makes: land rover; body type: suv; timeline: now; interested in C-003. no contact details yet (collected via the form, not chat). Status: qualified (confirmed viewing booked). Ask at most one qualifying question per turn.",
+        "tokens": 70
        }
       ],
       "history_messages": 2,
-      "history_tokens_estimate": 750,
-      "total_tokens_estimate": 2201,
+      "history_tokens_estimate": 126,
+      "total_tokens_estimate": 1588,
       "ms": 0
      },
      {
@@ -3764,118 +3931,155 @@
       "n": 1,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 4171,
+      "latency_ms": 1046,
       "tokens": {
-       "prompt_tokens": 3859,
-       "completion_tokens": 391
+       "prompt_tokens": 3453,
+       "completion_tokens": 39
       },
       "finish_reason": "tool_calls",
       "emitted": "tool_calls",
       "tool_names": [
-       "get_listing"
+       "search_inventory"
       ],
       "text_chars": 0,
-      "cassette_hit": true,
+      "cassette_hit": false,
       "note": null,
-      "ms": 0
+      "ms": 1062
      },
      {
       "stage": "tool",
-      "at_ms": 0,
-      "name": "get_listing",
+      "at_ms": 1062,
+      "name": "search_inventory",
       "args": {
-       "listing_id": "C-003"
+       "body_type": "suv",
+       "price_max_aed": 150000,
+       "has_warranty": true
       },
+      "executed": {
+       "sql": "SELECT * FROM listings WHERE (price_aed IS NULL OR price_aed <= :price_max) AND body_type = :body_type AND has_warranty = 1",
+       "params": {
+        "price_max": 150000,
+        "body_type": "suv"
+       },
+       "fts": null
+      },
+      "stage_counts": {
+       "exact": 26
+      },
+      "relaxed": [],
       "result_ids": [
-       "C-003"
+       "R-005",
+       "C-066",
+       "R-044",
+       "R-085",
+       "C-095"
       ],
+      "total_matches": 26,
+      "normalization": [],
       "ms": 0
      },
      {
       "stage": "llm_call",
-      "at_ms": 0,
+      "at_ms": 1062,
       "n": 2,
       "purpose": "chat",
       "model": "gemini/gemini-3.5-flash-lite",
-      "latency_ms": 1233,
+      "latency_ms": 1093,
       "tokens": {
-       "prompt_tokens": 5282,
-       "completion_tokens": 110
+       "prompt_tokens": 4460,
+       "completion_tokens": 89
       },
       "finish_reason": "stop",
       "emitted": "text",
       "tool_names": [],
-      "text_chars": 331,
-      "cassette_hit": true,
+      "text_chars": 265,
+      "cassette_hit": false,
       "note": null,
-      "ms": 0
+      "ms": 1108
      },
      {
       "stage": "structured_reply",
-      "at_ms": 0,
+      "at_ms": 2171,
       "ms": 0,
       "structured": true,
-      "cited": [
+      "cited": [],
+      "dropped_unknown": [
        "C-003"
-      ],
-      "dropped_unknown": []
+      ]
      },
      {
       "stage": "postfilter",
-      "at_ms": 0,
+      "at_ms": 2171,
       "ms": 0,
       "hits": []
      },
      {
       "stage": "id_check",
-      "at_ms": 0,
+      "at_ms": 2171,
       "ms": 0,
       "leaked": [],
       "id_leak": false
      },
      {
       "stage": "grounding",
-      "at_ms": 0,
-      "checked": 1,
-      "grounded": 1,
+      "at_ms": 2171,
+      "checked": 2,
+      "grounded": 2,
       "ungrounded": [],
       "ms": 0
      },
      {
+      "stage": "memory_write",
+      "at_ms": 2171,
+      "ms": 0,
+      "table": "search_history",
+      "by": "search_inventory",
+      "query": "what was I looking at last time?",
+      "results": 26
+     },
+     {
       "stage": "persist",
-      "at_ms": 0,
+      "at_ms": 2171,
       "messages": 4,
-      "shown_total": 1,
-      "focus_id": "C-003",
+      "shown_total": 5,
+      "focus_id": null,
       "ms": 0
      },
      {
       "stage": "reply",
-      "at_ms": 0,
+      "at_ms": 2171,
       "ms": 0,
-      "chars": 203,
-      "intent": "listing_question",
-      "cited": [
-       "C-003"
-      ]
+      "chars": 176,
+      "intent": "inventory_search",
+      "cited": []
      }
     ],
     "ablations_active": [],
-    "total_ms": 0
+    "total_ms": 2171
    },
    "grounding": {
-    "checked": 1,
-    "grounded": 1,
+    "checked": 2,
+    "grounded": 2,
     "ungrounded": [],
     "spans": [
      {
-      "text": "2018",
-      "start": 39,
-      "end": 43,
+      "text": "150,000",
+      "start": 63,
+      "end": 70,
       "grounded": true,
       "source": {
-       "listing_id": "C-003",
-       "field": "year"
+       "listing_id": null,
+       "field": "price_max_aed"
+      }
+     },
+     {
+      "text": "2018",
+      "start": 95,
+      "end": 99,
+      "grounded": true,
+      "source": {
+       "listing_id": null,
+       "field": "memory"
       }
      }
     ]
@@ -3886,23 +4090,28 @@
    },
    "memory": {
     "read": "Name: Sara. Sessions so far: 2.\nSearched earlier today: \"I like the velar\" (1 results).\nSearched earlier today: \"what about that first Honda?\" (1 results).\nSearched earlier today: \"show me SUVs with warranty under AED 150k\" (26 results).\nLiked earlier today: 2018 land rover range rover velar (C-003).\nUpcoming viewing: C-003 at 2026-09-07 09:00 (BK-0001).\nLead status: qualified (confirmed viewing booked).\nUse this only when relevant. Never apply stored preferences as silent filters.",
-    "writes": []
+    "writes": [
+     {
+      "table": "search_history",
+      "by": "search_inventory",
+      "query": "what was I looking at last time?",
+      "results": 26
+     }
+    ]
    },
    "verification": null,
    "structured_reply": true,
-   "cited_listing_ids": [
-    "C-003"
-   ],
-   "focus_id": "C-003",
+   "cited_listing_ids": [],
+   "focus_id": null,
    "pending_booking": null,
    "identified_user": null,
    "llm_used": true,
    "model": "gemini/gemini-3.5-flash-lite",
    "usage": {
-    "prompt_tokens": 9141,
-    "completion_tokens": 501
+    "prompt_tokens": 7913,
+    "completion_tokens": 128
    },
-   "latency_ms": 0,
+   "latency_ms": 2171,
    "new_session": false,
    "degraded": false
   }
