@@ -64,6 +64,7 @@ class LLMClient(Protocol):
         temperature: float | None = None,
         model: str | None = None,
         purpose: str = "chat",
+        max_tokens: int | None = None,
     ) -> LLMResponse: ...
 
     def embed(self, text: str) -> list[float]: ...

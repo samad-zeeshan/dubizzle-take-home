@@ -131,6 +131,7 @@ class LiteLLMClient:
         reasoning: str,
         response_schema: dict[str, Any] | None,
         temperature: float | None,
+        max_tokens: int | None = None,
     ) -> dict[str, Any]:
         kwargs: dict[str, Any] = {"messages": messages, "num_retries": 0}
         if tools:
@@ -145,8 +146,10 @@ class LiteLLMClient:
             kwargs["reasoning_effort"] = reasoning  # a Gemini knob; local servers may reject it
         if temperature is not None:
             kwargs["temperature"] = temperature
-        if self.max_tokens:
-            kwargs["max_tokens"] = self.max_tokens
+        # A per-call budget wins: one enrichment batch needs far more room than a chat turn,
+        # and the shared ceiling exists to stop a small model looping inside a JSON grammar.
+        if max_tokens or self.max_tokens:
+            kwargs["max_tokens"] = max_tokens or self.max_tokens
         return kwargs
 
     def _run(
@@ -209,6 +212,7 @@ class LiteLLMClient:
         temperature: float | None = None,
         model: str | None = None,
         purpose: str = "chat",
+        max_tokens: int | None = None,
     ) -> LLMResponse:
         use_model = model or self.model
         kwargs = self._kwargs(
@@ -217,6 +221,7 @@ class LiteLLMClient:
             reasoning=reasoning,
             response_schema=response_schema,
             temperature=temperature,
+            max_tokens=max_tokens,
         )
         start = time.monotonic()
         resp, note = self._run(kwargs, lambda kw: self._call(use_model, kw))
@@ -233,6 +238,7 @@ class LiteLLMClient:
         temperature: float | None = None,
         model: str | None = None,
         purpose: str = "chat",
+        max_tokens: int | None = None,
     ) -> LLMResponse:
         """Like complete, but text deltas reach on_token while the model is still generating."""
         use_model = model or self.model

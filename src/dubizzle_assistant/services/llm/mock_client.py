@@ -676,6 +676,7 @@ class HeuristicLLM:
         temperature: float | None = None,
         model: str | None = None,
         purpose: str = "chat",
+        max_tokens: int | None = None,
     ) -> LLMResponse:
         user = _last_user(messages)
         system = _system_text(messages)

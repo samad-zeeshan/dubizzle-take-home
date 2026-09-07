@@ -60,6 +60,7 @@ class CassetteClient:
         temperature: float | None = None,
         model: str | None = None,
         purpose: str = "chat",
+        max_tokens: int | None = None,
     ) -> LLMResponse:
         # Keyed on the conversation only, so a recording made with one provider replays under another.
         payload = self._payload("complete", messages=messages, tools=tools, schema=response_schema)
@@ -87,6 +88,7 @@ class CassetteClient:
             temperature=temperature,
             model=model,
             purpose=purpose,
+            max_tokens=max_tokens,
         )
         self._write(key, payload, asdict(resp))
         return resp
