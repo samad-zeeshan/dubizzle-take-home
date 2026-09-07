@@ -176,7 +176,7 @@ _STOCK_NOUN_RE = re.compile(
     re.I,
 )
 SEARCH_NUDGE = {
-    "role": "system",
+    "role": "user",
     "content": "You have not searched the inventory this turn. Call search_inventory now and answer only from its results.",
 }
 
@@ -629,7 +629,7 @@ def _run_loop(
             tool_names.append("search_inventory")
             messages.append(
                 {
-                    "role": "system",
+                    "role": "user",
                     "content": "search_inventory was run for you with "
                     + json.dumps(args, ensure_ascii=False)
                     + ". Its result: "

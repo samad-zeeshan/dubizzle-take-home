@@ -177,12 +177,15 @@ def system_message(blocks: list[dict[str, Any]]) -> dict[str, Any]:
     return {"role": "system", "content": "\n\n".join(b["text"] for b in blocks)}
 
 
-# The agent appends its repair instructions as a user turn, because Gemini refuses a request
-# that ends on a model turn. The offline model has to tell them from the customer speaking.
+# Everything the agent injects into the conversation travels as a user turn, because Gemini
+# refuses a request that ends on a model turn. The offline model, the cassette and anything
+# else reading the history has to tell these from the customer speaking.
 REPAIR_NOTE_OPENINGS = (
     "The figures ",
     "A check found these claims unsupported",
     "The reply contains listing ids",
+    "You have not searched the inventory this turn",
+    "search_inventory was run for you with",
 )
 
 

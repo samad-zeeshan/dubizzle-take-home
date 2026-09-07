@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from dubizzle_assistant.services.llm.base import LLMClient, LLMError, LLMResponse, ToolCall
+from dubizzle_assistant.services.prompts import is_repair_note
 from dubizzle_assistant.services.trace import redact
 
 
@@ -112,7 +113,7 @@ class CassetteClient:
             (
                 m.get("content")
                 for m in reversed(payload.get("messages") or [])
-                if m.get("role") == "user"
+                if m.get("role") == "user" and not is_repair_note(m.get("content"))
             ),
             None,
         )

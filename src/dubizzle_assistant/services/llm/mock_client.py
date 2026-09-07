@@ -687,7 +687,11 @@ class HeuristicLLM:
         if purpose == "verify":
             return self._resp(json.dumps({"verdicts": [], "all_supported": True}))
         if purpose == "summary":
-            turns = sum(1 for m in messages if m.get("role") == "user")
+            turns = sum(
+                1
+                for m in messages
+                if m.get("role") == "user" and not is_repair_note(m.get("content"))
+            )
             return self._resp(
                 f"Earlier in this session the user exchanged {turns} messages about cars in the inventory."
             )

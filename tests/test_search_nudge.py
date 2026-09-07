@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from dubizzle_assistant.api.app import create_app
 from dubizzle_assistant.services.llm.base import LLMResponse, ToolCall
+from dubizzle_assistant.services.prompts import is_repair_note
 from tests.conftest import make_settings
 
 
@@ -62,8 +63,10 @@ def test_stock_question_without_a_search_is_sent_back(tmp_path: Path) -> None:
     assert any(s["stage"] == "search_nudge" for s in e["trace"]["stages"])
     assert [x["id"] for x in e["cars"]]
     assert e["reply"].startswith("Here are the convertibles")
-    # The nudge reached the model as a system note after the user's message.
-    assert llm.seen[1][-1]["role"] == "system" and "search_inventory" in llm.seen[1][-1]["content"]
+    # The nudge reaches the model as a user turn, because Gemini refuses a request that ends
+    # on a model turn. The offline model skips it when it looks for what was asked.
+    assert llm.seen[1][-1]["role"] == "user" and "search_inventory" in llm.seen[1][-1]["content"]
+    assert is_repair_note(llm.seen[1][-1]["content"])
 
 
 def test_reference_questions_are_left_alone(tmp_path: Path) -> None:
@@ -96,8 +99,6 @@ def test_ignored_nudge_ends_in_a_search_run_by_code(tmp_path: Path) -> None:
 
 
 def test_repair_notes_are_not_read_as_the_customer():
-    from dubizzle_assistant.services.prompts import is_repair_note
-
     # These openings have to match the notes agent.py builds. They travel as a user turn
     # because Gemini refuses a request ending on a model turn, and without this the offline
     # model answers the repair instruction instead of the question that was asked.
@@ -106,5 +107,9 @@ def test_repair_notes_are_not_read_as_the_customer():
     )
     assert is_repair_note("A check found these claims unsupported by the tool results: x. Rewrite")
     assert is_repair_note("The reply contains listing ids (C-003). Rewrite it with the same facts")
+    assert is_repair_note(
+        "You have not searched the inventory this turn. Call search_inventory now"
+    )
+    assert is_repair_note('search_inventory was run for you with {"make": "honda"}. Its result:')
     assert not is_repair_note("does it have a warranty?")
     assert not is_repair_note(None)
