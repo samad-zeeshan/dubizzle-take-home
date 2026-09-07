@@ -55,6 +55,11 @@ LOOP_CAP_NOTE = {
     "content": "Answer now from the tool results you already have.",
 }
 EMPTY_REPLY = "I did not manage to put an answer together for that. Could you say it another way, or name the car you mean?"
+# The prefilter declines got an Arabic twin and these two did not, so the one moment the guard
+# fires was the one moment an Arabic session switched to English, inside an RTL container.
+EMPTY_REPLY_AR = (
+    "لم أتمكن من تكوين إجابة لذلك. هل يمكنك صياغته بطريقة أخرى، أو ذكر السيارة التي تقصدها؟"
+)
 
 
 def _ids_in(obj: Any) -> list[str]:
@@ -127,17 +132,31 @@ def _intent_from(tool_names: list[str], prefilter_hit: dict[str, Any] | None) ->
 
 def _template_reply(ctx: TurnContext) -> str:
     """Grounded fallback built from cards only, used when the model keeps inventing figures."""
+    ar = ctx.locale == "ar"
     cards = ctx.new_cards or [c for c in ctx.shown if c["id"] == ctx.focus_id]
     if not cards:
+        if ar:
+            return "هذا ما أستطيع تأكيده من بيانات الإعلان. أي سيارة تريد تفاصيلها؟"
         return "Here is what I can confirm from the listing data. Which car would you like the details of?"
     lines = []
     for c in cards[:5]:
-        price = f"AED {c['price_aed']:,}" if c.get("price_aed") else "price not listed"
-        km = f"{c['mileage_km']:,} km" if c.get("mileage_km") is not None else "mileage not stated"
+        # Make and model stay in Latin and the digits stay Western, the same two rules the Arabic
+        # prompt block gives the model, so the grounding check reads the figures back either way.
+        if c.get("price_aed"):
+            price = f"{c['price_aed']:,} درهم" if ar else f"AED {c['price_aed']:,}"
+        else:
+            price = "السعر غير مذكور" if ar else "price not listed"
+        if c.get("mileage_km") is not None:
+            km = f"{c['mileage_km']:,} كم" if ar else f"{c['mileage_km']:,} km"
+        else:
+            km = "الممشى غير مذكور" if ar else "mileage not stated"
         lines.append(
-            f"- {c['year']} {str(c['make']).title()} {str(c['model']).title()}, {price}, {km}"
+            f"- {c['year']} {str(c['make']).title()} {str(c['model']).title()}، {price}، {km}"
+            if ar
+            else f"- {c['year']} {str(c['make']).title()} {str(c['model']).title()}, {price}, {km}"
         )
-    return "Here is what the listing data shows:\n" + "\n".join(lines)
+    head = "إليك ما تذكره بيانات الإعلان:" if ar else "Here is what the listing data shows:"
+    return head + "\n" + "\n".join(lines)
 
 
 class ChatUnavailableError(RuntimeError):
@@ -591,7 +610,7 @@ def _run_loop(
                 usage[k] += resp.usage.get(k, 0)
             if resp.empty:
                 final = LLMResponse(
-                    text=EMPTY_REPLY,
+                    text=EMPTY_REPLY_AR if ctx.locale == "ar" else EMPTY_REPLY,
                     tool_calls=[],
                     finish_reason="empty",
                     usage={},
@@ -697,7 +716,7 @@ def _run_loop(
     cited = [i for i in cited if i in known]
     trace.add("structured_reply", structured=structured, cited=cited, dropped_unknown=dropped)
     if not reply.strip():
-        reply = EMPTY_REPLY
+        reply = EMPTY_REPLY_AR if ctx.locale == "ar" else EMPTY_REPLY
 
     if settings.ablate_postfilter:
         trace.add("postfilter", result="skipped (ablated)")
@@ -718,7 +737,16 @@ def _run_loop(
 
     sources = guardrails.collect_sources(ctx.tool_results, ctx.shown + ctx.new_cards)
     # The recall, summary, and lead blocks are written by the server from the database, so their figures are sourced too.
-    for label, block in (("memory", recall), ("summary", summary_prev), ("lead", _lead_block(ctx))):
+    # The customer's own message is a source for the same reason. Without it "do you have a 2023
+    # X6" marked 2023 a hallucination, spent the retry and fell to the template, which in an
+    # Arabic session meant the whole reply came back in English. It goes last so a figure that is
+    # also a listing price keeps the listing's label.
+    for label, block in (
+        ("memory", recall),
+        ("summary", summary_prev),
+        ("lead", _lead_block(ctx)),
+        ("user_message", ctx.raw_message),
+    ):
         for key in guardrails.figures_in(block or ""):
             sources.setdefault(key, {"listing_id": None, "field": label})
     grounding: dict[str, Any] | None = None
