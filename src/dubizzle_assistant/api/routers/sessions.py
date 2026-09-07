@@ -35,9 +35,13 @@ def create(
 
 
 @router.get("/{session_id}")
-def read(session_id: str, conn: sqlite3.Connection = Depends(get_conn)) -> dict[str, Any]:
+def read(
+    session_id: str, user_id: str, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """A transcript belongs to one person. Missing and someone else's answer the same 404, so
+    the response never confirms that a session id exists."""
     s = memory.get_session(conn, session_id)
-    if not s:
+    if not s or s["user_id"] != user_id:
         raise HTTPException(status_code=404, detail="no such session")
     ctx = memory.get_context(conn, session_id)
     return {"session": s, "messages": redact(memory.all_messages(conn, session_id)), "context": ctx}

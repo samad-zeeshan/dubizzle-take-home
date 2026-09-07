@@ -170,7 +170,9 @@ def test_sessions_and_users_endpoints(client):
     assert u["returning"] is False and u["profile_summary"] is None
     s = client.post("/sessions", json={"user_id": u["user_id"]}).json()
     chat(client, "show me a bmw", u["user_id"], s["session_id"])
-    read = client.get(f"/sessions/{s['session_id']}").json()
+    read = client.get(
+        f"/sessions/{s['session_id']}", params={"user_id": u["user_id"]}
+    ).json()
     assert read["session"]["turn_counter"] == 1 and read["messages"][0]["role"] == "user"
     assert read["context"]["shown"]
     h = client.get(f"/users/{u['user_id']}/history").json()

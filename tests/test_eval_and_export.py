@@ -139,7 +139,7 @@ def test_summary_kicks_in_on_long_sessions(tmp_path):
             e = c.post("/chat", json={"message": m, "user_id": uid, "session_id": sid}).json()
         stages = [s["stage"] for s in e["trace"]["stages"]]
         assert "summary" in stages
-        ctx = c.get(f"/sessions/{sid}").json()["context"]
+        ctx = c.get(f"/sessions/{sid}", params={"user_id": uid}).json()["context"]
         assert ctx["summary_text"] and ctx["summary_through_turn"] >= 2
         prompt = c.get(f"/debug/prompt/{sid}").json()
         e = c.post(
@@ -164,7 +164,7 @@ def test_a_refresh_gets_the_whole_transcript_back(tmp_path):
             body.update({"user_id": uid, "session_id": sid} if sid else {"name": "Refresh"})
             e = c.post("/chat", json=body).json()
             uid, sid = e["user_id"], e["session_id"]
-        got = c.get(f"/sessions/{sid}").json()
+        got = c.get(f"/sessions/{sid}", params={"user_id": uid}).json()
 
     assert got["session"]["turn_counter"] == 15
     assert sorted({m["turn"] for m in got["messages"]}) == list(range(1, 16))
@@ -179,3 +179,29 @@ def test_a_refresh_gets_the_whole_transcript_back(tmp_path):
     ]
     assert [m["content"] for m in kept if m["role"] == "user"] == asked
     assert sum(1 for m in kept if m["role"] == "assistant") == 15
+
+
+def test_a_transcript_is_only_returned_to_its_owner(tmp_path):
+    """The session id travels in the client's URL, so knowing one must not be enough to read it."""
+    from fastapi.testclient import TestClient
+
+    from dubizzle_assistant.api.app import create_app
+    from tests.conftest import make_settings
+
+    with TestClient(create_app(make_settings(tmp_path))) as c:
+        mine = c.post("/chat", json={"message": "show me hondas", "name": "Owner"}).json()
+        theirs = c.post("/chat", json={"message": "show me bmws", "name": "Stranger"}).json()
+        sid, uid = mine["session_id"], mine["user_id"]
+        assert theirs["user_id"] != uid
+
+        ok = c.get(f"/sessions/{sid}", params={"user_id": uid})
+        snooped = c.get(f"/sessions/{sid}", params={"user_id": theirs["user_id"]})
+        anonymous = c.get(f"/sessions/{sid}")
+        ghost = c.get("/sessions/s_doesnotexist", params={"user_id": uid})
+
+    assert ok.status_code == 200 and ok.json()["messages"]
+    # The same 404 either way, so the reply never confirms the id exists.
+    assert snooped.status_code == 404 and snooped.json()["detail"] == ghost.json()["detail"]
+    assert ghost.status_code == 404
+    # Asking without saying who you are is a 422 from the missing parameter, never a transcript.
+    assert anonymous.status_code == 422

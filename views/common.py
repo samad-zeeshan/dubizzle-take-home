@@ -309,14 +309,15 @@ def init_state() -> None:
     if st.session_state.user_id and not st.session_state.user_name:
         prof = get_json(f"/users/{st.session_state.user_id}/profile")
         st.session_state.user_name = (prof or {}).get("name")
-    if st.session_state.session_id and not st.session_state.messages:
-        restore_history(st.session_state.session_id)
+    if st.session_state.session_id and st.session_state.user_id and not st.session_state.messages:
+        restore_history(st.session_state.session_id, st.session_state.user_id)
 
 
-def restore_history(session_id: str) -> None:
+def restore_history(session_id: str, user_id: str) -> None:
     """After a refresh the backend still has the transcript; the panels only exist for new turns."""
     try:
-        r = api("GET", f"/sessions/{session_id}", timeout=10)
+        # The transcript is only handed back to the person it belongs to.
+        r = api("GET", f"/sessions/{session_id}", params={"user_id": user_id}, timeout=10)
     except httpx.HTTPError:
         return
     if r.status_code != 200:
