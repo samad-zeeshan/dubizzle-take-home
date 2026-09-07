@@ -88,8 +88,12 @@ _MONTHS = {
         start=1,
     )
 }
+# The bare "at H" branch starts earlier in "at 10:30" than the H:MM branch does, and the leftmost
+# match wins, so without the lookahead the half hour is dropped before anything can refuse it.
 _TIME_RE = re.compile(
-    r"\b(\d{1,2})(?::(\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)\b|\b(\d{1,2}):(\d{2})\b|\bat\s+(\d{1,2})\b",
+    r"\b(\d{1,2})(?::(\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)\b"
+    r"|\b(\d{1,2}):(\d{2})\b"
+    r"|\bat\s+(\d{1,2})\b(?!\s*[:.]\d)",
     re.I,
 )
 
@@ -125,8 +129,16 @@ def parse_day_phrase(text: str, now: datetime) -> tuple[datetime | None, str | N
         if candidate < today:
             candidate = candidate.replace(year=today.year + 1)
         return candidate, "day and month"
+    if re.search(r"\byesterday\b|أمس|امس", low):
+        return today - timedelta(days=1), "yesterday"
     for word, wd in _WEEKDAYS.items():
         if re.search(rf"(?<![\w؀-ۿ]){re.escape(word)}(?![\w؀-ۿ])", low):
+            # "last Monday" used to read as the plain weekday and land a week ahead, so someone
+            # correcting themselves was quietly given a different day. Reading it backwards puts
+            # it in the past, where validate_slot refuses it and says why.
+            if re.search(rf"\b(last|past)\s+{re.escape(word)}\b|{re.escape(word)}\s+الماضي", low):
+                behind = (today.weekday() - wd) % 7 or 7
+                return today - timedelta(days=behind), f"last {word}"
             ahead = (wd - today.weekday()) % 7
             if ahead == 0:
                 ahead = 7 if re.search(r"\bnext\b|القادم|الجاي", low) else 0
@@ -136,18 +148,21 @@ def parse_day_phrase(text: str, now: datetime) -> tuple[datetime | None, str | N
     return None, None
 
 
-def hour_from_text(text: str) -> int | None:
+def time_from_text(text: str) -> tuple[int, int] | None:
+    """Hour and minute exactly as written. The minute has to survive: a viewing runs the hour from
+    its start, so reading 10:30 as 10:00 puts the customer inside someone else's slot."""
     m = _TIME_RE.search(normalize_digits(text))
     if not m:
         return None
     if m.group(1):
         h = int(m.group(1)) % 12
-        return h + 12 if m.group(3).lower().startswith("p") else h
+        h = h + 12 if m.group(3).lower().startswith("p") else h
+        return h, int(m.group(2) or 0)
     if m.group(4):
-        return int(m.group(4))
+        return int(m.group(4)), int(m.group(5) or 0)
     h = int(m.group(6))
     # "at 3" without am or pm on a car lot means the afternoon.
-    return h + 12 if 1 <= h <= 7 else h
+    return (h + 12 if 1 <= h <= 7 else h), 0
 
 
 def slot_label(start: datetime) -> str:
@@ -156,7 +171,12 @@ def slot_label(start: datetime) -> str:
 
 
 def parse_slot(
-    date_text: str | None, date_iso: str | None, hour: int | None, now: datetime
+    date_text: str | None,
+    date_iso: str | None,
+    hour: int | None,
+    now: datetime,
+    *,
+    said: str | None = None,
 ) -> tuple[datetime | None, list[str], str | None]:
     """Server-side date reading. Own rules first, dateparser second, the model's ISO guess last."""
     steps: list[str] = []
@@ -175,7 +195,7 @@ def parse_slot(
                 parsed = parsed.astimezone(DUBAI) if parsed.tzinfo else parsed.replace(tzinfo=DUBAI)
                 day = parsed.replace(hour=0, minute=0, second=0, microsecond=0)
                 steps.append(f"'{date_text}' -> {day.strftime('%A %Y-%m-%d')} (dateparser)")
-                if hour is None and hour_from_text(date_text) is None and parsed.hour:
+                if hour is None and time_from_text(date_text) is None and parsed.hour:
                     hour = parsed.hour
     model_day: datetime | None = None
     if date_iso:
@@ -193,18 +213,37 @@ def parse_slot(
         )
     if day is not None and model_day is not None and day.date() != model_day.date():
         steps.append(f"model said {model_day.date()}, text says {day.date()}, text wins")
+        # The disagreement was only ever written to a log line the customer never sees. When one
+        # of the two readings has already gone the phrase was backward looking, and picking the
+        # future one for them is the substitution this whole step exists to avoid.
+        if model_day.date() < now.date() or day.date() < now.date():
+            return (
+                None,
+                steps,
+                f"I read that as {day.strftime('%A %d %b %Y')}, but it could be "
+                f"{model_day.strftime('%A %d %b %Y')}, and one of those has passed. "
+                "Which day did you mean?",
+            )
     base = day if day is not None else model_day
     assert base is not None
+    # The tool schema carries a whole hour, so a customer who typed 10:30 lost the half hour
+    # before the server ever saw it. Reading the message too is what makes validate_slot's
+    # minute check reachable at all, instead of rounding down into someone else's viewing.
+    minute = 0
+    typed = time_from_text(date_text or "") or time_from_text(said or "")
     if hour is None:
-        from_text = hour_from_text(date_text or "")
-        if from_text is not None:
-            hour = from_text
+        if typed is not None:
+            hour, minute = typed
         elif model_day is not None and model_day.hour:
-            hour = model_day.hour
+            hour, minute = model_day.hour, model_day.minute
         else:
             hour = 10
             steps.append("no time given, defaulted to 10:00")
-    start = base.replace(hour=int(hour), minute=0, second=0, microsecond=0)
+    elif typed is not None and typed[0] == int(hour):
+        minute = typed[1]
+    if minute:
+        steps.append(f"minute {minute:02d} kept as typed rather than rounded to the hour")
+    start = base.replace(hour=int(hour), minute=minute, second=0, microsecond=0)
     return start, steps, None
 
 
@@ -490,7 +529,9 @@ def _propose(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
         hour = int(hour) if hour is not None else None
     except (TypeError, ValueError):
         hour = None
-    start, steps, err = parse_slot(args.get("date_text"), args.get("date_iso"), hour, ctx.now)
+    start, steps, err = parse_slot(
+        args.get("date_text"), args.get("date_iso"), hour, ctx.now, said=ctx.raw_message
+    )
     if err or start is None:
         return {"ok": False, "reason": err or "could not read the date", "date_steps": steps}
     error = validate_slot(ctx.conn, lid, start, ctx.now) or open_booking_cap(
