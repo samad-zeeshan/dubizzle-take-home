@@ -1,0 +1,5 @@
+{
+ "model": "gemini/gemini-embedding-001",
+ "dim": 768,
+ "count": 189
+}
