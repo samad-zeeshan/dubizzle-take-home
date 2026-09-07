@@ -9,7 +9,21 @@ Longer notes on the data, retrieval, guardrails, and scale are in
 
 ## Setup
 
-Python 3.11 to 3.13 and [uv](https://docs.astral.sh/uv/). The first two commands need no key.
+You need Python 3.11 to 3.13 and [uv](https://docs.astral.sh/uv/). Then one step, and no
+API key:
+
+| Platform | Run this |
+|---|---|
+| Windows | double-click `run.bat` |
+| macOS, Linux | `./run.sh` |
+| Anywhere | `uv run python run.py` |
+
+That installs the dependencies, starts the backend and the client, seeds a returning
+customer so the recall demo works, and opens a browser. With a Gemini key in `.env` it
+uses the model; without one it falls back to a rule-based stand-in, so the app still
+answers. Ctrl+C stops both servers.
+
+To run the pieces yourself instead:
 
 ```
 uv sync
@@ -17,8 +31,7 @@ LLM_PROVIDER=mock uv run uvicorn main:app
 uv run streamlit run app.py
 ```
 
-The mock provider is a rule-based stand-in, so the whole app runs offline. Client on
-http://localhost:8501, backend on 8000.
+Client on http://localhost:8501, backend on 8000.
 
 The recorded demo is closer to the real thing. Start the backend in replay mode and run the
 demo script. It plays two scripted conversations from a cassette of 28 model calls. No key, no

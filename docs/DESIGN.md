@@ -6,7 +6,18 @@ through LiteLLM.
 
 ## Run it
 
-Python 3.11 to 3.13 and [uv](https://docs.astral.sh/uv/). The first two commands need no key.
+Python 3.11 to 3.13 and [uv](https://docs.astral.sh/uv/). One step, no key needed:
+double-click `run.bat` on Windows, run `./run.sh` on macOS or Linux, or
+`uv run python run.py` anywhere.
+
+The two wrappers call `uv sync` first. `run.py` reads `.env` only to test whether a Gemini
+key is non-empty, and picks the model when there is one and the offline stand-in when there
+is not, so a reviewer never meets an error on the first turn. It steps past busy ports,
+waits for `/health` before starting the client, seeds the returning customer once on a fresh
+clone, and stops both servers together on Ctrl+C. It takes `--mode live|mock`, `--port`,
+`--client-port`, `--no-browser` and `--no-seed`.
+
+To run the pieces yourself instead:
 
 ```
 uv sync
@@ -46,6 +57,8 @@ her history recalled.
 ## Layout
 
 ```
+run.py                       one command: both servers, seed, browser
+run.bat, run.sh              wrappers that uv sync first
 main.py                      FastAPI entry
 app.py                       Streamlit entry
 src/dubizzle_assistant/
