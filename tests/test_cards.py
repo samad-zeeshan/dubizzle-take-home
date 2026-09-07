@@ -42,3 +42,27 @@ def test_a_monthly_only_card_says_the_cash_price_is_not_listed():
     # A cash price still leads, with the instalment beside it.
     both = common.car_card({**card, "price_aed": 79000}, show_index=False, show_id=False)
     assert "AED 79,000" in both and "or AED 1,048/mo" in both
+
+
+def test_an_arabic_customer_sees_the_card_too(tmp_path: Path) -> None:
+    """The English-only stock test left the empty grid in place for half the sheet's Level 9."""
+    with TestClient(create_app(make_settings(tmp_path))) as c:
+        e = c.post("/chat", json={"message": "corolla", "name": "Arabic"}).json()
+        rest = {"user_id": e["user_id"], "session_id": e["session_id"]}
+        assert [x["id"] for x in e["cars"]] == ["R-066"]
+        # The same search, asked in Arabic, with that car now on screen and in focus.
+        ar = c.post("/chat", json={"message": "أريد تويوتا كورولا", **rest}).json()
+
+    ran = [s["name"] for s in ar["trace"]["stages"] if s["stage"] == "tool"]
+    assert "search_inventory" in ran
+    assert [x["id"] for x in ar["cars"]] == ["R-066"]
+
+
+def test_a_detail_question_in_arabic_is_not_a_stock_request() -> None:
+    from dubizzle_assistant.services.agent import _stock_question
+
+    for asks_for_stock in ("عندك تويوتا كورولا؟", "أبغى سيارة سبع مقاعد", "أريد تويوتا كورولا"):
+        assert _stock_question(asks_for_stock), asks_for_stock
+    # A follow-up about the car already in focus must not force a search.
+    for follow_up in ("كم ممشى الأولى؟", "هل عليها ضمان؟", "كم ممشى بي واي دي هان", "نعم"):
+        assert not _stock_question(follow_up), follow_up

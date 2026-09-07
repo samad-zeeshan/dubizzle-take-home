@@ -187,11 +187,21 @@ SEARCH_NUDGE = {
 }
 
 
+# "عندك تويوتا؟" asks exactly what "do you have a toyota?" asks. Without these the nudge never
+# fires in Arabic, and a search whose only hit is the focused car has its card suppressed.
+_STOCK_VERB_AR_RE = re.compile(
+    r"عندك|عندكم|عندنا|يوجد|أبغى|ابغى|أبي|ابي|أريد|اريد|ودي|وريني|ورني|اعرض|أعرض|ابحث|أبحث|ابي"
+)
+_STOCK_NOUN_AR_RE = re.compile(
+    r"سيار|عربي|موديل|دفع رباعي|سيدان|كوبيه|مكشوف|بيك اب|بيك أب|كهربائ|هجين|ديزل|بنزين|مقاعد|جديد"
+)
+
+
 def _stock_question(text: str) -> bool:
     low = text.lower()
-    if not _STOCK_VERB_RE.search(low):
+    if not (_STOCK_VERB_RE.search(low) or _STOCK_VERB_AR_RE.search(low)):
         return False
-    if _STOCK_NOUN_RE.search(low):
+    if _STOCK_NOUN_RE.search(low) or _STOCK_NOUN_AR_RE.search(low):
         return True
     return resolve_make_model(low)[0] is not None
 
