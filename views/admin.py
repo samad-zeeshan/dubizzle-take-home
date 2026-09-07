@@ -54,8 +54,12 @@ def page(h: dict[str, Any]) -> None:
         sid = st.selectbox("Export session", [""] + [s["session_id"] for s in sessions])
         if sid:
             fmt = st.radio("Format", ["md", "json"], horizontal=True)
+            # The export is owner-scoped, so the row supplies whose session this is.
+            owner = next(s["user_id"] for s in sessions if s["session_id"] == sid)
             r = httpx.get(
-                f"{common.BACKEND}/sessions/{sid}/export", params={"format": fmt}, timeout=60
+                f"{common.BACKEND}/sessions/{sid}/export",
+                params={"format": fmt, "user_id": owner},
+                timeout=60,
             )
             if fmt == "md":
                 st.markdown(r.text)

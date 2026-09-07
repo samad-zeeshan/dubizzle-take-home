@@ -47,18 +47,38 @@ def test_export_markdown_and_json(client):
             "session_id": e["session_id"],
         },
     )
-    md = client.get(f"/sessions/{e['session_id']}/export").text
+    mine = {"user_id": e["user_id"]}
+    md = client.get(f"/sessions/{e['session_id']}/export", params=mine).text
     assert md.startswith("# Session ") and "## Turn 1" in md and "## Turn 2" in md
     assert "search_inventory" in md and "grounding:" in md
     assert not PHONE_RE.search(md)
-    js = client.get(f"/sessions/{e['session_id']}/export", params={"format": "json"}).json()
+    js = client.get(f"/sessions/{e['session_id']}/export", params={**mine, "format": "json"}).json()
     assert len(js["traces"]) == 2 and js["messages"][0]["role"] == "user"
     assert "dealer_contact" not in json.dumps(js)
     assert (
-        client.get(f"/sessions/{e['session_id']}/export", params={"format": "xml"}).status_code
+        client.get(
+            f"/sessions/{e['session_id']}/export", params={**mine, "format": "xml"}
+        ).status_code
         == 422
     )
-    assert client.get("/sessions/nope/export").status_code == 404
+    assert client.get("/sessions/nope/export", params=mine).status_code == 404
+
+
+def test_export_belongs_to_one_person(client):
+    """The transcript carries the tool results and the trace, so the id alone is not enough."""
+    mine = client.post("/chat", json={"message": "show me a bmw", "name": "Owner"}).json()
+    theirs = client.post("/chat", json={"message": "show me a kia", "name": "Onlooker"}).json()
+    sid = mine["session_id"]
+
+    for fmt in ("md", "json"):
+        r = client.get(
+            f"/sessions/{sid}/export", params={"user_id": theirs["user_id"], "format": fmt}
+        )
+        # The same 404 a missing session gets, so the reply never confirms the id exists.
+        assert r.status_code == 404 and r.json()["detail"] == "no such session"
+    assert client.get(f"/sessions/{sid}/export").status_code == 422
+    ok = client.get(f"/sessions/{sid}/export", params={"user_id": mine["user_id"]})
+    assert ok.status_code == 200 and ok.text.startswith("# Session ")
 
 
 def test_structured_reply_cited_ids_are_validated(client):

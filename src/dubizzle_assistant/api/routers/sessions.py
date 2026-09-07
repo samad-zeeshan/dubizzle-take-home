@@ -102,11 +102,17 @@ def _render_markdown(
 
 @router.get("/{session_id}/export")
 def export(
-    session_id: str, format: str = "md", conn: sqlite3.Connection = Depends(get_conn)
+    session_id: str,
+    user_id: str,
+    format: str = "md",
+    conn: sqlite3.Connection = Depends(get_conn),
 ) -> Any:
-    """The conversation with its traces, redacted. This is the terminal log artefact."""
+    """The conversation with its traces, redacted. This is the terminal log artefact.
+
+    The export carries more than the read route does, so it takes the same ownership rule and
+    the same 404: an id that leaks into a log or a URL bar is not a licence to read the chat."""
     s = memory.get_session(conn, session_id)
-    if not s:
+    if not s or s["user_id"] != user_id:
         raise HTTPException(status_code=404, detail="no such session")
     messages = redact(memory.all_messages(conn, session_id))
     trace_rows = conn.execute(
