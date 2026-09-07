@@ -198,6 +198,7 @@ REPAIR_NOTE_OPENINGS = (
     "The reply contains listing ids",
     "You have not searched the inventory this turn",
     "search_inventory was run for you with",
+    "Answer now from the tool results",
 )
 
 

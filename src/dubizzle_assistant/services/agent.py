@@ -48,6 +48,12 @@ _PROVIDER_FIELDS = (
 )
 
 LOOP_CAP_REPLY = "I ran out of steps on that one. Could you narrow it to one car or one question and I will pick it up from there?"
+# The cap normally lands after the answer is already in the tool results, because the model spent
+# its last steps on bookkeeping calls. Taking the tools away lets it speak instead of apologising.
+LOOP_CAP_NOTE = {
+    "role": "user",
+    "content": "Answer now from the tool results you already have.",
+}
 EMPTY_REPLY = "I did not manage to put an answer together for that. Could you say it another way, or name the car you mean?"
 
 
@@ -643,7 +649,27 @@ def _run_loop(
         final = resp
         break
     if final is None:
-        trace.add("loop_cap", iterations=n)
+        messages.append(LOOP_CAP_NOTE)
+        n += 1
+        try:
+            capped = _call(
+                ctx,
+                llm,
+                messages,
+                None,
+                n,
+                want_schema=settings.structured_reply_for(turn_model or settings.llm_model),
+                model=turn_model,
+                purpose="loop_cap",
+            )
+        except ChatUnavailableError:
+            capped = None
+        if capped is not None and (capped.text or "").strip():
+            final = capped
+            for k in usage:
+                usage[k] += capped.usage.get(k, 0)
+        trace.add("loop_cap", iterations=n, recovered=final is not None)
+    if final is None:
         final = LLMResponse(
             text=LOOP_CAP_REPLY,
             tool_calls=[],

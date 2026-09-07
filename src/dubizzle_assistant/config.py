@@ -77,7 +77,7 @@ class Settings(BaseSettings):
     rate_limit_per_day: int = 300
     daily_llm_budget: int = 1000
     max_message_chars: int = 1000
-    max_tool_iterations: int = 4
+    max_tool_iterations: int = 6
     history_turns: int = 10
     session_idle_minutes: int = 30
 
