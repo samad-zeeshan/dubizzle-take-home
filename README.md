@@ -86,8 +86,8 @@ id pattern, and making the chat route async.
 
 **1. A multi-turn conversation exploring the inventory**
 
-<!-- ![Exploring the inventory](docs/screenshots/explore.png) -->
+![Exploring the inventory](docs/screenshots/explore.png)
 
 **2. The agent recalling a user's history in a completely new session**
 
-<!-- ![Sara recognised in a new session](docs/screenshots/recall.png) -->
+![Sara recognised in a new session](docs/screenshots/recall.png)

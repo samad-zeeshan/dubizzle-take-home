@@ -49,10 +49,9 @@ returning user named Sara for the recall scenario.
 a multi-turn exploration of the inventory, then a new session in which Sara is recognised and
 her history recalled.
 
-<!-- Drop the two screenshots into docs/screenshots/ and remove this comment.
-![Exploring the inventory](docs/screenshots/explore.png)
-![Sara recognised in a new session](docs/screenshots/recall.png)
--->
+![Exploring the inventory](screenshots/explore.png)
+
+![Sara recognised in a new session](screenshots/recall.png)
 
 ## Layout
 
