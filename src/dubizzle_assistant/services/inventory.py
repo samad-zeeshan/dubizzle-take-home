@@ -17,6 +17,7 @@ from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
+from dubizzle_assistant.config import get_settings
 from dubizzle_assistant.db import LISTING_COLUMNS
 from dubizzle_assistant.normalize import (
     canonical_body_type,
@@ -481,10 +482,11 @@ def search(
     if mode == "embeddings":
         from dubizzle_assistant.services.embeddings import available
 
-        if not available():
-            raise RetrievalUnavailableError(
-                "embeddings mode needs data/embeddings.npy; run scripts/build_embeddings.py"
-            )
+        settings = get_settings()
+        ids = [str(r[0]) for r in conn.execute("SELECT id FROM listings")]
+        ok, reason = available(model=settings.embedding_model, ids=ids)
+        if not ok:
+            raise RetrievalUnavailableError(reason)
     steps = list(normalization or [])
     if filters.make:
         make, step = canonical_make(filters.make)

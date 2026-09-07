@@ -41,11 +41,13 @@ class LiteLLMClient:
         max_tokens: int | None = None,
         fallback_model: str | None = None,
         embedding_model: str = "gemini/gemini-embedding-001",
+        embedding_dimensions: int | None = None,
         max_retry_wait: float = 20.0,
     ) -> None:
         self.model = model
         self.fallback_model = fallback_model
         self.embedding_model = embedding_model
+        self.embedding_dimensions = embedding_dimensions
         self.max_retry_wait = max_retry_wait
         self.api_base = api_base
         self.local = local
@@ -261,6 +263,12 @@ class LiteLLMClient:
         out.note = f"{out.note}; streamed" if out.note else "streamed"
         return out
 
+    def _embedding_width(self) -> dict[str, Any]:
+        # Asked for on both embedding paths, or a query would not match the stored matrix.
+        if self.embedding_dimensions and not self.local:
+            return {"dimensions": self.embedding_dimensions}
+        return {}
+
     def embed_many(self, texts: list[str], batch_size: int = 16) -> list[list[float]]:
         """Batched embeddings for the one-time corpus build; about a dozen calls for the whole inventory."""
         litellm = self._lib()
@@ -270,6 +278,7 @@ class LiteLLMClient:
                 resp = litellm.embedding(
                     model=self.embedding_model,
                     input=texts[i : i + batch_size],
+                    **self._embedding_width(),
                     **self._endpoint(self.embedding_model),
                 )
             except Exception as e:  # noqa: BLE001
@@ -284,7 +293,10 @@ class LiteLLMClient:
         litellm = self._lib()
         try:
             out = litellm.embedding(
-                model=self.embedding_model, input=[text], **self._endpoint(self.embedding_model)
+                model=self.embedding_model,
+                input=[text],
+                **self._embedding_width(),
+                **self._endpoint(self.embedding_model),
             )
         except Exception as e:  # noqa: BLE001
             raise LLMError(f"embedding call failed: {type(e).__name__}: {e}") from e

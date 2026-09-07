@@ -38,9 +38,10 @@ def main() -> int:
         api_base_key=settings.llm_api_key,
         local=settings.llm_local,
         embedding_model=settings.embedding_model,
+        embedding_dimensions=settings.embedding_dimensions,
     )
     vectors = client.embed_many(texts, batch_size=16)
-    embeddings.save(ids, vectors, settings.embeddings_path)
+    embeddings.save(ids, vectors, settings.embeddings_path, model=settings.embedding_model)
     print(
         f"wrote {settings.embeddings_path} ({len(ids)} x {len(vectors[0])}) and {settings.embeddings_path.with_suffix('.ids.json')}"
     )

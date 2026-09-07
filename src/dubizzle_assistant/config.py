@@ -68,6 +68,9 @@ class Settings(BaseSettings):
     debug_endpoints: bool = False
     retrieval_mode: Literal["structured", "fts", "hybrid", "embeddings"] = "hybrid"
     embedding_model: str = "gemini/gemini-embedding-001"
+    # gemini-embedding-001 returns 3072 by default, four times the file for no measured gain,
+    # and the local nomic model is 768, so pinning it keeps the two providers comparable.
+    embedding_dimensions: int | None = 768
     demo_now: datetime | None = None
 
     rate_limit_per_min: int = 20

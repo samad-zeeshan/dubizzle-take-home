@@ -38,11 +38,17 @@ def main() -> int:
     init_db(db)
     conn = connect(db)
     load_inventory(conn, settings.inventory_path)
+    listing_ids = [str(r[0]) for r in conn.execute("SELECT id FROM listings")]
+    embeddings_ok, embeddings_reason = embeddings.available(
+        model=settings.embedding_model, ids=listing_ids
+    )
     modes = (
         tuple(args.modes)
         if args.modes
-        else tuple(m for m in MODES if m != "embeddings" or embeddings.available())
+        else tuple(m for m in MODES if m != "embeddings" or embeddings_ok)
     )
+    if "embeddings" in modes and not embeddings_ok:
+        print(f"note: {embeddings_reason}")
     embedder = build_embedder(settings, build_llm(settings)) if "embeddings" in modes else None
     report = evaluate(conn, settings.inventory_path, modes, embedder)
     args.out.parent.mkdir(parents=True, exist_ok=True)

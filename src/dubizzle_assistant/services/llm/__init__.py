@@ -27,6 +27,7 @@ def build_llm(settings: Settings) -> LLMClient | None:
             max_tokens=settings.effective_max_tokens,
             fallback_model=settings.usable_fallback_model,
             embedding_model=settings.embedding_model,
+            embedding_dimensions=settings.embedding_dimensions,
         )
     if settings.llm_cassette_mode != "off":
         from dubizzle_assistant.services.llm.cassette import CassetteClient
