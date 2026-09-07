@@ -54,7 +54,12 @@ COMPETITORS = [
 COMPETITOR_RE = re.compile(
     r"(?<![\w-])(" + "|".join(re.escape(c) for c in COMPETITORS) + r")(?![\w-])"
     r"|\b(other|another|different|rival|competitor|competing)\s+(car\s+)?(sites?|websites?|platforms?|marketplaces?|apps?|listings? sites?)\b"
-    r"|\belsewhere online\b|\bcompetitors?\b|\bcheaper (online|elsewhere)\b",
+    r"|\belsewhere online\b|\bcheaper (online|elsewhere)\b"
+    # "competitor" is also the ordinary word for a rival car model, and the bare token refused
+    # "which cars in your stock are the main competitors of the Prado". It now needs the business
+    # sense: whose competitors, or a price word near enough to be part of the same thought.
+    r"|\b(your|our|dubizzle'?s) competitors?\b"
+    r"|\bcompetitors?\b(?=[^?.!]{0,25}\b(cheaper|price|prices|cost|online|site|sites)\b)",
     re.I,
 )
 
@@ -78,8 +83,20 @@ CODE_RE = re.compile(
 TRIVIA_RE = re.compile(
     r"\b(who|when|what|where|which) (won|was|were|is|did|invented|discovered|built) .{0,40}\b"
     r"(war|battle|world cup|olympics|election|president|king|queen|prime minister|empire|revolution|independence|moon landing)\b"
-    r"|\bcapital of\b|\bworld cup\b|\bwhat year (did|was)\b|\bhistory of (the )?(?!service|this car|the car|ownership)\w+"
-    r"|\bhow many (people|countries|planets)\b|\bwho (is|was) (the )?(first|last|current) (president|king|queen)",
+    r"|\bcapital of\b|\bworld cup\b|\bwhat year (did|was)\b"
+    # This branch used to match any noun and exempt four car words, which could never work: the
+    # object is usually a model name ("history of the Patrol"), and the exemption never fired
+    # anyway because the greedy (the )? consumed the article before the lookahead read it. Naming
+    # the world subjects instead means every car phrasing reaches the model, and real history
+    # questions are already caught by the war and empire branch above.
+    r"|\bhistory of (the )?(world|humanity|mankind|europe|asia|africa|america|china|india|rome"
+    r"|greece|egypt|persia|arabia|islam|christianity|aviation|flight|medicine|philosophy|art"
+    r"|music|football|the internet)\b"
+    # A seat count is the most ordinary question in this domain, and "how many people" swallowed
+    # it whole. Population trivia needs one of its own verbs to still decline.
+    r"|\bhow many (countries|planets|continents)\b"
+    r"|\bhow many people (live|lived|died|speak|voted|are there)\b"
+    r"|\bwho (is|was) (the )?(first|last|current) (president|king|queen)",
     re.I,
 )
 OFFTOPIC_RE = re.compile(

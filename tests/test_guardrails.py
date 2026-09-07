@@ -38,6 +38,41 @@ def test_prefilter_lets_car_questions_through():
         assert prefilter(text) is None, text
 
 
+# Every one of these was refused by the live model as out of scope, and every one is an ordinary
+# question a buyer asks. Sources: adversarial run breaks 2, 3 and 4.
+ADVERSARIAL_MUST_NOT_FIRE = (
+    "How many people does the first one seat, and is there room for a child seat in the back?",
+    "How many people can it fit?",
+    "What is the service history of the car?",
+    "Is the timing belt history of this engine known, or only the history of the previous owner?",
+    "What's the accident history of the Patrol you showed me, "
+    "and does it have full service history of the car?",
+    "What is the maintenance history of the vehicle?",
+    "Which cars in your stock are the main competitors of the Toyota Prado?",
+    "what are the competitors of the prado in your inventory",
+    "how does this hold its value against its competitors",
+)
+
+
+def test_the_nine_adversarial_false_positives_reach_the_model():
+    for text in ADVERSARIAL_MUST_NOT_FIRE:
+        hit = prefilter(text)
+        assert hit is None, f"{text!r} still declines as {hit and hit['rule']}"
+
+
+def test_the_rules_those_three_fixes_touch_still_decline():
+    """Widening a rule is only safe if what it was written for still trips it."""
+    for text in ("how many people live in Dubai?", "how many countries are in Africa?"):
+        assert prefilter(text)["rule"] == "trivia"
+    for text in ("what is the history of the Roman Empire?", "tell me the history of aviation"):
+        assert prefilter(text)["rule"] == "trivia"
+    for text in (
+        "are your prices better than your competitors?",
+        "do competitors have this cheaper?",
+    ):
+        assert prefilter(text)["rule"] == "competitor"
+
+
 def test_postfilter_scrubs_and_reports():
     text = "You could check YallaMotor, or call the dealer on +971 50 123 4567 or see www.dealer.ae for more."
     out, hits = postfilter(text)
