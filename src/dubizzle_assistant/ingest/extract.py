@@ -93,9 +93,27 @@ VAT_EXCL_RE = re.compile(
 )
 VAT_INCL_RE = re.compile(r"includ\w*\s+(?:5\s*%\s*)?vat|inclusive\s+of\s+vat|incl\.?\s*vat", re.I)
 DOWN_PAYMENT_RE = re.compile(r"(\d{1,2})\s*%\s*(?:down|dp\b)", re.I)
-SEATS_RE = re.compile(r"\b([2-9])\s*[- ]?seat", re.I)
+# "7 Seats", "5 seater", and "Seating Capacity: 5" are all the same fact written three ways.
+SEATS_RE = re.compile(
+    r"\b([2-9])\s*[- ]?seat|seat(?:ing)?\s*(?:capacity)?\s*[:\-]?\s*([2-9])\b", re.I
+)
+WARRANTY_CAP_RE = re.compile(
+    r"\d{1,2}\s*[-\s]?years?\s*(?:or|/|,)?\s*(?:\d{1,3}[,.]?\d{3}|\d{1,3}\s?k)\s*(?:kms?|kilomet\w*)?"
+    r"|\d{1,3}[,.]\d{3}\s*(?:kms?|kilomet\w*)"
+    r"|(?:until|till|valid\s+(?:until|till|to))\s+[\w/\. ]{3,20}"
+    r"|\d{1,2}\s*[-\s]?years?\b",
+    re.I,
+)
+# An electric sunroof is not an electric car, and feature lists are full of electric seats,
+# blinds and mirrors. Only an explicit fuel claim counts; the six real EVs here are all
+# named in ELECTRIC_MODELS, so nothing genuine rests on the loose reading.
+_ELECTRIC_RE = (
+    r"fully\s+electric|all[\s\-]electric|100\s?%\s+electric|electric\s+"
+    r"(?:vehicle|car|suv|sedan|hatchback|motor|powertrain|drivetrain)|\bev\b|\bkwh\b"
+    r"|battery\s+range|electric\s+range|كهربائية"
+)
 FUEL_PATTERNS: list[tuple[str, str]] = [
-    (r"\belectric\b|\bev\b|\bkwh\b|fully electric", "electric"),
+    (_ELECTRIC_RE, "electric"),
     (r"\bhybrid\b|e performance|e-performance|phev", "hybrid"),
     (r"\bdiesel\b|ديزل", "diesel"),
     (r"\bpetrol\b|\bgasoline\b|بنزين", "petrol"),
@@ -104,6 +122,147 @@ TRANSMISSION_PATTERNS: list[tuple[str, str]] = [
     (r"\bmanual\b|\bstd\s*-\s*manual|عادي|مانيوال", "manual"),
     (r"\bautomatic\b|\bauto\b|\bdsg\b|\btiptronic\b|\d-?speed|أوتوماتيك|اوتوماتيك", "automatic"),
 ]
+
+
+# Buyers ask about condition in the words sellers already use. Each flag is true only on an
+# explicit phrase and null otherwise, because "no accidents" and silence are different answers.
+ACCIDENT_FREE_RE = re.compile(
+    r"(?:no|free\s+of|zero|without)\s+(?:any\s+)?accidents?|accidents?[\s\-]*free"
+    r"|\bfree\s+accidents?\b|بدون\s*حوادث|خالية\s+من\s+الحوادث",
+    re.I,
+)
+ORIGINAL_PAINT_RE = re.compile(
+    r"original\s+paint|no\s+(?:re)?paints?\b|never\s+(?:re)?painted|no\s+body\s*work"
+    r"|صبغ\s*وكالة|بدون\s*صبغ",
+    re.I,
+)
+NEW_TYRES_RE = re.compile(
+    r"(?:\d\s+)?(?:brand\s+)?new\s+(?:condition\s+)?tyres?\b"
+    r"|(?:\d\s+)?(?:brand\s+)?new\s+(?:condition\s+)?tires?\b|ty[ri]es?\s+are\s+new",
+    re.I,
+)
+NO_FAULTS_RE = re.compile(
+    r"no\s+faults?\b|mechanical(?:ly)?\s+issue\s+free|no\s+mechanical\s+(?:problems?|issues?)"
+    r"|no\s+(?:have\s+)?(?:any\s+)?problems?\b|\bissue\s+free\b|mechanically\s+perfect",
+    re.I,
+)
+NO_FLOOD_RE = re.compile(r"no\s+flood|flood\s*[\-\s]*free|بدون\s*غرق", re.I)
+NEGOTIABLE_RE = re.compile(r"\bnegotiable\b|\bobo\b|best\s+offer|قابل\s+للتفاوض", re.I)
+NOT_NEGOTIABLE_RE = re.compile(r"non[\s\-]?negotiable|not\s+negotiable|fixed\s+price", re.I)
+TRADE_IN_RE = re.compile(
+    r"trade[\s\-]?in\b|part\s+exchange|exchange\s+accepted|trade\s+for\s+cash", re.I
+)
+CARPLAY_RE = re.compile(r"car\s?play|android\s+auto", re.I)
+LEATHER_RE = re.compile(r"\bleather\b|\balcantara\b|\bجلد\b", re.I)
+OWNERS_RE = re.compile(
+    r"\b(one|single|first|1|2|two|3|three)\s*(?:st|nd|rd|th)?[\s\-]?(?:hand|owners?)\b", re.I
+)
+_OWNER_WORDS = {"one": 1, "single": 1, "first": 1, "1": 1, "2": 2, "two": 2, "3": 3, "three": 3}
+
+SERVICE_HISTORY_PATTERNS: list[tuple[str, str]] = [
+    (r"partial\s+(?:agency\s+)?(?:service\s+)?(?:history|maintained|service)", "partial"),
+    (
+        r"full\s+(?:agency\s+)?services?\s+history|\bfsh\b|full\s+agency\s+service"
+        r"|full\s+service\b(?!\s+contract)",
+        "full",
+    ),
+    (
+        r"agency\s+(?:maintained|serviced|service)|(?:fully\s+)?serviced\s+at\s+(?:the\s+)?agency"
+        r"|dealer\s+serviced|صيانة\s*وكالة",
+        "agency",
+    ),
+    (
+        r"recently\s+serviced|major\s+service\s+done|service\s+(?:history|records?)"
+        r"|regularly\s+serviced",
+        "serviced",
+    ),
+]
+DRIVER_ASSIST_PATTERNS: list[tuple[str, str]] = [
+    (
+        r"lane\s+(?:departure|keep\w*|change)\s*(?:assist\w*|warning|indicator)?|lane\s+assist",
+        "lane assist",
+    ),
+    (r"blind[\s\-]?spot", "blind spot monitor"),
+    (r"adaptive\s+cruise", "adaptive cruise control"),
+    (
+        r"(?:anti[\s\-]?)?collision\s*(?:system|warning|avoidance)?"
+        r"|automatic\s+emergency\s+brak\w*",
+        "collision warning",
+    ),
+    (r"360\s*°?\s*(?:degree\s*)?camera", "360 camera"),
+    (r"parking\s+sensors?", "parking sensors"),
+    (r"(?:rear|reverse|backup)\s+camera", "rear camera"),
+]
+
+_SENTENCE_EDGE_RE = re.compile(r"[.!?\n|•؟]")
+
+
+def _sentence(text: str, start: int, end: int, limit: int = 180) -> str:
+    """The clause the match sits in, so a reply can quote the seller rather than a field name.
+
+    Many ads separate facts with dashes rather than full stops, so the clause can run for
+    hundreds of characters. The window then centres on the match instead of starting at the
+    clause, which is what put the wrong sentence next to a flag.
+    """
+    left = 0
+    for m in _SENTENCE_EDGE_RE.finditer(text, 0, start):
+        left = m.end()
+    right_m = _SENTENCE_EDGE_RE.search(text, end)
+    right = right_m.start() if right_m else len(text)
+    if right - left > limit:
+        pad = max(0, (limit - (end - start)) // 2)
+        left, right = max(left, start - pad), min(right, end + pad)
+    return " ".join(text[left:right].split())[:limit]
+
+
+def _flag(text: str, rx: re.Pattern[str], confidence: float = 0.9) -> Field:
+    """True with its evidence when the phrase is there, null when the ad simply does not say."""
+    m = rx.search(text)
+    if not m:
+        return null()
+    return Field(True, "regex", _sentence(text, m.start(), m.end()), confidence)
+
+
+def extract_conditions(text: str) -> dict[str, Field]:
+    fields: dict[str, Field] = {
+        "accident_free": _flag(text, ACCIDENT_FREE_RE),
+        "original_paint": _flag(text, ORIGINAL_PAINT_RE),
+        "new_tyres": _flag(text, NEW_TYRES_RE, 0.85),
+        "no_faults": _flag(text, NO_FAULTS_RE, 0.85),
+        "no_flood": _flag(text, NO_FLOOD_RE),
+        "trade_in_accepted": _flag(text, TRADE_IN_RE, 0.85),
+        "has_carplay": _flag(text, CARPLAY_RE),
+        "has_leather": _flag(text, LEATHER_RE, 0.85),
+    }
+    fixed = NOT_NEGOTIABLE_RE.search(text)
+    nm = NEGOTIABLE_RE.search(text)
+    if fixed:
+        fields["negotiable"] = Field(
+            False, "regex", _sentence(text, fixed.start(), fixed.end()), 0.9
+        )
+    elif nm:
+        fields["negotiable"] = Field(True, "regex", _sentence(text, nm.start(), nm.end()), 0.9)
+    else:
+        fields["negotiable"] = null()
+
+    om = OWNERS_RE.search(text)
+    count = _OWNER_WORDS.get(om.group(1).lower()) if om else None
+    fields["owners"] = (
+        Field(count, "regex", _sentence(text, om.start(), om.end()), 0.8)
+        if om and count is not None
+        else null()
+    )
+    fields["service_history"] = _first_match(SERVICE_HISTORY_PATTERNS, text)
+
+    seen: list[str] = []
+    evidence: str | None = None
+    for rx, label in DRIVER_ASSIST_PATTERNS:
+        m = re.search(rx, text, re.I)
+        if m and label not in seen:
+            seen.append(label)
+            evidence = evidence or _sentence(text, m.start(), m.end())
+    fields["driver_assist"] = Field(seen, "regex", evidence, 0.85) if seen else null()
+    return fields
 
 
 def _snippet(text: str, start: int, end: int, pad: int = 30) -> str:
@@ -326,6 +485,35 @@ def extract_body_type(make: str, model: str, title: str, text: str) -> Field:
     return null("inferred")
 
 
+def extract_warranty(text: str) -> tuple[Field, Field]:
+    """has_warranty and the wording, reaching for the clause that carries the cover cap.
+
+    "Until when" is the half of the warranty question a fixed window around the word
+    always cut off: on the Haval the cap sits a sentence later than the first mention.
+    """
+    first = WARRANTY_RE.search(text)
+    if not first or NO_WARRANTY_RE.search(text):
+        return Field(False, "regex", None, 0.8 if first else 0.6), null()
+    # The cap has to follow the word inside the same sentence. Reaching further picked up
+    # "Mileage: Just 68,000 km" from a dash separated run, and reaching past a line break
+    # turned "monthly for 5 years" from the finance block into a warranty term.
+    chosen, cap_text = None, None
+    for m in WARRANTY_RE.finditer(text):
+        edge = _SENTENCE_EDGE_RE.search(text, m.end())
+        stop = min(edge.start() if edge else len(text), m.end() + 160)
+        cap = WARRANTY_CAP_RE.search(text[m.end() : stop])
+        if cap:
+            chosen, cap_text = m, " ".join(cap.group(0).split())
+            break
+        if chosen is None and len(_sentence(text, m.start(), m.end(), 240)) > 25:
+            chosen = m
+    chosen = chosen or first
+    sentence = _sentence(text, chosen.start(), chosen.end(), 240)
+    if cap_text and cap_text.lower() not in sentence.lower():
+        sentence = f"{sentence} ({cap_text})"
+    return Field(True, "regex", sentence, 0.85), Field(sentence, "regex", None, 0.8)
+
+
 def _first_match(patterns: list[tuple[str, str]], text: str) -> Field:
     for rx, value in patterns:
         m = re.search(rx, text, re.I)
@@ -354,21 +542,11 @@ def extract_all(
     fields["transmission"] = _first_match(TRANSMISSION_PATTERNS, text)
     sm = SEATS_RE.search(text)
     fields["seats"] = (
-        Field(int(sm.group(1)), "regex", _snippet(text, sm.start(), sm.end()), 0.8)
+        Field(int(sm.group(1) or sm.group(2)), "regex", _snippet(text, sm.start(), sm.end()), 0.8)
         if sm
         else null()
     )
-    wm = WARRANTY_RE.search(text)
-    if wm and not NO_WARRANTY_RE.search(text):
-        fields["has_warranty"] = Field(
-            True, "regex", _snippet(text, wm.start(), wm.end(), 50), 0.85
-        )
-        fields["warranty_text"] = Field(
-            _snippet(text, wm.start(), wm.end(), 60), "regex", None, 0.8
-        )
-    else:
-        fields["has_warranty"] = Field(False, "regex", None, 0.8 if wm else 0.6)
-        fields["warranty_text"] = null()
+    fields["has_warranty"], fields["warranty_text"] = extract_warranty(text)
     scm = SERVICE_CONTRACT_RE.search(text)
     fields["service_contract"] = Field(
         bool(scm),
@@ -384,4 +562,5 @@ def extract_all(
     fields["is_export_only"] = Field(
         bool(em), "regex", _snippet(text, em.start(), em.end()) if em else None, 0.9 if em else 0.7
     )
+    fields.update(extract_conditions(text))
     return fields, rej_p + rej_m
