@@ -15,6 +15,7 @@ from dubizzle_assistant.normalize import (
     canonical_make,
     parse_budget,
     resolve_make_model,
+    unsupported_currency,
 )
 from dubizzle_assistant.services.inventory import SearchFilters
 
@@ -73,6 +74,12 @@ def filters_from_args(args: dict[str, Any]) -> tuple[SearchFilters, list[str]]:
                 f.monthly_max_aed = int(money.amount_aed)
             else:
                 f.price_max_aed = int(money.amount_aed)
+        else:
+            # No ceiling is better than a ceiling off by the exchange rate, and the step is what
+            # tells the model to ask rather than quietly searching the whole inventory.
+            foreign = unsupported_currency(str(budget_text))
+            if foreign:
+                steps.append(f"budget in {foreign} not converted, ask for the figure in AED")
 
     bt = (args.get("body_type") or "").strip().lower() or None
     if bt:

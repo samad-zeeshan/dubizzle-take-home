@@ -21,7 +21,12 @@ from datetime import datetime
 from typing import Any
 
 from dubizzle_assistant.config import Settings
-from dubizzle_assistant.normalize import canonical_body_type, canonical_make, parse_budget
+from dubizzle_assistant.normalize import (
+    canonical_body_type,
+    canonical_make,
+    parse_budget,
+    unsupported_currency,
+)
 from dubizzle_assistant.services import tools as tool_registry
 from dubizzle_assistant.services.context import TurnContext
 
@@ -318,12 +323,17 @@ def _timeline_from(text: str) -> str | None:
 
 def _update_lead(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
     updates: dict[str, Any] = {}
+    unconverted = None
     if args.get("budget_text"):
         money = parse_budget(str(args["budget_text"]))
         if money:
             updates["budget_original_text"] = str(args["budget_text"])[:60]
             updates["budget_mode"] = money.mode
             updates["budget_max_aed"] = int(money.amount_aed)
+        else:
+            # The row used to carry "25,000 euros" beside a budget of AED 25,000 and contradict
+            # itself. Nothing is written until the customer gives a figure this can price against.
+            unconverted = unsupported_currency(str(args["budget_text"]))
     for k in ("budget_min_aed", "budget_max_aed", "min_year", "max_mileage_km"):
         if args.get(k) not in (None, "", 0):
             with contextlib.suppress(TypeError, ValueError):
@@ -350,8 +360,14 @@ def _update_lead(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
         updates["lead_type"] = args["lead_type"]
     if ctx.focus_id:
         updates["interested_listing_ids"] = [ctx.focus_id]
+    ask = (
+        f"The budget is in {unconverted}, which cannot be converted here. Ask the customer for "
+        "the figure in dirhams, and do not treat it as AED."
+        if unconverted
+        else None
+    )
     if not updates:
-        return {"ok": False, "reason": "nothing to record"}
+        return {"ok": False, "reason": ask or "nothing to record"}
     lead = upsert(ctx.conn, ctx.settings, ctx.user_id, ctx.session_id, updates, ctx.now)
     ctx.note_write("leads", "update_lead", fields=sorted(k for k in updates), status=lead["status"])
     return {
@@ -361,6 +377,7 @@ def _update_lead(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
         },
         "status": lead["status"],
         "qualification_reason": lead["qualification_reason"],
+        "currency_not_converted": ask,
         "message": "Noted: "
         + "; ".join(
             f"{k.replace('_', ' ')} {v if not isinstance(v, list) else ', '.join(v)}"

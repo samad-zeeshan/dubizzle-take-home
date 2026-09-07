@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import secrets
 import sqlite3
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
@@ -41,6 +41,33 @@ class ChatRequest(BaseModel):
     }
 
 
+def _replayed(
+    conn: sqlite3.Connection,
+    settings: Settings,
+    now: datetime,
+    key: str | None,
+    scope: str | None,
+) -> dict[str, Any] | None:
+    """The envelope this key already produced for this scope, if it is still inside the window."""
+    if not key or not scope:
+        return None
+    row = conn.execute(
+        "SELECT envelope_json FROM idempotency WHERE key = ? AND user_id = ? AND created_at >= ?",
+        (
+            key,
+            scope,
+            (now - timedelta(seconds=settings.idempotency_ttl_seconds)).isoformat(
+                timespec="seconds"
+            ),
+        ),
+    ).fetchone()
+    if not row:
+        return None
+    env = json.loads(row["envelope_json"])
+    env["idempotent_replay"] = True
+    return env
+
+
 def prepare(
     req: ChatRequest,
     request: Request,
@@ -59,26 +86,27 @@ def prepare(
         )
     now = settings.now()
 
-    if req.user_id and memory.get_user(conn, req.user_id):
+    known = bool(req.user_id and memory.get_user(conn, req.user_id))
+    # Minting the user before the lookup guaranteed a miss for anonymous first contact, the one
+    # case the key exists for, so a double click made a second user, session and lead row. The
+    # client address is the only stable thing the request carries before an identity exists.
+    scope = user_scope = req.user_id if known else None
+    if not known and not req.name and request.client:
+        scope = f"ip:{request.client.host}"
+    replay = _replayed(conn, settings, now, idempotency_key, scope)
+    if replay is not None:
+        return {"replay": replay}
+
+    if known and req.user_id:
         user_id = req.user_id
     else:
         user_id = memory.identify_user(conn, now, name=req.name, user_id=req.user_id)["user_id"]
-
-    if idempotency_key:
-        row = conn.execute(
-            "SELECT envelope_json FROM idempotency WHERE key = ? AND user_id = ? AND created_at >= ?",
-            (
-                idempotency_key,
-                user_id,
-                (now - timedelta(seconds=settings.idempotency_ttl_seconds)).isoformat(
-                    timespec="seconds"
-                ),
-            ),
-        ).fetchone()
-        if row:
-            env = json.loads(row["envelope_json"])
-            env["idempotent_replay"] = True
-            return {"replay": env}
+    if scope is None:
+        scope = user_id
+    if user_scope is None and scope == user_id:
+        replay = _replayed(conn, settings, now, idempotency_key, user_id)
+        if replay is not None:
+            return {"replay": replay}
 
     limited = ratelimit.check(
         conn,
@@ -126,6 +154,7 @@ def prepare(
         "llm": llm,
         "degraded": degraded,
         "key": idempotency_key,
+        "scope": scope,
         "now": now,
     }
 
@@ -139,7 +168,7 @@ def store_idempotent(
                 "INSERT OR REPLACE INTO idempotency (key, user_id, envelope_json, created_at) VALUES (?,?,?,?)",
                 (
                     prep["key"],
-                    prep["user_id"],
+                    prep.get("scope") or prep["user_id"],
                     json.dumps(envelope, ensure_ascii=False, default=str),
                     prep["now"].isoformat(timespec="seconds"),
                 ),

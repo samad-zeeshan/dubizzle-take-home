@@ -324,9 +324,29 @@ _MONEY_RE = re.compile(
 )
 
 
+# The dirham is pegged to the dollar, which is the only reason those two convert. Everything here
+# floats, so a rate written into the source would be wrong within a week. Reading "25,000 euros"
+# as 25,000 AED was worse than not reading it: the figure reached the SQL, the price ceiling the
+# buyer is judged against, and a lead row that then contradicted its own budget_original_text.
+_FOREIGN_MONEY_RE = re.compile(
+    r"\b(euros?|eur|pounds?|sterling|gbp|rupees?|inr|riyals?|sar|qar|kwd|bhd|omr"
+    r"|dinars?|yen|jpy|yuan|rmb|cny|rand|zar|lira|roubles?|rubles?|francs?|chf)\b"
+    r"|[€£₹¥]",
+    re.I,
+)
+
+
+def unsupported_currency(text: str) -> str | None:
+    """The currency beside a figure that this system will not convert, if there is one."""
+    m = _FOREIGN_MONEY_RE.search(normalize_digits(text.lower()))
+    return m.group(0) if m else None
+
+
 def parse_budget(text: str) -> Money | None:
     """Pull one budget figure out of free text, converting dollars at the peg."""
     t = normalize_digits(text.lower())
+    if unsupported_currency(t):
+        return None
     m = _MONEY_RE.search(t)
     if not m:
         return None

@@ -46,6 +46,12 @@ _BIDI_MARKS = dict.fromkeys(map(ord, "⁦⁧⁨⁩‎‏"))
 
 def send(text: str) -> None:
     text = text.translate(_BIDI_MARKS)
+    # One key per message, held across a rerun, so a retry of the same send is recognised as the
+    # same request. A fresh uuid on every call made the header decorative.
+    key = st.session_state.get("send_key")
+    if st.session_state.get("send_key_for") != text or not key:
+        key = str(uuid.uuid4())
+        st.session_state.send_key, st.session_state.send_key_for = key, text
     body: dict[str, Any] = {"message": text, "locale": common.lang()}
     if st.session_state.user_id:
         body["user_id"] = st.session_state.user_id
@@ -69,7 +75,7 @@ def send(text: str) -> None:
                 "POST",
                 f"{common.BACKEND}/chat/stream",
                 json=body,
-                headers={"Idempotency-Key": str(uuid.uuid4())},
+                headers={"Idempotency-Key": key},
                 timeout=common.TIMEOUT,
             ) as r:
                 if r.status_code != 200:
