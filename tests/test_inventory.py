@@ -7,7 +7,7 @@ the one Honda, the ten managed rows, the BYD range decoy, the int-typed cells.
 
 from __future__ import annotations
 
-from dubizzle_assistant.ingest.enrich import _figure_in_text
+from dubizzle_assistant.ingest.enrich import _figure_in_text, merge
 from dubizzle_assistant.ingest.extract import extract_mileage, extract_prices
 from dubizzle_assistant.ingest.load import clean_html, load_all
 from dubizzle_assistant.ingest.sanitize import sanitize
@@ -92,6 +92,37 @@ def test_a_zero_reading_needs_a_distance():
     # A real figure is still matched by the digits printed in the ad.
     assert _figure_in_text(169859, ad("Driven 169,859 km"))
     assert not _figure_in_text(169859, ad("Driven 12,000 km"))
+
+
+def test_a_monthly_needs_monthly_wording():
+    def rec(text):
+        return {
+            "id": "C-000",
+            "title": "",
+            "description_clean": text,
+            "description_raw": "",
+            "fields": {},
+        }
+
+    # The model read this car's cash price back as an instalment, which the ad never mentions.
+    r = rec("Renault Megane RS 2020 Payment: AED 54,500 ---------")
+    merge(r, {"monthly_aed": 54500}, [])
+    assert "monthly_aed" not in r["fields"]
+
+    r = rec("2020 C-Class, 200 hp, GCC spec, agency maintained")
+    merge(r, {"monthly_aed": 200}, [])
+    assert "monthly_aed" not in r["fields"]
+
+    # The wordings these ads actually use are all accepted.
+    for text, n in [
+        ("GLS 63 AMG | From AED 5,805/mo | Up to 3Y Warranty", 5805),
+        ("Option 2 - AED 2,731 P/M for 5 years with 20% Downpayment", 2731),
+        ("From 1099 Pm. Massive Price Drop", 1099),
+        ("Only AED 1,876 per month", 1876),
+    ]:
+        r = rec(text)
+        merge(r, {"monthly_aed": n}, [])
+        assert r["fields"]["monthly_aed"]["value"] == n, text
 
 
 def test_salary_and_fees_rejected():

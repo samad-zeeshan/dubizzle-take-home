@@ -151,13 +151,25 @@ _ZERO_DISTANCE = re.compile(
 )
 
 
+# A monthly payment is the one figure whose meaning is in the wording rather than the number,
+# and these ads write it as "/mo", "P/M", "Pm.", "per month" or "monthly".
+_MONTHLY_WORDING = re.compile(
+    r"/\s*mo\b|\bp\s*[/.]?\s*m\b|per\s*month|month(?:ly)?\s*(?:payment|install)|\bmonthly\b|شهري",
+    re.I,
+)
+
+
+def _ad_text(rec: dict[str, Any]) -> str:
+    return normalize_digits(
+        " ".join(str(rec.get(k) or "") for k in ("title", "description_clean", "description_raw"))
+    )
+
+
 def _figure_in_text(n: int, rec: dict[str, Any]) -> bool:
     """A figure the model reports must be printed somewhere in the ad. Batches of ads
     tempt a model to copy one listing's price onto its neighbours, and nothing but the
     text can tell those apart."""
-    text = normalize_digits(
-        " ".join(str(rec.get(k) or "") for k in ("title", "description_clean", "description_raw"))
-    )
+    text = _ad_text(rec)
     seen: set[int] = set()
     for run in _DIGIT_RUN.findall(text):
         digits = re.sub(r"[,.\s]", "", run)
@@ -200,6 +212,10 @@ def merge(rec: dict[str, Any], llm: dict[str, Any], disagreements: list[dict[str
                             "resolution": "regex kept (has evidence)",
                         }
                     )
+                continue
+            # Without the wording, a bare number cannot be a monthly, and the model read the
+            # cash price of one car and a stray 200 on another as instalments.
+            if f == "monthly_aed" and not _MONTHLY_WORDING.search(_ad_text(rec)):
                 continue
             if _plausible(f, n) and _figure_in_text(n, rec):
                 fields[f] = {"value": n, "source": "llm", "evidence": None, "confidence": 0.6}
