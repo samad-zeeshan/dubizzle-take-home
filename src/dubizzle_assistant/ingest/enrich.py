@@ -103,10 +103,19 @@ PROMPT = (
     "Use null for anything not stated. Prices are AED; a figure next to 'month', 'P.M' or 'instalment' is monthly_aed, not price_aed. "
     "Salary requirements, RTA fees, evaluation fees and condition-report fees are not prices. Battery range, warranty kilometre "
     "caps and service intervals are not mileage. Body type may come from your knowledge of the model. Translate Arabic facts "
-    "into the English summary and keywords. Never include phone numbers, links, or dealer names."
+    "into the English summary and keywords. Never include phone numbers, links, or dealer names. "
+    # Left unbounded, a small model under the JSON grammar keeps writing keywords until it runs
+    # out of room, and the whole batch is lost with the unclosed object.
+    "Keep english_summary under 30 words and keywords_en under 15 comma separated words."
 )
 
 Enricher = Callable[[list[dict[str, Any]]], tuple[list[dict[str, Any]], list[dict[str, Any]], str]]
+
+# One listing's answer is a summary, a keyword line, and a handful of numbers. The budget is
+# asked for per call because the shared ceiling is sized for a chat turn, and a batch of
+# twelve needs more room than that in one reply.
+TOKENS_PER_LISTING = 220
+TOKENS_OVERHEAD = 300
 
 
 def _cache_key(rec: dict[str, Any]) -> str:
@@ -232,62 +241,100 @@ def make_enricher(
             json.dumps(cache, ensure_ascii=False, indent=0), encoding="utf-8", newline="\n"
         )
 
+    def _ask(batch: list[dict[str, Any]]) -> list[dict[str, Any]] | None:
+        """One request for one batch, or None when the answer came back unusable."""
+        payload = [
+            {
+                "id": r["id"],
+                "title": r["title"],
+                "make": r["make"],
+                "model": r["model"],
+                "year": r["year"],
+                "text": r["description_clean"][:1500],
+            }
+            for r in batch
+        ]
+        for _attempt in range(3):
+            try:
+                resp = llm.complete(
+                    [
+                        {"role": "system", "content": PROMPT},
+                        {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
+                    ],
+                    None,
+                    reasoning="low",
+                    response_schema=SCHEMA,
+                    purpose="enrich",
+                    temperature=0.1,
+                    max_tokens=TOKENS_PER_LISTING * len(batch) + TOKENS_OVERHEAD,
+                )
+            except RateLimitedError as e:
+                wait = min(e.retry_after or 20, 60)
+                print(f"  rate limited, waiting {wait}s")
+                time.sleep(wait)
+                continue
+            except LLMError as e:
+                print(f"  request failed: {e}")
+                return None
+            text = (resp.text or "").strip().strip("`").removeprefix("json").strip()
+            if resp.finish_reason == "length" or not text:
+                print(f"  answer ran out of room at {len(batch)} listings")
+                return None
+            try:
+                return list(json.loads(text).get("listings", []))
+            except json.JSONDecodeError as e:
+                print(f"  answer would not parse: {e}")
+                return None
+        return None
+
+    def _enrich(batch: list[dict[str, Any]]) -> None:
+        """Cache what the model returns, halving the batch when the answer does not survive.
+
+        A batch that overran the output budget used to fail silently and leave the regex
+        values in place. Splitting is what lets the pass finish on any model, whatever its
+        output ceiling, rather than depending on one batch size happening to fit.
+        """
+        items = _ask(batch)
+        if items is not None:
+            for item in items:
+                rec = next((r for r in batch if r["id"] == str(item.get("id", "")).upper()), None)
+                if rec is not None:
+                    cache[_cache_key(rec)] = item
+            return
+        if len(batch) == 1:
+            print(f"  {batch[0]['id']} keeps its regex values")
+            return
+        mid = len(batch) // 2
+        _enrich(batch[:mid])
+        _enrich(batch[mid:])
+
     def enricher(
         records: list[dict[str, Any]],
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], str]:
         disagreements: list[dict[str, Any]] = []
-        todo = [r for r in records if _cache_key(r) not in cache]
+        # A listing whose cleaned text is empty carries nothing to extract, so asking about it
+        # can only produce invention. Four ads are nothing but a contact block.
+        todo = [
+            r
+            for r in records
+            if _cache_key(r) not in cache and (r["description_clean"] or "").strip()
+        ]
         batches = (len(todo) + batch_size - 1) // batch_size
         print(
-            f"enriching {len(todo)} of {len(records)} listings in {batches} batches ({len(records) - len(todo)} cached)"
+            f"enriching {len(todo)} of {len(records)} listings in {batches} batches "
+            f"({len(records) - len(todo)} cached)"
         )
         for i in range(0, len(todo), batch_size):
-            batch = todo[i : i + batch_size]
-            payload = [
-                {
-                    "id": r["id"],
-                    "title": r["title"],
-                    "make": r["make"],
-                    "model": r["model"],
-                    "year": r["year"],
-                    "text": r["description_clean"][:1500],
-                }
-                for r in batch
-            ]
-            for _attempt in range(3):
-                try:
-                    resp = llm.complete(
-                        [
-                            {"role": "system", "content": PROMPT},
-                            {"role": "user", "content": json.dumps(payload, ensure_ascii=False)},
-                        ],
-                        None,
-                        reasoning="low",
-                        response_schema=SCHEMA,
-                        purpose="enrich",
-                        temperature=0.1,
-                    )
-                    data = json.loads((resp.text or "{}").strip().strip("`").removeprefix("json"))
-                    for item in data.get("listings", []):
-                        rec = next(
-                            (r for r in batch if r["id"] == str(item.get("id", "")).upper()), None
-                        )
-                        if rec is not None:
-                            cache[_cache_key(rec)] = item
-                    break
-                except RateLimitedError as e:
-                    wait = min(e.retry_after or 20, 60)
-                    print(f"  rate limited, waiting {wait}s")
-                    time.sleep(wait)
-                except (LLMError, json.JSONDecodeError) as e:
-                    print(f"  batch {i // batch_size + 1} failed: {e}")
-                    break
+            _enrich(todo[i : i + batch_size])
             _save_cache()
             print(f"  batch {i // batch_size + 1}/{batches} done")
+        answered = 0
         for r in records:
             item = cache.get(_cache_key(r))
             if item:
+                answered += 1
                 merge(r, item, disagreements)
+        print(f"the model answered for {answered} of {len(records)} listings")
         return records, disagreements, llm.model
 
     return enricher
