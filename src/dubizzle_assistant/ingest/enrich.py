@@ -269,6 +269,11 @@ def make_enricher(
                     max_tokens=TOKENS_PER_LISTING * len(batch) + TOKENS_OVERHEAD,
                 )
             except RateLimitedError as e:
+                if e.daily:
+                    # The free tier's daily cap. Everything answered so far is already cached,
+                    # so stopping here and resuming tomorrow costs nothing.
+                    print("  daily quota reached; rerun tomorrow and the cache resumes")
+                    raise
                 wait = min(e.retry_after or 20, 60)
                 print(f"  rate limited, waiting {wait}s")
                 time.sleep(wait)

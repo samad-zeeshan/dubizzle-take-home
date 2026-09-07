@@ -48,6 +48,7 @@ def turn(
     user_id: str | None,
     session_id: str | None,
     name: str,
+    timeout: float,
 ) -> dict:
     body: dict = {"message": message, "name": name}
     if user_id:
@@ -55,7 +56,7 @@ def turn(
     if session_id:
         body["session_id"] = session_id
     r = client.post(
-        f"{base}/chat", json=body, headers={"Idempotency-Key": str(uuid.uuid4())}, timeout=120
+        f"{base}/chat", json=body, headers={"Idempotency-Key": str(uuid.uuid4())}, timeout=timeout
     )
     if r.status_code != 200:
         return {"error": r.status_code, "detail": r.text}
@@ -86,6 +87,8 @@ def main() -> int:
     ap.add_argument("--base", default=os.environ.get("BACKEND_URL", "http://127.0.0.1:8000"))
     ap.add_argument("--scenario", choices=["all", "explore", "recall"], default="all")
     ap.add_argument("--name", default="Sara")
+    # A recording on a slow local model needs longer than a turn against a hosted one.
+    ap.add_argument("--timeout", type=float, default=120.0, help="seconds to wait for one turn")
     ap.add_argument("--out", type=Path, default=ROOT / "logs" / "demo_transcript.json")
     ap.add_argument(
         "--pause", type=float, default=0.0, help="seconds between turns, useful against a live key"
@@ -111,7 +114,7 @@ def main() -> int:
         print("\n=== Scenario A: exploring, memory, booking, guardrails ===")
         session_id = None
         for m in SCENARIO_A:
-            env = turn(client, args.base, m, user_id, session_id, args.name)
+            env = turn(client, args.base, m, user_id, session_id, args.name, args.timeout)
             show(env, m)
             transcript.append({"scenario": "A", "message": m, "envelope": env})
             if "error" not in env:
@@ -126,7 +129,7 @@ def main() -> int:
         print("\n=== Scenario B: a brand new session, same person ===")
         session_id = None
         for m in SCENARIO_B:
-            env = turn(client, args.base, m, user_id, session_id, args.name)
+            env = turn(client, args.base, m, user_id, session_id, args.name, args.timeout)
             show(env, m)
             transcript.append({"scenario": "B", "message": m, "envelope": env})
             if "error" not in env:
