@@ -147,21 +147,33 @@ div[data-testid="stButton"] button:focus-visible,div[data-testid="stFormSubmitBu
    widgets read the dir attribute on the root, which is why it is set there and not on .stApp. */
 [dir=rtl] html,[dir=rtl] body,[dir=rtl] [data-testid="stAppViewContainer"],[dir=rtl] [data-testid="stSidebar"]{font-family:'IBM Plex Sans Arabic','DM Sans',system-ui,sans-serif}
 [dir=rtl] h1,[dir=rtl] h2,[dir=rtl] h3,[dir=rtl] .hero h1,[dir=rtl] .tile h3,[dir=rtl] .section{font-family:'IBM Plex Sans Arabic','Space Grotesk',sans-serif;letter-spacing:0}
-[dir=rtl] .car,[dir=rtl] .tile,[dir=rtl] .hero,[dir=rtl] .stat,[dir=rtl] .kv{text-align:right}
-[dir=rtl] .badges,[dir=rtl] .meta{flex-direction:row-reverse;justify-content:flex-end}
-[dir=rtl] .idx{left:auto;right:.6rem}
-/* Prices, kilometres and years stay left-to-right inside an Arabic sentence, or the digits
-   and the currency word swap round and the figure reads wrong. */
-[dir=rtl] .price,[dir=rtl] .kv b,[dir=rtl] .stat b{direction:ltr;unicode-bidi:embed;display:inline-block}
+/* Every block takes its direction from its own first strong character. Whatever is still in
+   English keeps its full stop at the end rather than having it moved to the front. */
+[dir=rtl] .car,[dir=rtl] .tile,[dir=rtl] .hero,[dir=rtl] .stat,[dir=rtl] .kv,[dir=rtl] .meta,
+[dir=rtl] .tile h3,[dir=rtl] .tile p,[dir=rtl] .welcome,[dir=rtl] .section,
+[dir=rtl] [data-testid="stMarkdownContainer"] p,[dir=rtl] button p{unicode-bidi:plaintext;text-align:start}
+/* Make and model are Latin, so the title reads left to right while still sitting on the
+   Arabic side of the card. Without this the leading year is carried to the end. */
+[dir=rtl] .car .t{direction:ltr;text-align:right}
+/* The price is one Arabic phrase. Forcing it left to right split the figure from its currency
+   word, and inline-block shrank the line so it no longer filled the card. */
+[dir=rtl] .price{unicode-bidi:plaintext;text-align:right;display:block}
+/* A figure on its own is Latin, so it keeps an explicit direction. */
+[dir=rtl] .kv b,[dir=rtl] .stat b{direction:ltr;unicode-bidi:embed}
+/* rtl already reverses a flex row; row-reverse put the badges back into Latin order. */
+[dir=rtl] .badges{justify-content:flex-start}
+/* Streamlit hides the collapsed sidebar with translateX(-300px), which is off the left edge
+   only in a left-to-right page. In rtl it dragged the sidebar into the middle of the content. */
+[dir=rtl] [data-testid="stSidebar"][aria-expanded="false"]{transform:translateX(300px)!important}
 </style>
 """
 
-STARTERS = [
-    "Show me SUVs with warranty under AED 150k",
-    "Any Hondas?",
-    "Compare the two cheapest Range Rovers",
-    "Book the Velar for Monday at 10am",
-]
+_STARTER_KEYS = ("start.suvs", "start.honda", "start.compare", "start.book")
+
+
+def starters() -> list[str]:
+    """Written out in the reader's language: an English chip in an Arabic page reads backwards."""
+    return [t(k) for k in _STARTER_KEYS]
 
 
 def pages() -> dict[str, Any]:
@@ -183,11 +195,13 @@ def brand() -> None:
     )
 
 
-def bento(tiles: list[tuple[str, str, str]]) -> str:
+def bento(icons: tuple[str, ...]) -> str:
     """Equal-height feature tiles as one CSS grid, so the boxes never drift with their text."""
     cards = "".join(
-        f'<div class="tile"><div class="ic">{ICONS[icon]}</div><h3>{html.escape(title)}</h3><p>{html.escape(body)}</p></div>'
-        for icon, title, body in tiles
+        f'<div class="tile"><div class="ic">{ICONS[icon]}</div>'
+        f"<h3>{html.escape(t(f'feat.{icon}.h'))}</h3>"
+        f"<p>{html.escape(t(f'feat.{icon}.p'))}</p></div>"
+        for icon in icons
     )
     return f'<div class="bento">{cards}</div>'
 
@@ -276,7 +290,7 @@ def get_json(path: str, **params: Any) -> Any:
             timeout=60,
         )
     except httpx.HTTPError as e:
-        st.error(f"Backend not reachable: {e}")
+        st.error(t("err.unreachable", error=e))
         return None
     if r.status_code == 404 and path.startswith("/admin"):
         return None
@@ -352,7 +366,10 @@ def for_display(text: str) -> str:
 
 
 def lang() -> str:
-    return st.session_state.get("lang", "en")
+    """The page titles are built before bootstrap() runs, so the URL is the only source then."""
+    if "lang" in st.session_state:
+        return st.session_state.lang
+    return "ar" if st.query_params.get("lang") == "ar" else "en"
 
 
 def t(key: str, **fmt: object) -> str:
@@ -389,7 +406,7 @@ def identify(name: str) -> None:
     st.session_state.user_id, st.session_state.user_name = d["user_id"], d["name"]
     st.query_params["user"] = d["user_id"]
     new_session()
-    note = ("Welcome back, " if d["returning"] else "Nice to meet you, ") + d["name"] + "."
+    note = t("acct.welcome_back" if d["returning"] else "acct.nice", name=d["name"])
     summary = d.get("profile_summary") or ""
     if d["returning"] and "\n" in summary:
         note += " " + summary.split("\n")[1]
@@ -400,7 +417,7 @@ def forget() -> None:
     """Forget-me from the client: the backend drops the profile, events, likes, searches, sessions, and the lead row."""
     r = api("DELETE", f"/users/{st.session_state.user_id}")
     if r.status_code != 200:
-        st.session_state.flash = (f"Could not forget you: {r.status_code}", ":material/error:")
+        st.session_state.flash = (t("acct.forget_failed", code=r.status_code), ":material/error:")
         return
     st.session_state.user_id = None
     st.session_state.user_name = None
@@ -441,8 +458,19 @@ def money(n: Any) -> str:
     return f"{int(n):,} درهم" if lang() == "ar" else f"AED {int(n):,}"
 
 
-@st.dialog("Your account")  # Streamlit needs a literal title here
+def _display_name() -> str:
+    """A chat turn with no name stores the user as "guest", which is a placeholder, not a name."""
+    name = (st.session_state.user_name or "").strip()
+    return t("nav.guest") if name.lower() in ("", "guest") else name
+
+
 def account() -> None:
+    """The title is built per call: as a decorator it would freeze whichever language
+    happened to be active when the module was first imported."""
+    st.dialog(t("acct.title_dialog"))(_account_body)()
+
+
+def _account_body() -> None:
     """Who you are, your contact details, and your bookings. A name is enough; the chat can take it too."""
     if not st.session_state.user_id:
         st.write(t("acct.intro"))
@@ -460,7 +488,7 @@ def account() -> None:
         c1, c2 = st.columns(2)
         phone = c1.text_input(t("acct.phone"))
         email = c2.text_input(t("acct.email"))
-        if st.form_submit_button("Save") and (phone or email):
+        if st.form_submit_button(t("acct.save")) and (phone or email):
             r = api(
                 "POST",
                 "/leads/contact",
@@ -470,7 +498,7 @@ def account() -> None:
                     "email": email or None,
                 },
             )
-            st.write(r.json().get("problems") or f"Saved. Lead status: {r.json().get('status')}")
+            st.write(r.json().get("problems") or t("acct.saved", status=r.json().get("status")))
     st.markdown(t("acct.bookings"))
     r = api("GET", "/bookings", params={"user_id": st.session_state.user_id})
     bookings = r.json() if r.status_code == 200 else []
@@ -478,10 +506,10 @@ def account() -> None:
         st.table(
             [
                 {
-                    "ref": b["ref"],
-                    "car": b["listing_id"],
-                    "slot": b["slot_start"][:16],
-                    "status": b["status"],
+                    t("acct.col_ref"): b["ref"],
+                    t("acct.col_car"): b["listing_id"],
+                    t("acct.col_slot"): b["slot_start"][:16],
+                    t("acct.col_status"): b["status"],
                 }
                 for b in bookings
             ]
@@ -490,7 +518,7 @@ def account() -> None:
         st.caption(t("acct.no_bookings"))
     with st.expander(t("acct.not_you")), st.form("switch", border=False):
         other = st.text_input(t("acct.your_name"), placeholder="Layla")
-        if st.form_submit_button("Switch", use_container_width=True) and other.strip():
+        if st.form_submit_button(t("acct.switch"), use_container_width=True) and other.strip():
             identify(other.strip())
             st.rerun()
     if st.button(
@@ -510,9 +538,12 @@ def sidebar(h: dict[str, Any]) -> None:
         if flash:
             st.toast(flash[0], icon=flash[1])
         for key, page in pages().items():
-            st.page_link(page, label=key.title(), icon=page.icon or None, use_container_width=True)
+            # The label is ours, not the page title: app.py builds those before the language is known.
+            st.page_link(
+                page, label=t(f"nav.{key}"), icon=page.icon or None, use_container_width=True
+            )
         st.button(
-            "New chat",
+            t("nav.new_chat"),
             key="newchat",
             icon=":material/add_comment:",
             type="tertiary",
@@ -521,12 +552,12 @@ def sidebar(h: dict[str, Any]) -> None:
         )
         st.divider()
         if st.button(
-            st.session_state.user_name or "Guest",
+            _display_name(),
             key="account",
             icon=":material/account_circle:",
             type="tertiary",
             use_container_width=True,
-            help="Your name, contact details, and bookings.",
+            help=t("acct.help"),
         ):
             account()
         picked_lang = st.segmented_control(
@@ -727,11 +758,11 @@ def render_cards(
             picked = None
             if b1.button(t("btn.ask"), key=f"{key_prefix}_ask_{c['id']}", use_container_width=True):
                 # The id in brackets lets the resolver pin the car even when it is not on screen yet.
-                picked = f"Tell me more about the {car_name(c)} ({c['id']})"
+                picked = f"{t('chip.more', car=car_name(c))} ({c['id']})"
             if b2.button(
                 t("btn.book"), key=f"{key_prefix}_book_{c['id']}", use_container_width=True
             ):
-                picked = f"Book a viewing for the {car_name(c)} ({c['id']})"
+                picked = f"{t('chip.book', car=car_name(c))} ({c['id']})"
             if picked:
                 st.session_state.pending_prompt = picked
                 if switch_to_chat:

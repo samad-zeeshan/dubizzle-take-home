@@ -9,28 +9,7 @@ import streamlit as st
 
 from views import common
 
-FEATURES = [
-    (
-        "search",
-        "Search that reads the ads",
-        "Price, mileage, colour, spec, and warranty are pulled out of free text, so 'white SUV under $20k' works.",
-    ),
-    (
-        "calendar",
-        "Book a viewing in two steps",
-        "Monday to Saturday, 8 to 8, Dubai time. It proposes a slot, you confirm, the booking is written down.",
-    ),
-    (
-        "memory",
-        "It remembers you",
-        "Come back tomorrow and it recalls what you searched, what you liked, and what you booked.",
-    ),
-    (
-        "shield",
-        "Every number has a source",
-        "Figures in a reply are checked against the listing they came from. Contact details never pass through the model.",
-    ),
-]
+FEATURES = ("search", "calendar", "memory", "shield")
 
 
 def page(h: dict[str, Any]) -> None:
@@ -55,8 +34,9 @@ def page(h: dict[str, Any]) -> None:
         st.session_state.pending_prompt = text.strip()
         st.switch_page(common.pages()["chat"])
     chips = st.container(key="chips")
-    cols = chips.columns(len(common.STARTERS))
-    for col, s in zip(cols, common.STARTERS, strict=True):
+    picks = common.starters()
+    cols = chips.columns(len(picks))
+    for col, s in zip(cols, picks, strict=True):
         if col.button(s, key=f"starter_{s}", use_container_width=True, help=s):
             st.session_state.pending_prompt = s
             st.switch_page(common.pages()["chat"])

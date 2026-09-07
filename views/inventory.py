@@ -7,7 +7,7 @@ from typing import Any
 import streamlit as st
 
 from views import common
-from views.i18n import stated
+from views.i18n import enum_label, stated
 
 BODIES = [
     "",
@@ -35,18 +35,22 @@ FIELDS = (
 )
 
 
-SORTS = {
-    "": "Relevance",
-    "price_asc": "Price, low to high",
-    "price_desc": "Price, high to low",
-    "year_desc": "Newest first",
-    "year_asc": "Oldest first",
-    "mileage_asc": "Lowest mileage",
-}
+SORT_KEYS = ("", "price_asc", "price_desc", "year_desc", "year_asc", "mileage_asc")
+
+
+def sort_label(k: str) -> str:
+    return common.t(f"sort.{k}")
 
 
 def body_label(b: str) -> str:
-    return "Any" if not b else "SUV" if b == "suv" else b.replace("_", " ").title()
+    if not b:
+        return common.t("inv.any")
+    # The body types are a closed set, so Arabic comes from the table rather than a model call.
+    return (
+        enum_label(b, common.lang())
+        if common.lang() == "ar"
+        else ("SUV" if b == "suv" else b.replace("_", " ").title())
+    )
 
 
 def filters() -> dict[str, Any]:
@@ -55,18 +59,20 @@ def filters() -> dict[str, Any]:
         c1, c2, c3, c4, c5, c6 = st.columns(
             [1.7, 1.4, 1.3, 1.9, 1.5, 1.1], vertical_alignment="bottom"
         )
-        make = c1.text_input("Make", placeholder="Merc, Honda")
-        model = c2.text_input("Model", placeholder="Velar, 3-Series")
-        body = c3.selectbox("Body type", BODIES, format_func=body_label)
-        budget = c4.text_input("Budget", placeholder="$20k, under 2000 a month")
-        sort = c5.selectbox("Sort", list(SORTS), format_func=lambda k: SORTS[k])
-        with c6.popover("More", icon=":material/tune:", use_container_width=True):
-            keywords = st.text_input("Keywords", placeholder="panoramic roof 7 seats")
-            color = st.text_input("Colour")
+        make = c1.text_input(common.t("inv.make"), placeholder=common.t("inv.make_ph"))
+        model = c2.text_input(common.t("inv.model"), placeholder=common.t("inv.model_ph"))
+        body = c3.selectbox(common.t("inv.body"), BODIES, format_func=body_label)
+        budget = c4.text_input(common.t("inv.budget"), placeholder=common.t("inv.budget_ph"))
+        sort = c5.selectbox(common.t("inv.sort"), list(SORT_KEYS), format_func=sort_label)
+        with c6.popover(common.t("inv.more"), icon=":material/tune:", use_container_width=True):
+            keywords = st.text_input(
+                common.t("inv.keywords"), placeholder=common.t("inv.keywords_ph")
+            )
+            color = st.text_input(common.t("inv.colour"))
             k1, k2 = st.columns(2)
-            warranty = k1.checkbox("Warranty")
-            managed = k2.checkbox("Inspected")
-            limit = st.slider("Rows", 6, 200, 30)
+            warranty = k1.checkbox(common.t("inv.warranty"))
+            managed = k2.checkbox(common.t("inv.inspected"))
+            limit = st.slider(common.t("inv.rows"), 6, 200, 30)
     return dict(
         make=make,
         model=model,
@@ -147,8 +153,12 @@ def page(h: dict[str, Any]) -> None:
     rows = res["results"]
     n = res["total_matches"]
     st.caption(
-        f"{n} match{'' if n == 1 else 'es'}"
-        + (f" · relaxed {res['relaxed_filters']}" if res.get("relaxed_filters") else "")
+        (common.t("inv.match_one") if n == 1 else common.t("inv.matches", n=n))
+        + (
+            common.t("inv.relaxed", filters=res["relaxed_filters"])
+            if res.get("relaxed_filters")
+            else ""
+        )
     )
     if not common.demo():
         common.render_cards(

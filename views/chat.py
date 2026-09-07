@@ -35,11 +35,17 @@ def one_line(text: object) -> str:
                 s = payload["message"]
     s = " ".join(s.split())
     if not s or s.startswith(("{", "[")):
-        return "the backend did not say why"
+        return common.t("err.no_detail")
     return s[: _MAX_ERROR - 1] + "…" if len(s) > _MAX_ERROR else s
 
 
+# A chip carries bidi isolates so the Latin car name keeps its year at the front inside an
+# Arabic sentence. They are invisible, but the backend should never see them.
+_BIDI_MARKS = dict.fromkeys(map(ord, "⁦⁧⁨⁩‎‏"))
+
+
 def send(text: str) -> None:
+    text = text.translate(_BIDI_MARKS)
     body: dict[str, Any] = {"message": text, "locale": common.lang()}
     if st.session_state.user_id:
         body["user_id"] = st.session_state.user_id
@@ -87,7 +93,7 @@ def send(text: str) -> None:
                             elif event == "error":
                                 error = f"{data.get('status')}: {one_line(data.get('detail'))}"
         except httpx.HTTPError as e:
-            error = one_line(f"backend not reachable: {e}")
+            error = one_line(common.t("err.unreachable", error=e))
         draft.empty()
         status.update(
             label=common.t("chat.done") if envelope else common.t("chat.failed"),
@@ -245,11 +251,28 @@ def under_the_hood(env: dict[str, Any]) -> None:
             )
 
 
+# The backend writes these four in English with a listing id in them. A chip is also what gets
+# sent when it is clicked, so it has to read as something the customer would have typed.
+_CHIP_TEMPLATES = (
+    ("Tell me more about ", "chip.more"),
+    ("Book a viewing for ", "chip.book"),
+    ("Similar cars to ", "chip.similar"),
+)
+
+
 def friendly(action: str, cars: list[dict[str, Any]]) -> str:
     """Suggested actions arrive with listing ids; people should see the car, not the id."""
+    if action == "Show more":
+        return common.t("chip.show_more")
     for c in cars:
-        if c.get("id") and c["id"] in action:
-            return action.replace(c["id"], f"the {common.car_name(c)}")
+        if not c.get("id") or c["id"] not in action:
+            continue
+        # Make and model stay Latin in either language, the way the ads print them.
+        name = common.car_name(c)
+        for prefix, key in _CHIP_TEMPLATES:
+            if action.startswith(prefix):
+                return common.t(key, car=name)
+        return action.replace(c["id"], f"the {name}")
     return action
 
 
@@ -279,7 +302,10 @@ def welcome() -> None:
         for c in (prof.get("liked_cars") or [])[:1]:
             car = common.car_name(c)
             recall.append(
-                (f"{common.t('chat.more_on')} {car}", f"Tell me more about the {car} ({c['id']})")
+                (
+                    f"{common.t('chat.more_on')} {car}",
+                    f"{common.t('chip.more', car=car)} ({c['id']})",
+                )
             )
     if recall:
         title, sub = common.t("chat.welcome_back", name=name), common.t("chat.welcome_back_sub")
@@ -304,7 +330,7 @@ def welcome() -> None:
                 if col.button(label, key=f"recall_{text}", use_container_width=True):
                     st.session_state.pending_prompt = text
             st.caption(common.t("chat.or_try"))
-        starters = [s for s in common.STARTERS if s not in {text for _, text in recall}]
+        starters = [s for s in common.starters() if s not in {text for _, text in recall}]
         cols = st.columns(2)
         for i, s in enumerate(starters):
             if cols[i % 2].button(s, key=f"chat_starter_{s}", use_container_width=True):
@@ -320,7 +346,7 @@ def page(h: dict[str, Any]) -> None:
         d = common.get_json(f"/inventory/{ask}")
         if d:
             st.session_state.pending_prompt = (
-                f"Tell me more about the {common.car_name(d)} ({d['id']})"
+                f"{common.t('chip.more', car=common.car_name(d))} ({d['id']})"
             )
     if not st.session_state.messages:
         welcome()
