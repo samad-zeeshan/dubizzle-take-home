@@ -1544,5 +1544,58 @@
 "monthly_aed": 2887,
 "mileage_km": 73361,
 "body_type": "suv"
+},
+"0b98f26ad23b2771996820be1ce6df716128ff02bd7786af5260c5dacdcac32d": {
+"id": "C-075",
+"body_type": "suv",
+"fuel_type": "petrol",
+"transmission": "automatic",
+"english_summary": "The 2015 Jeep Wrangler Sahara is a mid-tier trim of the Wrangler series, offering rugged off-road capability and enhanced comfort and convenience features compared to the base model. It is suitable for both adventurous off-road use and daily commuting.",
+"keywords_en": "jeep, wrangler, 2015, sahara, off-road, comfort, convenience, suv, v6, 3.6-liter, 285 horsepower, 260 lb-ft torque, dual front airbags, side-curtain airbags, stability control, anti-lock braking system, traction control"
+},
+"8d92e2a0a32af118306bfdeafbe4876038526546867fa887bc389597be02fe59": {
+"id": "C-076",
+"body_type": "suv",
+"fuel_type": "hybrid",
+"transmission": "automatic",
+"english_summary": "The 2021 Toyota Highlander hybrid is a fully equipped, very clean vehicle with excellent condition both inside and outside. Contact for more information.",
+"keywords_en": "toyota, highlander, 2021, hybrid, full options, clean car, suv, interior, exterior"
+},
+"3c7203a6b177a4dc96e9d7725c9339a22789ac37989194a745fb5d1b33174b7e": {
+"id": "C-077",
+"body_type": "coupe",
+"fuel_type": "petrol",
+"transmission": "automatic",
+"english_summary": "The 2019 Audi A5 is a clean car with 98,000 km driven, featuring a V4 engine, sunroof, digital kilometer meter, reverse camera, and parking sensors.",
+"keywords_en": "audi, a5, 2019, v4, quattro, 98000 km, clean car, sunroof, digital kilometer meter, reverse camera, parking sensors, coupe"
+},
+"4307eacd5edde5f0b4b72011bc7eab54f29faee41de90466e0ffa8502fe8df47": {
+"id": "C-079",
+"body_type": "convertible",
+"fuel_type": "petrol",
+"transmission": "automatic",
+"seats": 4,
+"english_summary": "2004 Bentley Continental GT W12 6.0L with full service history, accident free, pristine condition. 73,000 km low mileage. Last major service done at Bentley agency for AED 85,000, including new suspensions. All services performed on time. Brand new tyres. No additional expenses required.",
+"keywords_en": "bentley, continental gt, 2004, w12, 6.0l, full service history, accident free, pristine condition, 73000kms, agency service, new suspensions, on-time services, brand new tyres, no additional costs"
+},
+"1642de9d1d71d48580f28799daf1c6f37cec469789b69d2c9a86d9a3603bfa6e": {
+"id": "C-073",
+"english_summary": "2017 Rolls-Royce Wraith with 45,000km, recent service, 4 new tyres, GCC, luxury car.",
+"keywords_en": "rolls royce, wraith, 2017, luxury, 45000km, recent service, new tyres, gcc"
+},
+"05237790e595f6bcadb17337c373ec77fd6338d83c53c98403f14a4e29092588": {
+"id": "C-078",
+"english_summary": "2020 Nissan Versa with installment payment option of 10,000 AED.",
+"keywords_en": "nissan, versa, 2020, installment, 10000, aed"
+},
+"c6ef6aa3b49a92a4af7d9bbb3e9470ac855dac57e7255c2ecfd34d6bdaf4ae35": {
+"id": "C-080",
+"english_summary": "2024 Volkswagen Golf GTI, 11,000km, gray color, GCC warranty available.",
+"keywords_en": "volkswagen, golf, gti, 2024, 11000km, gray, warranty, gcc"
+},
+"3239a03326f137cd0c32331d94ce372f9ee22fa516fde36c308712ff2810d536": {
+"id": "R-059",
+"english_summary": "2020 Toyota Innova, 7-seater, perfect condition, no accidents, 4 new tyres.",
+"keywords_en": "toyota, innova, 2020, 7seater, perfect condition, no accidents, new tyres"
 }
 }
