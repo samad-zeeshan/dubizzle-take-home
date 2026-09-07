@@ -381,6 +381,24 @@ def _identify(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
     name = str(args.get("name") or "").strip()
     if not name:
         return {"error": "a name is needed"}
+    # A typed name is spoofable, so it may put a name to a guest session but must never move an
+    # identified one onto someone else's account: that would hand this chat their preferences,
+    # likes and bookings. Switching accounts goes through the account panel, which mints a fresh
+    # session. Read the session's own row rather than trusting ctx, and never look the claimed
+    # name up, so nothing about the other person can reach the reply.
+    row = memory.get_session(ctx.conn, ctx.session_id)
+    current = memory.get_user(ctx.conn, row["user_id"]) if row else None
+    if current:
+        held = current["name_key"] or memory.name_key(current["name"] or "")
+        if held not in ("", "guest") and held != memory.name_key(name):
+            return {
+                "error": "this chat is already signed in",
+                "signed_in_as": current["name"],
+                "message": (
+                    f"This chat is signed in as {current['name']}. Changing who is signed in "
+                    "happens in the account panel, not in chat."
+                ),
+            }
     info = memory.identify_user(ctx.conn, ctx.now, name=name)
     with ctx.conn:
         ctx.conn.execute(
