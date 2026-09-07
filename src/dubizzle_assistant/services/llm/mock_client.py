@@ -158,6 +158,43 @@ def _pending_from_prompt(system: str) -> bool:
     return "## Pending booking" in system
 
 
+def _recall_from_prompt(system: str) -> tuple[str, list[str]] | None:
+    """The name and remembered facts the router put in the returning-user block.
+
+    Only figures the server itself wrote are quoted back, so a greeting built from these
+    clears the grounding check the same way the model's does. Listing ids stay out of the
+    sentences because the post-filter scrubs them, which would leave a gap mid-clause.
+    """
+    block = system.split("## Returning user", 1)
+    if len(block) < 2:
+        return None
+    body = block[1].split("##", 1)[0]
+    name = re.search(r"Name, spell it exactly: (.+?)\.", body)
+    if not name:
+        return None
+
+    search = re.search(r'Searched [^:\n]+: "(.+?)"', body)
+    liked = re.search(r"Liked [^:\n]+: (.+?) \(([CR]-\d{3})\)", body)
+    booking = re.search(r"Upcoming viewing: ([CR]-\d{3}) at (.+?) \((BK-\d{4})\)", body)
+    car = liked.group(1).title() if liked else None
+
+    sentences = []
+    if search and car:
+        sentences.append(f'Last time you searched for "{search.group(1)}" and liked the {car}.')
+    elif search:
+        sentences.append(f'Last time you searched for "{search.group(1)}".')
+    elif car:
+        sentences.append(f"Last time you liked the {car}.")
+    if booking:
+        when = booking.group(2).replace(" ", " at ", 1)
+        # Naming the car only works when the booking is for the one they liked; otherwise the
+        # id would be the only handle, and that gets scrubbed on the way out.
+        same_car = liked is not None and liked.group(2) == booking.group(1)
+        subject = "Your viewing for it" if same_car else "Your viewing"
+        sentences.append(f"{subject} is booked for {when} ({booking.group(3)}).")
+    return (name.group(1), sentences) if sentences else None
+
+
 def _search_args(text: str) -> dict[str, Any]:
     low = text.lower()
     args: dict[str, Any] = {}
@@ -712,7 +749,17 @@ class HeuristicLLM:
         shown = _shown_from_prompt(system)
         explicit = [i.upper() for i in _ID_RE.findall(user)]
 
+        remembered = _recall_from_prompt(system)
         if _GREETING_RE.search(low) and len(low) < 60:
+            # A returning customer saying hi is the second scenario the brief asks for, and it
+            # is the one a reviewer without an API key sees, so answer it from memory here too.
+            if remembered and "Do not greet them again" not in system:
+                name, sentences = remembered
+                return self._resp(
+                    f"Welcome back, {name}. "
+                    + " ".join(sentences)
+                    + " What would you like to do next?"
+                )
             return self._resp(
                 "Hello! I can help you explore the cars in our inventory, compare them, or book a viewing. What are you looking for?"
             )
@@ -721,6 +768,11 @@ class HeuristicLLM:
                 "I can note that you are looking to sell. Listings are created on dubizzle itself, and I can record your details as a lead so the team can follow up. Meanwhile, is there anything in our inventory you would like to see?"
             )
         if _RECALL_RE.search(low):
+            if remembered:
+                _, sentences = remembered
+                return self._resp(
+                    " ".join(sentences) + " Would you like to pick up where you left off?"
+                )
             return self._resp(
                 "Here is what I have on file for you from earlier sessions. Would you like to pick up where you left off?"
             )
