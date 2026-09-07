@@ -164,7 +164,13 @@ def _search(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
         embedder=ctx.embedder,
         normalization=steps,
     )
-    ctx.new_cards.extend(result.results)
+    ids = [c["id"] for c in result.results]
+    on_screen = {c["id"] for c in ctx.shown} | {c["id"] for c in ctx.new_cards}
+    # A search that finds only the car already under discussion is usually a hunt for alternatives
+    # run on its own make and model. Showing the same card again would answer the wrong question.
+    only_focus = offset == 0 and ids == [ctx.focus_id] and ctx.focus_id in on_screen
+    if not only_focus:
+        ctx.new_cards.extend(result.results)
     memory.record_search(
         ctx.conn,
         ctx.user_id,
@@ -186,6 +192,11 @@ def _search(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
         ctx.suggested_actions.append(f"Tell me more about {c['id']}")
     payload = result.as_dict()
     payload["results"] = [_compact(c) for c in result.results]
+    if only_focus:
+        payload["note"] = (
+            f"{ctx.focus_id} is the car already on screen and under discussion. If the user wants "
+            "other cars like it, call similar_listings with its id."
+        )
     # The executed SQL and stage counts go to the trace, not to the model.
     payload["_trace"] = {
         "executed": payload.pop("executed"),
@@ -193,6 +204,46 @@ def _search(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
         "relaxed": payload["relaxed_filters"],
     }
     return payload
+
+
+# Condition is what buyers actually ask about, and none of it is a search filter, so it
+# rides on the detail call with the seller's own sentence attached as evidence.
+_CONDITION_FIELDS = (
+    "accident_free",
+    "original_paint",
+    "owners",
+    "service_history",
+    "new_tyres",
+    "no_faults",
+    "no_flood",
+    "negotiable",
+    "trade_in_accepted",
+    "has_carplay",
+    "has_leather",
+    "driver_assist",
+)
+_INFERRED_SOURCES = ("llm", "inferred", "derived")
+_INFERRED_NOTE = "from what this model is generally known for, the listing does not state it"
+
+
+def _sourced(fields: dict[str, Any], name: str, value: Any) -> Any:
+    """An inferred value travels with its source, so the reply can hedge instead of asserting."""
+    if value is None:
+        return None
+    if (fields.get(name) or {}).get("source") not in _INFERRED_SOURCES:
+        return value
+    return {"value": value, "source": "inferred", "note": _INFERRED_NOTE}
+
+
+def _conditions(fields: dict[str, Any]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for name in _CONDITION_FIELDS:
+        f = fields.get(name) or {}
+        value = f.get("value")
+        if value is None or value == [] or value == "":
+            continue
+        out[name] = {"value": value, "evidence": f.get("evidence")}
+    return out
 
 
 def _get(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
@@ -208,19 +259,27 @@ def _get(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
     out.update(
         {
             "interior_color": row.get("interior_color"),
-            "transmission": row.get("transmission"),
-            "seats": row.get("seats"),
+            "transmission": _sourced(fields, "transmission", row.get("transmission")),
+            "fuel_type": _sourced(fields, "fuel_type", row.get("fuel_type")),
+            "body_type": _sourced(fields, "body_type", row.get("body_type")),
+            "seats": row.get("seats") if (row.get("seats") or 0) > 0 else None,
             "warranty_text": row.get("warranty_text"),
             "price_vat_status": row.get("price_vat_status"),
             "down_payment_pct": row.get("down_payment_pct"),
             "language": row.get("language"),
             "description_quality": row.get("description_quality"),
+            # The seller's headline carries facts that appear nowhere else: the engine on one
+            # listing, the spec on another, the instalment on a third.
+            "title": row.get("title"),
+            # The whole cleaned ad, because condition sits anywhere in it and a fixed cut lost
+            # the tyres on one listing and CarPlay on another. The longest here is under 2000 chars.
             # With the sanitizer ablated the model sees the seller's raw text, phones and all. That is the demo.
             "listing_text": (
                 inv.raw_text(ctx.conn, row["id"])
                 if ctx.settings.ablate_sanitizer
                 else (row.get("description_clean") or "")
-            )[:1200],
+            ),
+            **_conditions(fields),
             "evidence": {
                 k: fields[k].get("evidence")
                 for k in (
@@ -236,6 +295,7 @@ def _get(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
         }
     )
     ctx.suggested_actions.append(f"Book a viewing for {row['id']}")
+    ctx.suggested_actions.append(f"Similar cars to {row['id']}")
     return out
 
 
@@ -252,6 +312,31 @@ def _compare(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
             ctx.new_cards.append(c)
     out["cards"] = [_compact(c) for c in out["cards"]]
     return out
+
+
+def _similar(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
+    lid = str(args.get("listing_id") or ctx.focus_id or "").upper()
+    limit = max(1, min(int(args.get("limit") or 5), 10))
+    out = inv.similar(ctx.conn, lid, limit=limit)
+    if out is None:
+        return {"error": f"no listing {lid or '(missing id)'} in the inventory"}
+    ctx.focus_id = lid
+    ctx.new_cards.extend(out["results"])
+    for c in out["results"][:2]:
+        ctx.suggested_actions.append(f"Tell me more about {c['id']}")
+    return {
+        "anchor": _compact(out["anchor"]),
+        "criteria": out["criteria"],
+        "total_matches": out["total_matches"],
+        "results": [
+            {**_compact(c), "vs_anchor": c["explain"]["vs_anchor"]} for c in out["results"]
+        ],
+        "_trace": {
+            "executed": out["executed"],
+            "stage_counts": {"similar": out["total_matches"]},
+            "relaxed": [],
+        },
+    }
 
 
 def _like(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
@@ -332,6 +417,24 @@ register(
         },
     },
     _compare,
+)
+register(
+    {
+        "name": "similar_listings",
+        "description": "Alternatives to one listing: other cars with the same body type or a price within 30% of it, ranked by how close they sit on body type, price, year, and make. Never returns the listing itself. Use for 'similar cars', 'alternatives', 'anything else like it'.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "listing_id": {
+                    "type": "string",
+                    "description": "The car to find alternatives to, e.g. R-085",
+                },
+                "limit": {"type": "integer", "description": "1 to 10, default 5"},
+            },
+            "required": ["listing_id"],
+        },
+    },
+    _similar,
 )
 register(
     {

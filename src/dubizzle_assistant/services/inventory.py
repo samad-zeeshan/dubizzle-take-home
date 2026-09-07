@@ -622,6 +622,109 @@ def compare(conn: sqlite3.Connection, ids: list[str]) -> dict[str, Any]:
     return {"ids": [c["id"] for c in cards], "cards": cards, "table": table}
 
 
+PRICE_BAND = (
+    0.30  # a listed price this far either side of the anchor's still counts as an alternative
+)
+
+
+def _vs_anchor(anchor: dict[str, Any], row: dict[str, Any]) -> tuple[int, list[str], list[str]]:
+    """Score one candidate against the anchor and say how it differs, in words a reply can reuse."""
+    score, matched, words = 0, [], []
+    if anchor["body_type"] and row["body_type"] == anchor["body_type"]:
+        score += 3
+        matched.append("body_type")
+        words.append("same body type")
+    ap, rp = anchor["price_aed"], row["price_aed"]
+    if ap and rp:
+        gap = abs(rp - ap) / ap
+        if gap <= 0.15:
+            score += 3
+        elif gap <= PRICE_BAND:
+            score += 2
+        elif gap <= 0.5:
+            score += 1
+        if gap <= PRICE_BAND:
+            matched.append("price_band")
+        words.append(
+            "same price" if rp == ap else f"AED {abs(rp - ap):,} {'more' if rp > ap else 'less'}"
+        )
+    elif rp is None:
+        words.append("price not listed")
+    if anchor["year"] and row["year"]:
+        dy = row["year"] - anchor["year"]
+        if abs(dy) <= 1:
+            score += 2
+        elif abs(dy) <= 3:
+            score += 1
+        if abs(dy) <= 3:
+            matched.append("year")
+        words.append(
+            "same year"
+            if dy == 0
+            else f"{abs(dy)} year{'s' if abs(dy) != 1 else ''} {'newer' if dy > 0 else 'older'}"
+        )
+    if row["make"] == anchor["make"]:
+        score += 1
+        matched.append("make")
+        words.append(f"also a {row['make']}")
+    return score, matched, words
+
+
+def similar(conn: sqlite3.Connection, listing_id: str, limit: int = 5) -> dict[str, Any] | None:
+    """Alternatives to one listing, never the listing itself.
+
+    A candidate qualifies on the same body type or a listed price within the band, and ranks on
+    how much of body type, price, year, and make it shares. Attribute scoring rather than
+    embeddings, so each result carries a reason the trace and the reply can quote.
+    """
+    row = conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    if row is None:
+        return None
+    anchor = dict(row)
+    sql = "SELECT * FROM listings WHERE id != :id"
+    ranked: list[tuple[tuple[int, bool, int, str], dict[str, Any], list[str], list[str]]] = []
+    for r in conn.execute(sql, {"id": listing_id}):
+        cand = dict(r)
+        score, matched, words = _vs_anchor(anchor, cand)
+        if "body_type" not in matched and "price_band" not in matched:
+            continue
+        gap = (
+            abs(cand["price_aed"] - anchor["price_aed"])
+            if cand["price_aed"] and anchor["price_aed"]
+            else 0
+        )
+        ranked.append(((-score, cand["price_aed"] is None, gap, cand["id"]), cand, matched, words))
+    ranked.sort(key=lambda t: t[0])
+    results = []
+    for i, (_, cand, matched, words) in enumerate(ranked[:limit], start=1):
+        c = card(cand)
+        c["explain"] = {
+            "matched_filters": matched,
+            "admitted_at_stage": "similar",
+            "bm25": None,
+            "cosine": None,
+            "rank_reason": f"#{i}: " + ", ".join(words),
+            "vs_anchor": ", ".join(words),
+        }
+        results.append(c)
+    criteria = "same body type"
+    if anchor["price_aed"]:
+        criteria += (
+            f" or a listed price within {int(PRICE_BAND * 100)}% of AED {anchor['price_aed']:,}"
+        )
+    return {
+        "anchor": card(anchor),
+        "criteria": criteria,
+        "total_matches": len(ranked),
+        "results": results,
+        "executed": {
+            "sql": sql,
+            "params": {"id": listing_id},
+            "scoring": "body type 3; price within 15% 3, 30% 2, 50% 1; year within 1 2, within 3 1; same make 1",
+        },
+    }
+
+
 def raw_text(conn: sqlite3.Connection, listing_id: str) -> str:
     """The seller's text with contact details intact. Only the sanitizer ablation ever reads this."""
     row = conn.execute(
