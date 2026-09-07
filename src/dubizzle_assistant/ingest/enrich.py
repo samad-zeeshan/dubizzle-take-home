@@ -12,12 +12,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 from dubizzle_assistant.config import get_settings
+from dubizzle_assistant.normalize import normalize_digits
 from dubizzle_assistant.services.llm import build_llm
 from dubizzle_assistant.services.llm.base import LLMClient, LLMError, RateLimitedError
 from dubizzle_assistant.text import contains_contact
@@ -127,6 +129,29 @@ def _plausible(field: str, value: int) -> bool:
     return 0 <= value <= 600_000
 
 
+_DIGIT_RUN = re.compile(r"\d(?:[\d,.\s]*\d)?")
+_K_SUFFIX = re.compile(r"(\d+(?:\.\d+)?)\s*k\b", re.I)
+
+
+def _figure_in_text(n: int, rec: dict[str, Any]) -> bool:
+    """A figure the model reports must be printed somewhere in the ad. Batches of ads
+    tempt a model to copy one listing's price onto its neighbours, and nothing but the
+    text can tell those apart."""
+    text = normalize_digits(
+        " ".join(str(rec.get(k) or "") for k in ("title", "description_clean", "description_raw"))
+    )
+    seen: set[int] = set()
+    for run in _DIGIT_RUN.findall(text):
+        digits = re.sub(r"[,.\s]", "", run)
+        if digits.isdigit():
+            seen.add(int(digits))
+    for m in _K_SUFFIX.finditer(text):
+        seen.add(int(float(m.group(1)) * 1000))
+    if n == 0 and re.search(r"\bzero\b|زيرو|صفر", text, re.I):
+        return True
+    return n in seen
+
+
 def merge(rec: dict[str, Any], llm: dict[str, Any], disagreements: list[dict[str, Any]]) -> None:
     """Regex keeps figures it found. The model fills gaps and overrides only low-confidence words."""
     fields = rec["fields"]
@@ -157,7 +182,7 @@ def merge(rec: dict[str, Any], llm: dict[str, Any], disagreements: list[dict[str
                         }
                     )
                 continue
-            if _plausible(f, n):
+            if _plausible(f, n) and _figure_in_text(n, rec):
                 fields[f] = {"value": n, "source": "llm", "evidence": None, "confidence": 0.6}
             continue
         if isinstance(v, str):
