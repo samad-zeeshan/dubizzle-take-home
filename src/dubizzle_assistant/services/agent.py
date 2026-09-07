@@ -404,8 +404,14 @@ def _grounding_pass(
 ) -> dict[str, Any]:
     with ctx.trace.stage(stage) as rec:
         g = guardrails.grounding_spans(reply, sources)
+        g["computed"] = guardrails.derived_figures(g["ungrounded"], sources)
         rec.update(
-            {"checked": g["checked"], "grounded": g["grounded"], "ungrounded": g["ungrounded"]}
+            {
+                "checked": g["checked"],
+                "grounded": g["grounded"],
+                "ungrounded": g["ungrounded"],
+                "computed": g["computed"],
+            }
         )
     return g
 
@@ -755,10 +761,25 @@ def _run_loop(
     else:
         grounding = _grounding_pass(ctx, reply, sources, "grounding")
         if grounding["ungrounded"]:
-            note = {
-                "role": "user",
-                "content": f"The figures {', '.join(grounding['ungrounded'])} do not appear in the tool results. Rewrite the reply using only figures from the tool results, or say the listing does not state it.",
-            }
+            # A worked out figure and an invented one look identical to the check, and the old note
+            # told the model to say the listing does not state it. For a subtraction that is not
+            # true, so the reply quietly changed the subject instead of explaining itself.
+            computed = grounding["computed"]
+            invented = [f for f in grounding["ungrounded"] if f not in computed]
+            parts = []
+            if computed:
+                parts.append(
+                    f"The figures {', '.join(computed)} are arithmetic on other figures rather than "
+                    "values a listing states. Do not calculate. Say plainly that you cannot give a "
+                    "worked out figure, then quote the listed figures you used."
+                )
+            if invented:
+                parts.append(
+                    f"The figures {', '.join(invented)} do not appear in the tool results. Rewrite "
+                    "the reply using only figures from the tool results, or say the listing does "
+                    "not state it."
+                )
+            note = {"role": "user", "content": " ".join(parts)}
             retry_msgs = [*messages, {"role": "assistant", "content": reply}, note]
             reply2 = reply
             try:

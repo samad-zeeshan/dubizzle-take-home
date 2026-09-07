@@ -353,3 +353,34 @@ def grounding_spans(reply: str, sources: dict[str, dict[str, Any]]) -> dict[str,
         "ungrounded": ungrounded,
         "spans": spans,
     }
+
+
+# A subtraction result is absent from the tool results by construction, so the grounding check can
+# only ever call it a hallucination. This tells the two apart for the rewrite note, and for that
+# only. Nothing here lets a figure through, so a coincidental hit costs a wording choice and not
+# the guarantee that every figure in a shipped reply traces back to a listing.
+def _combinations(a: float, b: float) -> tuple[float, ...]:
+    return (a - b, a + b, a * b, a / b) if b else (a - b, a + b, a * b)
+
+
+def derived_figures(ungrounded: list[str], sources: dict[str, dict[str, Any]]) -> list[str]:
+    """Which unsourced figures are exact arithmetic on two figures that are sourced."""
+    numbers: list[float] = []
+    for key in sources:
+        try:
+            numbers.append(float(key))
+        except ValueError:
+            continue
+    out: list[str] = []
+    for key in ungrounded:
+        # The ungrounded list carries the text as written, separators and all.
+        try:
+            target = float(_norm(key))
+        except ValueError:
+            continue
+        # Half a unit, because a price difference is quoted as a whole dirham.
+        if any(
+            abs(v - target) <= 0.5 for a in numbers for b in numbers for v in _combinations(a, b)
+        ):
+            out.append(key)
+    return out
