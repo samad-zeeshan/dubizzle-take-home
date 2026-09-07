@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 
-from dubizzle_assistant.config import Settings
+from dubizzle_assistant.config import Settings, gemini_generation
 from dubizzle_assistant.services.llm import build_llm
 from dubizzle_assistant.services.llm.base import LLMError
 from dubizzle_assistant.services.llm.litellm_client import LiteLLMClient
@@ -46,6 +46,29 @@ def test_local_endpoint_counts_as_configured(tmp_path: Path) -> None:
         == "gemini/gemini-3.1-flash-lite"
     )
     assert local_settings(tmp_path, llm_fallback_model="").usable_fallback_model is None
+
+
+def test_reply_schema_only_on_gemini_3(tmp_path: Path) -> None:
+    def gem(model: str, **kw: Any) -> Settings:
+        return make_settings(
+            tmp_path, llm_provider="litellm", gemini_api_key="k", llm_model=model, **kw
+        )
+
+    assert gem("gemini/gemini-3.5-flash-lite").use_structured_reply is True
+    assert gem("gemini/gemini-3.1-flash-lite").use_structured_reply is True
+    assert gem("gemini/gemini-2.5-flash-lite").use_structured_reply is False
+    assert local_settings(tmp_path).use_structured_reply is False
+    assert gem("gemini/gemini-2.5-flash-lite", structured_reply=True).use_structured_reply is True
+    # A turn that fell back mid-flight has to ask about the model it actually reached.
+    assert (
+        gem("gemini/gemini-3.5-flash-lite").structured_reply_for("gemini/gemini-2.5-flash") is False
+    )
+    # Replay reports the recorded model, and the recording is keyed on the schema, so an
+    # unrecognised name must not flip the flag or every cassette turn misses.
+    assert gem("gemini/gemini-3.5-flash-lite").structured_reply_for("cassette") is True
+    assert gemini_generation("gemini/gemini-3.5-flash-lite") == 3.5
+    assert gemini_generation("gemini/gemini-embedding-001") is None
+    assert gemini_generation("openai/qwen/qwen3-4b-2507") is None
 
 
 def test_prefix_alone_marks_local(tmp_path: Path) -> None:

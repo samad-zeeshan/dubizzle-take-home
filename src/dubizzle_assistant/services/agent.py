@@ -549,7 +549,7 @@ def _run_loop(
             messages,
             schemas,
             n,
-            want_schema=settings.use_structured_reply and n > 1,
+            want_schema=settings.structured_reply_for(turn_model or settings.llm_model) and n > 1,
             model=turn_model,
         )
         if resp.model != settings.llm_model and settings.llm_provider == "litellm":

@@ -7,6 +7,7 @@ turn trace can show the configuration the answer was produced under.
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
@@ -31,6 +32,15 @@ ABLATION_FLAGS = (
 
 # Provider prefixes that mean a self-hosted server, so no Gemini key is needed.
 LOCAL_PROVIDERS = frozenset({"lm_studio", "ollama", "ollama_chat"})
+
+# Pulls 3.5 out of "gemini/gemini-3.5-flash-lite". The generation decides whether a reply
+# schema may travel alongside the tool schemas.
+_GEMINI_GEN_RE = re.compile(r"gemini-(\d+(?:\.\d+)?)")
+
+
+def gemini_generation(model: str) -> float | None:
+    m = _GEMINI_GEN_RE.search(model)
+    return float(m.group(1)) if m else None
 
 
 class Settings(BaseSettings):
@@ -149,12 +159,20 @@ class Settings(BaseSettings):
     def llm_configured(self) -> bool:
         return self.llm_provider == "mock" or bool(self.gemini_api_key) or self.llm_local
 
-    @property
-    def use_structured_reply(self) -> bool:
-        # JSON schema mode is where small models under LM Studio's grammar loop until the token ceiling.
+    def structured_reply_for(self, model: str) -> bool:
+        # Gemini 2.5 answers 400 when a reply schema travels with function tools, and small local
+        # models loop inside LM Studio's grammar until the token ceiling. Everything else keeps it,
+        # including a cassette, whose recording has to replay under whatever provider is configured.
         if self.structured_reply is not None:
             return self.structured_reply
-        return not self.llm_local
+        if self.llm_local:
+            return False
+        gen = gemini_generation(model)
+        return gen is None or gen >= 3
+
+    @property
+    def use_structured_reply(self) -> bool:
+        return self.structured_reply_for(self.llm_model)
 
     @property
     def use_brief_replies(self) -> bool:
