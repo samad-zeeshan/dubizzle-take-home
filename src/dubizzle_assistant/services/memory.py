@@ -60,6 +60,13 @@ def name_key(name: str) -> str:
 # users --------------------------------------------------------------------
 
 
+NAME_LIMIT = 60
+# Every anonymous visitor is dropped into this bucket by the server, so it is a placeholder and
+# not a name. Two other places already read it as an empty slot, and treating it as a name here
+# handed the first anonymous visitor's searches and lead status to anyone who typed the word.
+PLACEHOLDER_NAME = "guest"
+
+
 def identify_user(
     conn: sqlite3.Connection, now: datetime, *, name: str | None = None, user_id: str | None = None
 ) -> dict[str, Any]:
@@ -67,17 +74,21 @@ def identify_user(
     row = None
     if user_id:
         row = conn.execute("SELECT * FROM users WHERE user_id = ?", (user_id,)).fetchone()
-    if row is None and name:
+    # The column truncates, so the key has to be taken from the truncated string on both paths.
+    # Keying the lookup on the full name meant a long name could never find the row its own
+    # insert had written, and every visit minted a new user with an empty profile.
+    display = (name or user_id or PLACEHOLDER_NAME).strip()[:NAME_LIMIT]
+    key = name_key(display)
+    if row is None and name and key != PLACEHOLDER_NAME:
         row = conn.execute(
-            "SELECT * FROM users WHERE name_key = ? ORDER BY created_at LIMIT 1", (name_key(name),)
+            "SELECT * FROM users WHERE name_key = ? ORDER BY created_at LIMIT 1", (key,)
         ).fetchone()
     if row is None:
-        display = (name or user_id or "guest").strip()[:60]
         uid = user_id or ("u_" + secrets.token_hex(4))
         with conn:
             conn.execute(
                 "INSERT INTO users (user_id, name, name_key, created_at, last_seen_at) VALUES (?,?,?,?,?)",
-                (uid, display, name_key(display), _iso(now), _iso(now)),
+                (uid, display, key, _iso(now), _iso(now)),
             )
         return {"user_id": uid, "name": display, "returning": False}
     with conn:

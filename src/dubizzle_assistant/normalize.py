@@ -364,7 +364,10 @@ def resolve_make_model(text: str) -> tuple[str | None, str | None, list[str]]:
     """Find a make and model mentioned anywhere in a phrase."""
     t = normalize_digits(text.lower())
     steps: list[str] = []
-    for phrase, make, model in [*MODEL_ALIASES, *DATA_MODEL_ALIASES]:
+    # The loaded inventory goes first. A static alias mapped "flying spur" to continental, so
+    # the two Flying Spurs in stock were unreachable by their own name and the reply named a
+    # different car. What the data holds outranks what the table guessed.
+    for phrase, make, model in [*DATA_MODEL_ALIASES, *MODEL_ALIASES]:
         if _phrase_in(phrase, t):
             steps.append(f"{phrase} -> make {make}, model {model} (alias)")
             return make, model, steps
@@ -402,14 +405,17 @@ def register_makes(makes: Iterable[str]) -> int:
 
 
 def register_models(pairs: Iterable[tuple[str, str]]) -> int:
-    known = {p for p, _, _ in MODEL_ALIASES} | {p for p, _, _ in DATA_MODEL_ALIASES}
+    known = {p for p, _, _ in DATA_MODEL_ALIASES}
     added = 0
     for make, model in pairs:
         phrase = (model or "").strip().lower()
         # Short or numeric model names ("3", "x5") would match everywhere, so they stay out.
         if len(phrase) < 4 or not re.search(r"[a-z]{3}", phrase):
             continue
-        if phrase in known or phrase in MAKE_ALIASES:
+        # A phrase a static alias claims is registered anyway, because this model is in stock and
+        # the resolver reads the data table first. Only a make this inventory really has still
+        # wins, which leaves "genesis" a make and gives "discovery" back to Land Rover.
+        if phrase in known or phrase in KNOWN_MAKES:
             continue
         DATA_MODEL_ALIASES.append((phrase, make.strip().lower(), phrase))
         known.add(phrase)
