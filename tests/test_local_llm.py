@@ -43,7 +43,7 @@ def test_local_endpoint_counts_as_configured(tmp_path: Path) -> None:
     assert gemini.use_brief_replies is False
     assert (
         local_settings(tmp_path, gemini_api_key="k").usable_fallback_model
-        == "gemini/gemini-2.5-flash"
+        == "gemini/gemini-3.1-flash-lite"
     )
     assert local_settings(tmp_path, llm_fallback_model="").usable_fallback_model is None
 
@@ -110,7 +110,7 @@ def test_client_routes_to_api_base_without_reasoning_knob(monkeypatch: pytest.Mo
 def test_gemini_fallback_skips_api_base(monkeypatch: pytest.MonkeyPatch) -> None:
     fake = FakeLiteLLM()
     c = make_client(monkeypatch, fake)
-    c.complete([{"role": "user", "content": "hi"}], None, model="gemini/gemini-2.5-flash")
+    c.complete([{"role": "user", "content": "hi"}], None, model="gemini/gemini-3.1-flash-lite")
     assert "api_base" not in fake.calls[0]
 
 

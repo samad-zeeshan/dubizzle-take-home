@@ -40,8 +40,8 @@ class Settings(BaseSettings):
 
     gemini_api_key: str | None = None
     llm_provider: Literal["litellm", "mock"] = "litellm"
-    llm_model: str = "gemini/gemini-2.5-flash-lite"
-    llm_fallback_model: str | None = "gemini/gemini-2.5-flash"
+    llm_model: str = "gemini/gemini-3.5-flash-lite"
+    llm_fallback_model: str | None = "gemini/gemini-3.1-flash-lite"
     # Any OpenAI-compatible server: LM Studio, Ollama, llama.cpp, vLLM. The key is whatever it expects.
     llm_api_base: str | None = None
     llm_api_key: str | None = None
