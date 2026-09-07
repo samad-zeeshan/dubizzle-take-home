@@ -689,7 +689,7 @@ def _run_loop(
         grounding = _grounding_pass(ctx, reply, sources, "grounding")
         if grounding["ungrounded"]:
             note = {
-                "role": "system",
+                "role": "user",
                 "content": f"The figures {', '.join(grounding['ungrounded'])} do not appear in the tool results. Rewrite the reply using only figures from the tool results, or say the listing does not state it.",
             }
             retry_msgs = [*messages, {"role": "assistant", "content": reply}, note]
@@ -729,7 +729,7 @@ def _run_loop(
                 if not v.get("supported", True)
             ]
             note = {
-                "role": "system",
+                "role": "user",
                 "content": f"A check found these claims unsupported by the tool results: {'; '.join(claims)}. Rewrite the reply using only what the tool results state.",
             }
             try:
@@ -790,7 +790,7 @@ def _rewrite_without_ids(
 ) -> str:
     """One corrected attempt at the same answer with the cars named instead of numbered."""
     note = {
-        "role": "system",
+        "role": "user",
         "content": (
             f"The reply contains listing ids ({', '.join(leaked)}). Rewrite it with the same facts, "
             "naming each car by year, make, and model, and with no listing id anywhere in the text."

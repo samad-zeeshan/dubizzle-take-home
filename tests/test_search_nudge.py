@@ -93,3 +93,18 @@ def test_ignored_nudge_ends_in_a_search_run_by_code(tmp_path: Path) -> None:
     assert [x["id"] for x in e["cars"]] == ["R-078"]
     assert e["reply"].startswith("Here is the one Honda")
     assert e["intent"] == "inventory_search"
+
+
+def test_repair_notes_are_not_read_as_the_customer():
+    from dubizzle_assistant.services.prompts import is_repair_note
+
+    # These openings have to match the notes agent.py builds. They travel as a user turn
+    # because Gemini refuses a request ending on a model turn, and without this the offline
+    # model answers the repair instruction instead of the question that was asked.
+    assert is_repair_note(
+        "The figures 200,000 do not appear in the tool results. Rewrite the reply"
+    )
+    assert is_repair_note("A check found these claims unsupported by the tool results: x. Rewrite")
+    assert is_repair_note("The reply contains listing ids (C-003). Rewrite it with the same facts")
+    assert not is_repair_note("does it have a warranty?")
+    assert not is_repair_note(None)

@@ -15,6 +15,7 @@ from typing import Any
 
 from dubizzle_assistant.normalize import parse_budget, resolve_make_model
 from dubizzle_assistant.services.llm.base import LLMError, LLMResponse, ToolCall
+from dubizzle_assistant.services.prompts import is_repair_note
 
 _GREETING_RE = re.compile(
     r"^\s*(hi|hello|hey|hiya|salam|marhaba|مرحبا|السلام عليكم|good (morning|afternoon|evening)|how are you|how's it going)\b",
@@ -111,7 +112,7 @@ _ID_RE = re.compile(r"\b([CR]-\d{3})\b", re.I)
 
 def _last_user(messages: list[dict[str, Any]]) -> str:
     for m in reversed(messages):
-        if m.get("role") == "user":
+        if m.get("role") == "user" and not is_repair_note(m.get("content")):
             return str(m.get("content") or "")
     return ""
 
@@ -119,7 +120,7 @@ def _last_user(messages: list[dict[str, Any]]) -> str:
 def _tool_results_this_turn(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     for m in reversed(messages):
-        if m.get("role") == "user":
+        if m.get("role") == "user" and not is_repair_note(m.get("content")):
             break
         if m.get("role") == "tool":
             try:

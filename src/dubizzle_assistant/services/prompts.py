@@ -175,3 +175,16 @@ def build_blocks(
 
 def system_message(blocks: list[dict[str, Any]]) -> dict[str, Any]:
     return {"role": "system", "content": "\n\n".join(b["text"] for b in blocks)}
+
+
+# The agent appends its repair instructions as a user turn, because Gemini refuses a request
+# that ends on a model turn. The offline model has to tell them from the customer speaking.
+REPAIR_NOTE_OPENINGS = (
+    "The figures ",
+    "A check found these claims unsupported",
+    "The reply contains listing ids",
+)
+
+
+def is_repair_note(content: object) -> bool:
+    return str(content or "").startswith(REPAIR_NOTE_OPENINGS)
