@@ -118,9 +118,11 @@ TOKENS_PER_LISTING = 220
 TOKENS_OVERHEAD = 300
 
 
-def _cache_key(rec: dict[str, Any]) -> str:
+def _cache_key(rec: dict[str, Any], model: str) -> str:
+    # The model belongs in the key. Answers differ enough between models that reusing
+    # one model's cache under another ships the wrong provenance in the report.
     return hashlib.sha256(
-        (rec["id"] + "\n" + rec["description_clean"] + "\n" + rec["title"]).encode()
+        (model + "\n" + rec["id"] + "\n" + rec["description_clean"] + "\n" + rec["title"]).encode()
     ).hexdigest()
 
 
@@ -304,7 +306,7 @@ def make_enricher(
             for item in items:
                 rec = next((r for r in batch if r["id"] == str(item.get("id", "")).upper()), None)
                 if rec is not None:
-                    cache[_cache_key(rec)] = item
+                    cache[_cache_key(rec, llm.model)] = item
             return
         if len(batch) == 1:
             print(f"  {batch[0]['id']} keeps its regex values")
@@ -322,7 +324,7 @@ def make_enricher(
         todo = [
             r
             for r in records
-            if _cache_key(r) not in cache and (r["description_clean"] or "").strip()
+            if _cache_key(r, llm.model) not in cache and (r["description_clean"] or "").strip()
         ]
         batches = (len(todo) + batch_size - 1) // batch_size
         print(
@@ -335,7 +337,7 @@ def make_enricher(
             print(f"  batch {i // batch_size + 1}/{batches} done")
         answered = 0
         for r in records:
-            item = cache.get(_cache_key(r))
+            item = cache.get(_cache_key(r, llm.model))
             if item:
                 answered += 1
                 merge(r, item, disagreements)
