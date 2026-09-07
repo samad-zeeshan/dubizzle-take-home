@@ -33,6 +33,10 @@ TURNS = [
     ("book it for next monday at 10am", lambda e: bool(e.get("pending_booking"))),
     ("yes confirm", lambda e: "BK-" in e["reply"]),
     ("show me the range rover velar", lambda e: [c["id"] for c in e["cars"]] == ["C-003"]),
+    (
+        "anything similar to the velar?",
+        lambda e: bool(e["cars"]) and "C-003" not in [c["id"] for c in e["cars"]],
+    ),
 ]
 
 

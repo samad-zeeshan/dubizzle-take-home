@@ -1,5 +1,5 @@
 """
-Inventory endpoints: typed search with no LLM involved, listing detail with provenance, compare.
+Inventory endpoints: typed search with no LLM involved, listing detail with provenance, compare, similar.
 
 The same search service backs the chat tool, so anything the assistant can
 find, a reviewer can find here with curl and see how it was found.
@@ -116,3 +116,15 @@ def get_listing(listing_id: str, conn: sqlite3.Connection = Depends(get_conn)) -
     if row is None:
         raise HTTPException(status_code=404, detail=f"no listing {listing_id}")
     return row
+
+
+@router.get("/{listing_id}/similar")
+def similar_listings(
+    listing_id: str,
+    limit: int = Query(5, ge=1, le=20),
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    out = inv.similar(conn, listing_id.upper(), limit=limit)
+    if out is None:
+        raise HTTPException(status_code=404, detail=f"no listing {listing_id}")
+    return out

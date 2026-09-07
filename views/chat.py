@@ -238,6 +238,52 @@ def render_envelope(env: dict[str, Any], latest: bool = False) -> None:
         under_the_hood(env)
 
 
+def welcome() -> None:
+    """The empty chat: one question in the middle of the page, and for a known user the threads they can pick back up."""
+    uid = st.session_state.user_id
+    name = st.session_state.user_name
+    prof = common.profile(uid) if uid else None
+    recall: list[tuple[str, str]] = []
+    if prof:
+        for s in prof.get("recent_searches") or []:
+            if s["query"] not in [r[1] for r in recall]:
+                recall.append((s["query"], s["query"]))
+            if len(recall) == 2:
+                break
+        for c in (prof.get("liked_cars") or [])[:1]:
+            car = common.car_name(c)
+            recall.append((f"More on the {car}", f"Tell me more about the {car} ({c['id']})"))
+    if recall:
+        title, sub = f"Welcome back, {name}.", "Pick up where you left off, or start something new."
+    elif name:
+        title, sub = (
+            f"Hi {name}, what are you looking for?",
+            "Search the inventory, compare listings, or book a viewing.",
+        )
+    else:
+        title, sub = (
+            "What are you looking for?",
+            "Search the inventory, compare listings, or book a viewing. "
+            "Say hi with your name and I will remember you next time.",
+        )
+    with st.container(key="welcome"):
+        st.markdown(
+            f'<div class="welcome"><h2>{html.escape(title)}</h2><p>{html.escape(sub)}</p></div>',
+            unsafe_allow_html=True,
+        )
+        if recall:
+            st.caption("Where you left off")
+            for col, (label, text) in zip(st.columns(len(recall)), recall, strict=True):
+                if col.button(label, key=f"recall_{text}", use_container_width=True):
+                    st.session_state.pending_prompt = text
+            st.caption("Or try one of these")
+        starters = [s for s in common.STARTERS if s not in {text for _, text in recall}]
+        cols = st.columns(2)
+        for i, s in enumerate(starters):
+            if cols[i % 2].button(s, key=f"chat_starter_{s}", use_container_width=True):
+                st.session_state.pending_prompt = s
+
+
 def page(h: dict[str, Any]) -> None:
     ask = st.query_params.get("ask")
     if ask and st.session_state.get("last_ask") != ask:
@@ -250,12 +296,7 @@ def page(h: dict[str, Any]) -> None:
                 f"Tell me more about the {common.car_name(d)} ({d['id']})"
             )
     if not st.session_state.messages:
-        st.markdown("### Ask about a car")
-        st.caption("Search the inventory, compare listings, or book a viewing. Try one of these:")
-        cols = st.columns(len(common.STARTERS))
-        for col, s in zip(cols, common.STARTERS, strict=True):
-            if col.button(s, key=f"chat_starter_{s}", use_container_width=True):
-                st.session_state.pending_prompt = s
+        welcome()
     msgs = st.session_state.messages
     # Buttons live on the last reply that showed cars, and chips name any car seen this session.
     with_cards = [i for i, m in enumerate(msgs) if (m.get("envelope") or {}).get("cars")]
@@ -275,7 +316,11 @@ def page(h: dict[str, Any]) -> None:
         for col, label in zip(cols, labels, strict=True):
             if col.button(label, key=f"chip_{len(msgs)}_{label}", use_container_width=True):
                 st.session_state.pending_prompt = label
-    prompt = st.chat_input("Ask about a car, or say hi")
+    prompt = st.chat_input(
+        "Ask about a car, or say hi"
+        if st.session_state.user_id
+        else "Ask about a car, or say hi and tell me your name"
+    )
     text = prompt or st.session_state.pending_prompt
     if text:
         st.session_state.pending_prompt = None

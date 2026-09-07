@@ -45,7 +45,7 @@ def page(h: dict[str, Any]) -> None:
         c1, c2 = st.columns([4, 1], vertical_alignment="bottom")
         text = c1.text_input(
             "Ask about a car",
-            placeholder="Show me SUVs with warranty under AED 150k",
+            placeholder="Try: a white SUV under AED 100k with warranty",
             label_visibility="collapsed",
         )
         go = c2.form_submit_button("Ask", use_container_width=True, type="primary")

@@ -34,23 +34,38 @@ FIELDS = (
 )
 
 
+SORTS = {
+    "": "Relevance",
+    "price_asc": "Price, low to high",
+    "price_desc": "Price, high to low",
+    "year_desc": "Newest first",
+    "year_asc": "Oldest first",
+    "mileage_asc": "Lowest mileage",
+}
+
+
+def body_label(b: str) -> str:
+    return "Any" if not b else "SUV" if b == "suv" else b.replace("_", " ").title()
+
+
 def filters() -> dict[str, Any]:
-    with st.sidebar:
-        st.divider()
-        st.markdown("**Filters**")
-        make = st.text_input("Make", placeholder="Merc, Range Rover, Honda")
-        model = st.text_input("Model")
-        body = st.selectbox("Body type", BODIES)
-        budget = st.text_input("Budget", placeholder="$20k, under 2000 a month, 150k")
-        keywords = st.text_input("Keywords", placeholder="panoramic roof 7 seats")
-        color = st.text_input("Colour")
-        c1, c2 = st.columns(2)
-        warranty = c1.checkbox("Warranty")
-        managed = c2.checkbox("Inspected")
-        sort = st.selectbox(
-            "Sort", ["", "price_asc", "price_desc", "year_desc", "year_asc", "mileage_asc"]
+    """A filter bar above the cards, with the rarer controls behind one popover, so the sidebar stays navigation."""
+    with st.container(key="filterbar"):
+        c1, c2, c3, c4, c5, c6 = st.columns(
+            [1.7, 1.4, 1.3, 1.9, 1.5, 1.1], vertical_alignment="bottom"
         )
-        limit = st.slider("Rows", 6, 200, 30)
+        make = c1.text_input("Make", placeholder="Merc, Honda")
+        model = c2.text_input("Model", placeholder="Velar, 3-Series")
+        body = c3.selectbox("Body type", BODIES, format_func=body_label)
+        budget = c4.text_input("Budget", placeholder="$20k, under 2000 a month")
+        sort = c5.selectbox("Sort", list(SORTS), format_func=lambda k: SORTS[k])
+        with c6.popover("More", icon=":material/tune:", use_container_width=True):
+            keywords = st.text_input("Keywords", placeholder="panoramic roof 7 seats")
+            color = st.text_input("Colour")
+            k1, k2 = st.columns(2)
+            warranty = k1.checkbox("Warranty")
+            managed = k2.checkbox("Inspected")
+            limit = st.slider("Rows", 6, 200, 30)
     return dict(
         make=make,
         model=model,

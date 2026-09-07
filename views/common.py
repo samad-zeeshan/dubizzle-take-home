@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import html
 import os
+import re
+from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
 
@@ -18,9 +20,9 @@ import streamlit.components.v1 as components
 
 BACKEND = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000").rstrip("/")
 TIMEOUT = 120
-# Sayara: Arabic for car. One place to rename the product.
+# Sayara: Arabic for car. One place to rename the product; the wordmark in assets/ is a separate drawing.
 APP_NAME = "Sayara"
-APP_TAGLINE = "take-home build for dubizzle"
+ASSETS = Path(__file__).with_name("assets")
 
 # dubizzle's red as the single accent on a slate and off-white base, so the brand reads without shouting.
 BRAND = {
@@ -45,6 +47,7 @@ ICONS = {
     "car": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 11 6.5 6.5h11L19 11"/><rect x="3" y="11" width="18" height="7" rx="2"/><circle cx="7.5" cy="18" r="1.5"/><circle cx="16.5" cy="18" r="1.5"/></svg>',
 }
 
+# Buttons with help= sit inside a tooltip wrapper, so button rules use descendant selectors, not >.
 CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&display=swap');
@@ -54,11 +57,10 @@ h1,h2,h3,.hero h1,.tile h3{font-family:'Space Grotesk','DM Sans',system-ui,sans-
 [data-testid="stAppDeployButton"],#MainMenu,[data-testid="stMainMenu"]{display:none}
 .block-container{padding-top:1.4rem;max-width:1180px}
 [data-testid="stSidebar"]{background:#141416;border-right:1px solid var(--line)}
-[data-testid="stSidebar"] hr{border-color:var(--line)}
-.brandmark{display:flex;align-items:center;gap:.6rem;margin:.2rem 0 .8rem}
-.brandmark .dot{width:14px;height:14px;border-radius:4px;background:var(--brand);flex:none;box-shadow:0 0 8px rgba(227,38,46,.35)}
-.brandmark b{font-family:'Space Grotesk',sans-serif;font-size:1.05rem;color:var(--ink)}
-.brandmark span{color:var(--muted);font-size:.8rem}
+[data-testid="stSidebar"] hr{border-color:var(--line);margin:.75rem 0}
+[data-testid="stSidebar"] .st-key-newchat button,[data-testid="stSidebar"] .st-key-account button{justify-content:flex-start;gap:.5rem;width:100%;min-height:2rem;padding:.25rem .5rem;border:0;border-radius:.5rem;background:transparent;color:var(--ink);font-weight:400}
+[data-testid="stSidebar"] .st-key-newchat button>div,[data-testid="stSidebar"] .st-key-account button>div{justify-content:flex-start}
+[data-testid="stSidebar"] .st-key-newchat button:hover,[data-testid="stSidebar"] .st-key-account button:hover{background:rgba(255,255,255,.06);color:var(--ink)}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes sheen{0%{background-position:0% 50%}100%{background-position:100% 50%}}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(134,239,172,.55)}70%{box-shadow:0 0 0 8px rgba(134,239,172,0)}}
@@ -76,8 +78,20 @@ h1,h2,h3,.hero h1,.tile h3{font-family:'Space Grotesk','DM Sans',system-ui,sans-
 .st-key-ask div[data-testid="stFormSubmitButton"]>button{height:64px;width:100%;border-radius:18px;font-size:1.12rem;font-weight:700;background:var(--brand);border:1px solid var(--brand);color:#fff;box-shadow:0 10px 24px -16px rgba(227,38,46,.5);transition:transform .18s var(--ease),background .18s ease}
 .st-key-ask div[data-testid="stFormSubmitButton"]>button:hover{background:#F03A41;transform:translateY(-1px)}
 .st-key-chips{animation:rise .6s .18s var(--ease) both}
-.st-key-chips div[data-testid="stButton"]>button{height:48px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--slate);font-weight:500;transition:border-color .18s ease,color .18s ease,transform .18s var(--ease)}
-.st-key-chips div[data-testid="stButton"]>button:hover{border-color:var(--brand);color:var(--ink);transform:translateY(-1px)}
+.st-key-chips div[data-testid="stButton"] button,.st-key-welcome div[data-testid="stButton"] button{height:auto;min-height:48px;width:100%;white-space:normal;line-height:1.25;padding:.5rem 1rem;border-radius:14px;background:var(--card);border:1px solid var(--line);color:var(--slate);font-weight:500;transition:border-color .18s ease,color .18s ease,transform .18s var(--ease)}
+.st-key-chips div[data-testid="stButton"] button:hover,.st-key-welcome div[data-testid="stButton"] button:hover{border-color:var(--brand);color:var(--ink);transform:translateY(-1px)}
+.st-key-chips div[data-testid="stButton"] button [data-testid="stMarkdownContainer"],.st-key-welcome div[data-testid="stButton"] button [data-testid="stMarkdownContainer"]{white-space:normal;overflow:visible;text-overflow:clip}
+.st-key-chips div[data-testid="stButton"] button p,.st-key-welcome div[data-testid="stButton"] button p{white-space:normal}
+.st-key-welcome{max-width:780px;margin:9vh auto 0;animation:rise .5s var(--ease) both}
+.welcome{text-align:center;margin-bottom:1.3rem}
+.welcome h2{font-size:2.1rem;line-height:1.1;margin:0 0 .5rem}
+.welcome p{color:var(--slate);margin:0 auto;max-width:54ch;line-height:1.5}
+.st-key-welcome [data-testid="stCaptionContainer"]{text-align:center}
+.st-key-filterbar{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:.9rem 1rem .4rem;margin-bottom:.4rem}
+.st-key-filterbar [data-testid="stWidgetLabel"] p{font-size:.78rem;color:var(--muted)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:.3rem .7rem;font-size:.8rem;margin:.2rem 0 .4rem;align-items:baseline}
+.kv span{color:var(--muted)}
+.kv b{font-weight:500;color:var(--slate);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.76rem;overflow-wrap:anywhere}
 .section{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:1.35rem;margin:1.6rem 0 .8rem}
 .bento{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;align-items:stretch}
 .tile{background:linear-gradient(180deg,var(--card-2),var(--card));border:1px solid var(--line);border-radius:var(--radius);padding:1.3rem 1.2rem;min-height:230px;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:transform .22s var(--ease),border-color .22s ease;animation:rise .6s var(--ease) both}
@@ -111,15 +125,16 @@ h1,h2,h3,.hero h1,.tile h3{font-family:'Space Grotesk','DM Sans',system-ui,sans-
 .badge.ok{background:var(--ok-bg);color:var(--ok-fg)}
 .badge.id{background:#26262A;color:var(--slate);font-weight:500}
 .foot{color:var(--muted);font-size:.8rem;margin-top:1.6rem;border-top:1px solid var(--line);padding-top:.8rem}
-div[data-testid="stButton"]>button,div[data-testid="stFormSubmitButton"]>button{border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:.35rem .95rem;font-weight:500;transition:background .15s ease,border-color .15s ease,transform .18s var(--ease)}
-div[data-testid="stButton"]>button:hover{border-color:var(--brand);color:var(--ink)}
-div[data-testid="stButton"]>button[kind="primary"]{background:var(--brand);border-color:var(--brand);color:#fff}
-div[data-testid="stButton"]>button[kind="primary"]:hover{background:#F03A41;border-color:#F03A41}
-div[data-testid="stButton"]>button:focus-visible,div[data-testid="stFormSubmitButton"]>button:focus-visible{outline:3px solid #fff;outline-offset:2px}
+div[data-testid="stButton"] button,div[data-testid="stFormSubmitButton"]>button{border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:.35rem .95rem;font-weight:500;transition:background .15s ease,border-color .15s ease,transform .18s var(--ease)}
+div[data-testid="stButton"] button:hover{border-color:var(--brand);color:var(--ink)}
+div[data-testid="stButton"] button[kind="primary"]{background:var(--brand);border-color:var(--brand);color:#fff}
+div[data-testid="stButton"] button[kind="primary"]:hover{background:#F03A41;border-color:#F03A41}
+div[data-testid="stButton"] button:focus-visible,div[data-testid="stFormSubmitButton"]>button:focus-visible{outline:3px solid #fff;outline-offset:2px}
 [data-testid="stChatMessage"]{border-radius:var(--radius);padding:.9rem 1rem;border:1px solid var(--line);background:var(--card);margin-bottom:.5rem;animation:rise .35s var(--ease) both}
 [data-testid="stChatInput"]{border-radius:var(--radius)}
 .meta-line{color:var(--muted);font-size:.8rem;margin-top:.3rem}
-.card-actions div[data-testid="stButton"]>button{height:40px;font-size:.9rem}
+[data-testid="stColumn"]:has(.car) div[data-testid="stButton"] button{height:36px;font-size:.85rem}
+@media (hover:hover){[data-testid="stColumn"]:has(.car) [data-testid="stHorizontalBlock"]{opacity:0;transition:opacity .18s ease}[data-testid="stColumn"]:has(.car):hover [data-testid="stHorizontalBlock"],[data-testid="stColumn"]:has(.car):focus-within [data-testid="stHorizontalBlock"]{opacity:1}}
 [data-testid="stHorizontalBlock"]+[data-testid="stHorizontalBlock"]{margin-top:.25rem}
 #cursor-glow{position:fixed;left:0;top:0;width:440px;height:440px;margin:-220px 0 0 -220px;border-radius:50%;pointer-events:none;z-index:0;background:radial-gradient(circle,rgba(227,38,46,.11) 0%,rgba(227,38,46,.04) 40%,transparent 70%);filter:blur(18px);opacity:0;transition:opacity .4s ease;will-change:transform}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}#cursor-glow{display:none}}
@@ -144,6 +159,15 @@ def pages() -> dict[str, Any]:
 
 def inject_css() -> None:
     st.markdown(CSS, unsafe_allow_html=True)
+
+
+def brand() -> None:
+    """The wordmark in the sidebar header, just the car tile once the sidebar is collapsed."""
+    st.logo(
+        (ASSETS / "wordmark.svg").read_text(encoding="utf-8"),
+        size="large",
+        icon_image=(ASSETS / "icon.svg").read_text(encoding="utf-8"),
+    )
 
 
 def bento(tiles: list[tuple[str, str, str]]) -> str:
@@ -288,7 +312,32 @@ def identify(name: str) -> None:
     summary = d.get("profile_summary") or ""
     if d["returning"] and "\n" in summary:
         note += " " + summary.split("\n")[1]
-    st.session_state.identify_note = note
+    st.session_state.flash = (note, ":material/waving_hand:")
+
+
+def forget() -> None:
+    """Forget-me from the client: the backend drops the profile, events, likes, searches, sessions, and the lead row."""
+    r = api("DELETE", f"/users/{st.session_state.user_id}")
+    if r.status_code != 200:
+        st.session_state.flash = (f"Could not forget you: {r.status_code}", ":material/error:")
+        return
+    st.session_state.user_id = None
+    st.session_state.user_name = None
+    st.query_params.pop("user", None)
+    new_session()
+    st.session_state.flash = (
+        "Forgotten. Your profile, searches, likes, bookings, and contact details are gone.",
+        ":material/delete:",
+    )
+
+
+def profile(user_id: str) -> dict[str, Any] | None:
+    """The materialised profile, or None when the backend is down or the user was forgotten."""
+    try:
+        r = api("GET", f"/users/{user_id}/profile", timeout=10)
+    except httpx.HTTPError:
+        return None
+    return r.json() if r.status_code == 200 else None
 
 
 def ask_href(listing_id: str) -> str:
@@ -307,16 +356,97 @@ def money(n: Any) -> str:
     return f"AED {int(n):,}" if n else ""
 
 
-def sidebar(h: dict[str, Any]) -> None:
-    """The one sidebar for every page: brand, the mode switch, who you are, and in demo mode the backend."""
-    with st.sidebar:
-        st.markdown(
-            f'<div class="brandmark"><div class="dot"></div><div><b>{html.escape(APP_NAME)}</b><br><span>{html.escape(APP_TAGLINE)}</span></div></div>',
-            unsafe_allow_html=True,
+@st.dialog("Your account")
+def account() -> None:
+    """Who you are, your contact details, and your bookings. A name is enough; the chat can take it too."""
+    if not st.session_state.user_id:
+        st.write(
+            "Tell me your name and I will remember your searches, the cars you liked, and your "
+            "bookings next time. Saying hi in the chat works too."
         )
+        with st.form("identify", border=False):
+            name = st.text_input("Name", placeholder="Sara")
+            go = st.form_submit_button("Continue", type="primary", use_container_width=True)
+        if go and name.strip():
+            identify(name.strip())
+            st.rerun()
+        return
+    st.markdown(f"Signed in as **{st.session_state.user_name}**")
+    st.markdown("**Contact details**")
+    st.caption("Saved straight to the backend, never through the model.")
+    with st.form("contact", border=False):
+        c1, c2 = st.columns(2)
+        phone = c1.text_input("Phone (UAE mobile)")
+        email = c2.text_input("Email")
+        if st.form_submit_button("Save") and (phone or email):
+            r = api(
+                "POST",
+                "/leads/contact",
+                json={
+                    "user_id": st.session_state.user_id,
+                    "phone": phone or None,
+                    "email": email or None,
+                },
+            )
+            st.write(r.json().get("problems") or f"Saved. Lead status: {r.json().get('status')}")
+    st.markdown("**Bookings**")
+    r = api("GET", "/bookings", params={"user_id": st.session_state.user_id})
+    bookings = r.json() if r.status_code == 200 else []
+    if bookings:
+        st.table(
+            [
+                {
+                    "ref": b["ref"],
+                    "car": b["listing_id"],
+                    "slot": b["slot_start"][:16],
+                    "status": b["status"],
+                }
+                for b in bookings
+            ]
+        )
+    else:
+        st.caption("No viewings yet. Ask the chat to book one.")
+    with st.expander("Not you?"), st.form("switch", border=False):
+        other = st.text_input("Your name", placeholder="Layla")
+        if st.form_submit_button("Switch", use_container_width=True) and other.strip():
+            identify(other.strip())
+            st.rerun()
+    if st.button(
+        "Forget me",
+        type="tertiary",
+        icon=":material/delete:",
+        help="Deletes your profile, searches, likes, bookings, and contact details.",
+    ):
+        forget()
+        st.rerun()
+
+
+def sidebar(h: dict[str, Any]) -> None:
+    """The one sidebar for every page: pages, new chat, who you are, the mode switch, and in demo mode the backend."""
+    with st.sidebar:
+        flash = st.session_state.pop("flash", None)
+        if flash:
+            st.toast(flash[0], icon=flash[1])
         for key, page in pages().items():
             st.page_link(page, label=key.title(), icon=page.icon or None, use_container_width=True)
+        st.button(
+            "New chat",
+            key="newchat",
+            icon=":material/add_comment:",
+            type="tertiary",
+            use_container_width=True,
+            on_click=new_session,
+        )
         st.divider()
+        if st.button(
+            st.session_state.user_name or "Guest",
+            key="account",
+            icon=":material/account_circle:",
+            type="tertiary",
+            use_container_width=True,
+            help="Your name, contact details, and bookings.",
+        ):
+            account()
         on = st.toggle(
             "Demo mode",
             value=demo(),
@@ -325,81 +455,106 @@ def sidebar(h: dict[str, Any]) -> None:
         if on != demo():
             set_mode("demo" if on else "user")
             st.rerun()
-        st.divider()
-        name = st.text_input(
-            "Your name", value=st.session_state.user_name or "", placeholder="Sara"
-        )
-        c1, c2 = st.columns(2)
-        if c1.button("Continue", use_container_width=True) and name.strip():
-            identify(name.strip())
-            st.rerun()
-        c2.button("New chat", use_container_width=True, on_click=new_session)
-        if st.session_state.get("identify_note"):
-            st.caption(st.session_state.identify_note)
-        if st.session_state.user_id:
-            with st.expander("Your details and bookings"):
-                st.caption("Contact details go straight to the backend, never through the model.")
-                with st.form("contact"):
-                    phone = st.text_input("Phone (UAE mobile)")
-                    email = st.text_input("Email")
-                    if st.form_submit_button("Save") and (phone or email):
-                        r = api(
-                            "POST",
-                            "/leads/contact",
-                            json={
-                                "user_id": st.session_state.user_id,
-                                "phone": phone or None,
-                                "email": email or None,
-                            },
-                        )
-                        st.write(
-                            r.json().get("problems")
-                            or f"Saved. Lead status: {r.json().get('status')}"
-                        )
-                r = api("GET", "/bookings", params={"user_id": st.session_state.user_id})
-                if r.status_code == 200 and r.json():
-                    st.table(
-                        [
-                            {
-                                "ref": b["ref"],
-                                "car": b["listing_id"],
-                                "slot": b["slot_start"][:16],
-                                "status": b["status"],
-                            }
-                            for b in r.json()
-                        ]
-                    )
         if demo():
             st.divider()
             llm = h["llm"]
             st.markdown("**Backend**")
-            st.caption(f"model `{llm['model']}` via {llm['provider']}")
-            st.caption(
-                f"retrieval `{h['retrieval_mode']}` · cassette `{llm['cassette_mode']}` · verify `{llm['verify_mode']}`"
+            rows = [
+                ("model", llm["model"]),
+                ("provider", llm["provider"]),
+                ("retrieval", h["retrieval_mode"]),
+                ("cassette", llm["cassette_mode"]),
+                ("verify", llm["verify_mode"]),
+                ("calls today", f"{llm['requests_today']} / {llm['budget']}"),
+                ("clock", f"frozen at {h['demo_clock']}" if h.get("demo_clock") else "live"),
+                ("user", st.session_state.user_id or "-"),
+                ("session", st.session_state.session_id or "-"),
+            ]
+            st.markdown(
+                '<div class="kv">'
+                + "".join(
+                    f"<span>{html.escape(k)}</span><b>{html.escape(str(v))}</b>" for k, v in rows
+                )
+                + "</div>",
+                unsafe_allow_html=True,
             )
-            st.caption(f"model calls today {llm['requests_today']} / {llm['budget']}")
             if h["ablations_active"]:
                 st.warning("ablations active: " + ", ".join(h["ablations_active"]))
             if llm.get("last_error"):
                 st.error(llm["last_error"])
-            if h.get("demo_clock"):
-                st.caption(f"clock frozen at {h['demo_clock']}")
-            st.caption(
-                f"user `{st.session_state.user_id or '-'}` · session `{st.session_state.session_id or '-'}`"
-            )
+
+
+# The data keeps makes and models lowercase, and title-casing gives "Bmw 330I". Names the rules below get wrong.
+CASED = {
+    "bmw": "BMW",
+    "gmc": "GMC",
+    "gwm": "GWM",
+    "jac": "JAC",
+    "byd": "BYD",
+    "mg": "MG",
+    "kia": "Kia",
+    "mini": "MINI",
+    "cr-v": "CR-V",
+    "hr-v": "HR-V",
+    "lr4": "LR4",
+    "ix": "iX",
+    "ix1": "iX1",
+    "ix3": "iX3",
+    "i3": "i3",
+    "i4": "i4",
+    "i5": "i5",
+    "i7": "i7",
+    "i8": "i8",
+    "bz4x": "bZ4X",
+    "yu7": "YU7",
+    "su7": "SU7",
+    "4matic": "4MATIC",
+    "4wd": "4WD",
+    "awd": "AWD",
+    "tfsi": "TFSI",
+    "tdi": "TDI",
+    "xlt": "XLT",
+    "gts": "GTS",
+    "gt-r": "GT-R",
+    "ecoboost": "EcoBoost",
+}
+PLAIN_WORDS = {"max", "pro", "van", "new", "one", "eco", "lux", "top", "evo", "han", "car", "cars"}
+
+
+def _case_token(tok: str) -> str:
+    if tok in CASED:
+        return CASED[tok]
+    if "-" in tok:
+        return "-".join(_case_token(t) for t in tok.split("-"))
+    for prefix, styled in (("xdrive", "xDrive"), ("sdrive", "sDrive"), ("edrive", "eDrive")):
+        if tok.startswith(prefix):
+            return styled + tok[len(prefix) :]
+    if re.fullmatch(r"\d+(\.\d+)?[a-z]?", tok):
+        return tok
+    if re.fullmatch(r"[a-z]{1,3}\d{1,3}[a-z]?", tok):
+        return tok.upper()
+    if len(tok) <= 3 and tok.isalpha() and tok not in PLAIN_WORDS:
+        return tok.upper()
+    return tok.capitalize()
+
+
+def cased(text: str | None) -> str:
+    """Brand-style casing for a make, model, or trim: BMW, CR-V, iX3, 330i, GLE 400 4MATIC."""
+    if not text:
+        return ""
+    text = text.lower()
+    return CASED.get(text) or " ".join(_case_token(t) for t in text.split())
 
 
 def car_name(c: dict[str, Any]) -> str:
-    return f"{c.get('year') or ''} {str(c.get('make') or '').title()} {str(c.get('model') or '').title()}".strip()
+    return f"{c.get('year') or ''} {cased(c.get('make'))} {cased(c.get('model'))}".strip()
 
 
 def car_card(c: dict[str, Any], show_index: bool = True, show_id: bool = True) -> str:
-    title = html.escape(
-        f"{c.get('year') or ''} {str(c.get('make') or '').title()} {str(c.get('model') or '').title()}".strip()
-    )
+    title = html.escape(car_name(c))
     trim = c.get("trim")
     if trim and trim != "other":
-        title += " " + html.escape(str(trim).title())
+        title += " " + html.escape(cased(str(trim)))
     photo = c.get("thumb_url") or c.get("photo_url") or ""
     href = ask_href(str(c.get("id")))
     # A real img tag: lazy, thumbnail sized, no referrer so the CDN treats it like any browser hit.
