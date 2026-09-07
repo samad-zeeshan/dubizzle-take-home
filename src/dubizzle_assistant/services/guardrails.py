@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from dubizzle_assistant.normalize import normalize_digits
 from dubizzle_assistant.text import EMAIL_RE, PHONE_RE, URL_RE
 
 # Other car marketplaces, sister brands included, since a grader cannot tell them apart.
@@ -117,6 +118,27 @@ CANNED: dict[str, str] = {
     + PIVOT,
 }
 
+# A tripped rule never reaches the model, so an Arabic session would get these back in English
+# at the exact moment the assistant most needs to look like it knows what it is doing.
+PIVOT_AR = " هل تحب أن أعرض لك سيارات ضمن ميزانيتك، أو أخبرك المزيد عن واحدة شاهدتها؟"
+
+CANNED_AR: dict[str, str] = {
+    "competitor": "أستطيع التحدث فقط عن الإعلانات الموجودة هنا على دوبيزل، لذلك لا يمكنني المقارنة مع مواقع أخرى."
+    + PIVOT_AR,
+    "injection": "سألتزم بمساعدتك في سيارات هذا المعرض والمعاينات وتفضيلاتك." + PIVOT_AR,
+    "code": "كتابة الأكواد خارج نطاق عملي هنا. أستطيع مساعدتك في البحث عن السيارات ومقارنتها وحجز معاينة."
+    + PIVOT_AR,
+    "trivia": "هذا خارج ما أستطيع المساعدة به هنا. أنا ألتزم بالسيارات الموجودة في المعرض."
+    + PIVOT_AR,
+    "offtopic": "هذا خارج ما أستطيع المساعدة به هنا. أنا ألتزم بالسيارات الموجودة في المعرض."
+    + PIVOT_AR,
+    "seller_contact": "التواصل يتم عبر دوبيزل وليس بأرقام البائعين مباشرة، وأسهل خطوة تالية هي حجز معاينة وأنا أرتبها لك."
+    + PIVOT_AR,
+    "advice": "لا أستطيع تقديم استشارة مالية أو قانونية. أستطيع أن أنقل لك ما يذكره الإعلان عن السعر أو التمويل أو الضمان كما هو مكتوب."
+    + PIVOT_AR,
+}
+
+
 RULES: list[tuple[str, re.Pattern[str]]] = [
     ("competitor", COMPETITOR_RE),
     ("injection", INJECTION_RE),
@@ -128,8 +150,9 @@ RULES: list[tuple[str, re.Pattern[str]]] = [
 ]
 
 
-def prefilter(text: str) -> dict[str, Any] | None:
+def prefilter(text: str, locale: str = "en") -> dict[str, Any] | None:
     """Return a canned decline for hard cases, or None to let the model handle the message."""
+    canned = CANNED_AR if locale == "ar" else CANNED
     for name, rx in RULES:
         m = rx.search(text)
         if m:
@@ -142,7 +165,7 @@ def prefilter(text: str) -> dict[str, Any] | None:
                 else "pii_request"
                 if name == "seller_contact"
                 else "out_of_scope",
-                "reply": CANNED[name],
+                "reply": canned[name],
                 "match": m.group(0),
             }
     return None
@@ -202,7 +225,9 @@ def strip_ids(text: str) -> str:
 # Whole numbers first, then context decides. A number glued to a word, a path, a decimal point or a
 # hyphen ("R-005", "6-year/200,000", "115,750.000") is skipped as a whole, so no fragment of it
 # ("000") can ever be judged on its own.
-_NUM_RE = re.compile(r"\d{1,3}(?:,\d{3})+|\d{3,}")
+# The Arabic thousands separator groups digits the same way a comma does, and it has to be
+# matched here rather than normalised away, so the span offsets still point into the reply.
+_NUM_RE = re.compile(r"\d{1,3}(?:[,٬]\d{3})+|\d{3,}")
 _GLUE_BEFORE = "#/.-_"
 _GLUE_AFTER = "-_"
 
@@ -224,7 +249,10 @@ _NUMERIC_FIELDS = ("price_aed", "monthly_aed", "mileage_km", "year", "seats", "d
 
 
 def _norm(n: str) -> str:
-    return n.replace(",", "")
+    # Arabic-Indic numerals and the Arabic thousands separator have to fold to ASCII here. The
+    # figure regex matches them either way, so without this an Arabic reply's correct prices
+    # never match a source and the client strikes them through as unsourced.
+    return normalize_digits(n).replace(",", "").replace("٬", "").replace("⁦", "")
 
 
 def collect_sources(
