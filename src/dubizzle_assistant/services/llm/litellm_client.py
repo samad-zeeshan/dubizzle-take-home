@@ -23,6 +23,9 @@ _RETRY_RE = re.compile(
 )
 _DAILY_RE = re.compile(r"per[_ ]day|daily|PerDay|RequestsPerDay|quota_exceeded", re.I)
 
+# The corpus build is a one-off, so it can afford to wait out a per-minute limit.
+_EMBED_MAX_WAIT = 90.0
+
 # Wordings seen when a provider refuses a reply schema, usually next to function tools.
 _SCHEMA_REJECT = ("schema", "mime type", "response_format", "structured output")
 
@@ -269,20 +272,39 @@ class LiteLLMClient:
             return {"dimensions": self.embedding_dimensions}
         return {}
 
-    def embed_many(self, texts: list[str], batch_size: int = 16) -> list[list[float]]:
-        """Batched embeddings for the one-time corpus build; about a dozen calls for the whole inventory."""
+    def _embed_batch(self, batch: list[str]) -> Any:
         litellm = self._lib()
-        out: list[list[float]] = []
-        for i in range(0, len(texts), batch_size):
+        for attempt in range(2):
             try:
-                resp = litellm.embedding(
+                return litellm.embedding(
                     model=self.embedding_model,
-                    input=texts[i : i + batch_size],
+                    input=batch,
                     **self._embedding_width(),
                     **self._endpoint(self.embedding_model),
                 )
             except Exception as e:  # noqa: BLE001
-                raise LLMError(f"embedding call failed: {type(e).__name__}: {e}") from e
+                m = _RETRY_RE.search(str(e))
+                delay = float(m.group(1)) if m else None
+                if attempt or delay is None or delay > _EMBED_MAX_WAIT:
+                    raise LLMError(f"embedding call failed: {type(e).__name__}: {e}") from e
+                time.sleep(delay + 1)
+        raise LLMError("embedding call failed after one retry")
+
+    def embed_many(
+        self, texts: list[str], batch_size: int = 16, *, pause: float | None = None
+    ) -> list[list[float]]:
+        """Embeddings for the one-time corpus build, paced for a metered endpoint.
+
+        Gemini embeds one input per request, so a batch of sixteen counts as sixteen
+        against the per-minute cap rather than one, and the whole inventory overruns it
+        if the batches go out back to back. A local server has no such cap.
+        """
+        wait = (0.0 if self.local else 8.0) if pause is None else pause
+        out: list[list[float]] = []
+        for i in range(0, len(texts), batch_size):
+            if i and wait:
+                time.sleep(wait)
+            resp = self._embed_batch(texts[i : i + batch_size])
             out.extend(
                 list(item["embedding"])
                 for item in sorted(resp.data, key=lambda d: d.get("index", 0))
