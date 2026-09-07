@@ -7,6 +7,7 @@ the one Honda, the ten managed rows, the BYD range decoy, the int-typed cells.
 
 from __future__ import annotations
 
+from dubizzle_assistant.ingest.enrich import _figure_in_text
 from dubizzle_assistant.ingest.extract import extract_mileage, extract_prices
 from dubizzle_assistant.ingest.load import clean_html, load_all
 from dubizzle_assistant.ingest.sanitize import sanitize
@@ -75,6 +76,22 @@ def test_byd_range_is_not_mileage(listings):
     byd = next(row for row in listings.values() if row["make"] == "byd")
     assert byd["fields"]["mileage_km"]["value"] is None
     assert any(r["value"] == 701 for r in byd["rejected"])
+
+
+def test_a_zero_reading_needs_a_distance():
+    def ad(text):
+        return {"title": "", "description_clean": text, "description_raw": ""}
+
+    # Both of these phrases are in half the ads, and each one used to ground a 0 km
+    # reading the model had invented for a used car.
+    assert not _figure_in_text(0, ad("Instant torque, smooth acceleration, zero emissions"))
+    assert not _figure_in_text(0, ad("Auto Loan at 0% Down Payment, 2022 Nissan X-Trail"))
+    assert _figure_in_text(0, ad("2025 Hyundai Tucson 0km, brand new"))
+    assert _figure_in_text(0, ad("Odometer : 0 KM Brand New Warranty"))
+    assert _figure_in_text(0, ad("Mileage: zero, still in the wrapper"))
+    # A real figure is still matched by the digits printed in the ad.
+    assert _figure_in_text(169859, ad("Driven 169,859 km"))
+    assert not _figure_in_text(169859, ad("Driven 12,000 km"))
 
 
 def test_salary_and_fees_rejected():

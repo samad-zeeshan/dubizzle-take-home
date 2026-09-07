@@ -142,6 +142,13 @@ def _plausible(field: str, value: int) -> bool:
 
 _DIGIT_RUN = re.compile(r"\d(?:[\d,.\s]*\d)?")
 _K_SUFFIX = re.compile(r"(\d+(?:\.\d+)?)\s*k\b", re.I)
+# A zero reading has to be about distance. "Zero emissions" and "0% down payment" are in
+# half these ads, and either one was enough to ground an invented 0 km on a used car.
+_ZERO_DISTANCE = re.compile(
+    r"\b(?:zero|0|صفر|زيرو)\s*(?:km|kms|kilomet(?:er|re)s?|mileage)\b"
+    r"|\b(?:mileage|odometer|driven|done)\b[\s:\-]*(?:zero|0|صفر|زيرو)\b",
+    re.I,
+)
 
 
 def _figure_in_text(n: int, rec: dict[str, Any]) -> bool:
@@ -158,8 +165,9 @@ def _figure_in_text(n: int, rec: dict[str, Any]) -> bool:
             seen.add(int(digits))
     for m in _K_SUFFIX.finditer(text):
         seen.add(int(float(m.group(1)) * 1000))
-    if n == 0 and re.search(r"\bzero\b|زيرو|صفر", text, re.I):
-        return True
+    # Zero never counts as printed just because the digit is somewhere in the ad.
+    if n == 0:
+        return bool(_ZERO_DISTANCE.search(text))
     return n in seen
 
 
