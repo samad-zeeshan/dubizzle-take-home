@@ -90,14 +90,18 @@ class FakeLiteLLM:
     suppress_debug_info = False
     drop_params = False
 
-    def __init__(self, fail: Exception | None = None) -> None:
+    def __init__(self, fail: Exception | None = None, *, once: bool = False) -> None:
         self.calls: list[dict[str, Any]] = []
         self.fail = fail
+        self.once = once
 
     def completion(self, **kwargs: Any) -> Any:
         self.calls.append(kwargs)
         if self.fail:
-            raise self.fail
+            err = self.fail
+            if self.once:
+                self.fail = None
+            raise err
         msg = SimpleNamespace(content="ok", tool_calls=[], model_dump=lambda: {"content": "ok"})
         return SimpleNamespace(
             choices=[SimpleNamespace(message=msg, finish_reason="stop")],
@@ -142,6 +146,23 @@ def test_connection_error_names_the_endpoint(monkeypatch: pytest.MonkeyPatch) ->
     c = make_client(monkeypatch, fake)
     with pytest.raises(LLMError, match="localhost:1234"):
         c.complete([{"role": "user", "content": "hi"}], None)
+
+
+def test_schema_rejection_retries_as_plain_text(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Gemini's wording for this 400 never contains the word "schema".
+    refusal = FakeLiteLLM.BadRequestError(
+        "Function calling with a response mime type: 'application/json' is unsupported"
+    )
+    fake = FakeLiteLLM(fail=refusal, once=True)
+    c = make_client(monkeypatch, fake)
+    r = c.complete(
+        [{"role": "user", "content": "hi"}],
+        [{"type": "function"}],
+        response_schema={"type": "object"},
+    )
+    assert len(fake.calls) == 2
+    assert "response_format" in fake.calls[0] and "response_format" not in fake.calls[1]
+    assert r.text == "ok" and r.note is not None and "fell back to text" in r.note
 
 
 def test_factory_builds_local_client(tmp_path: Path) -> None:

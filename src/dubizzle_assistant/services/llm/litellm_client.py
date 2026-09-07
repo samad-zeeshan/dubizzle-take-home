@@ -23,6 +23,9 @@ _RETRY_RE = re.compile(
 )
 _DAILY_RE = re.compile(r"per[_ ]day|daily|PerDay|RequestsPerDay|quota_exceeded", re.I)
 
+# Wordings seen when a provider refuses a reply schema, usually next to function tools.
+_SCHEMA_REJECT = ("schema", "mime type", "response_format", "structured output")
+
 
 class LiteLLMClient:
     name = "litellm"
@@ -166,8 +169,11 @@ class LiteLLMClient:
             note = f"retried once after {e.retry_after}s rate limit"
             resp = runner(kwargs)
         except LLMError as e:
-            if "response_format" in kwargs and "schema" in str(e).lower():
-                # Some models reject json_schema mode; plain text plus the post-filter still works.
+            # Providers word this rejection differently. Gemini says "response mime type", never
+            # "schema", so matching on one word alone let a 400 through as a dead turn.
+            msg = str(e).lower()
+            if "response_format" in kwargs and any(k in msg for k in _SCHEMA_REJECT):
+                # Plain text plus the post-filter still works, so one retry beats failing the turn.
                 kwargs.pop("response_format")
                 note = "model rejected json schema mode, fell back to text"
                 resp = runner(kwargs)
