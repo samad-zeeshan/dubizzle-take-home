@@ -37,7 +37,21 @@ _CTA_RE = re.compile(
     r"|\bsell\s+your\s+car\b|\bwant\s+to\s+sell\b|\bbuy\s+back\b|\bclick\s+(on\s+)?the\s+link"
     r"|\bjust\s+click\b|\bstay\s+connected\b|\bcheck\s+out\s+our\b|\bour\s+website\b|\bwebsite\s*:"
     r"|\bللتواصل\b|\bتفضلوا بزيارتنا\b|\bزيارتنا\b|\bاتصال\b|\bواتساب\b|\bالاتصال\b|\bللاستفسار\b|\bتواصل\b"
-    r"|\bmobile\s+no\b|\bmob\s*:|\btel\s*:|\bphone\s*:|\boffice\s*:|\bsales\s*:",
+    r"|\bmobile\s+no\b|\bmob\s*:|\btel\s*:|\bphone\s*:|\boffice\s*:|\bsales\s*:"
+    # Opening hours survive a sentence-level cut when they carry no colon, and a showroom
+    # timetable read as viewing availability is the one listing fact that must never land.
+    r"|\bwe\s+are\s+open\b|\bopen\s+from\b|\bopening\s+(times?|hours?)\b|\btimings?\b\s*\d"
+    r"|\b(mon|tues?|wed(nes)?|thur?s?|fri|satur?|sun)(day)?\s*(?:[:\-–]|from|to|till|until)?\s*"
+    r"\d{1,2}\s*[:.]?\d{0,2}\s*(am|pm)"
+    r"|\b(mon|tues?|wed(nes)?|thur?s?|fri|satur?|sun)(day)?\s*[:\-–]\s*\d"
+    r"|\bfrom\s+\d{1,2}\s*[:.]?\d{0,2}\s*(am|pm)\s*(to|till|until|[-–])\s*\d"
+    r"|\bafter\s+\d{1,2}\s*(am|pm)\b|\bbusiness\s+hours?\b|\baddress\s*:|\blandline\b"
+    r"|\d{1,2}\s*[:.]\d{2}\s*(am|pm)\s*(to|till|until|[-–])\s*\d"
+    r"|\bvisit\s+(to\s+)?(us|our|the)\b|\bour\s+showroom\b|\bshowroom\s*[:,]|\bshowroom\s+is\s+located\b"
+    r"|\bshowroom\s+of\s+the\s+year\b|\bp\.?\s?o\.?\s*box\b|\bbranch\s*(\d|:)"
+    # Finance paperwork drags salary figures in, and those read as prices.
+    r"|\brequired\s+documents?\b|\bsalary\b|\bbank\s+statements?\b|\bemirates\s+id\b|\bpassport\s+copy\b"
+    r"|\bplease\s+call\b",
     re.IGNORECASE,
 )
 
@@ -60,6 +74,36 @@ _KEYCAP_RE = re.compile(r"[0-9]\uFE0F?\u20E3")
 
 _SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?؟])\s+|\n+|\s+[|]\s+|\s+•\s+|\s+\*\s+(?=[A-Z])")
 
+# Dealer pitches open some ads and trail others, so they are matched per sentence rather
+# than cut to the end of the text. ALHOOT's ads put the pitch first and the car after it.
+_BOILERPLATE_SENT_RE = re.compile("|".join(re.escape(m) for m in BOILERPLATE_MARKERS), re.I)
+
+# Many ads run the car description and the phone pitch together with no full stop between
+# them. Cutting at the call to action keeps the facts that came before it.
+_TRAILING_CONNECTOR_RE = re.compile(
+    r"(?:\b(?:please|kindly|for|to|and|or|so|the|our|we|you|your|just|feel free|more details?)\b[\s,:;.\-]*)+$",
+    re.IGNORECASE,
+)
+_STRIP_CHARS = " \t-–—•*|,:;."
+_MIN_KEEP = 12
+
+# A figure with a unit is the mark of a fact about the car rather than a line about the dealer.
+_FACT_RE = re.compile(
+    r"\d{1,3}[,. ]?\d{3}\s?(?:km|kms|kilomet|كم)|\d+\s?(?:km|kms|كم)\b|\baed\b|\bdhs\b|درهم"
+    r"|\b(?:19|20)\d{2}\b|\d\.\d\s?l\b|\d+\s?(?:hp|cc|cyl)",
+    re.I,
+)
+
+
+def _trim_tail(text: str) -> str:
+    """Drop the dangling words that led into a call to action, such as a trailing 'please'."""
+    out = text.strip(_STRIP_CHARS)
+    while True:
+        shorter = _TRAILING_CONNECTOR_RE.sub("", out).strip(_STRIP_CHARS)
+        if shorter == out:
+            return out
+        out = shorter
+
 
 @dataclass
 class Sanitized:
@@ -72,7 +116,7 @@ class Sanitized:
 
 
 def _cut_block(text: str, markers: tuple[str, ...]) -> tuple[str, bool]:
-    """Remove everything from the first marker onward. Boilerplate always trails."""
+    """Remove everything from the first marker onward. dubizzle's managed block always trails."""
     low = text.lower()
     positions = [low.find(m) for m in markers if m in low]
     if not positions:
@@ -94,7 +138,7 @@ def sanitize(description_clean_html: str) -> Sanitized:
     dealer_name = dealer_match.group(1) if dealer_match else None
 
     text, managed = _cut_block(text, MANAGED_MARKERS)
-    text, boilerplate = _cut_block(text, BOILERPLATE_MARKERS)
+    boilerplate = bool(_BOILERPLATE_SENT_RE.search(text))
 
     text = _KEYCAP_RE.sub(" ", text)
     text = _EMOJI_RE.sub(" ", text)
@@ -110,9 +154,26 @@ def sanitize(description_clean_html: str) -> Sanitized:
         s = piece.strip(" \t-–—•*|")
         if not s or _DECOR_RE.match(s):
             continue
-        if _CTA_RE.search(s):
+        if _BOILERPLATE_SENT_RE.search(s):
             removed += 1
             continue
+        cta = _CTA_RE.search(s)
+        if cta:
+            removed += 1
+            head = _trim_tail(s[: cta.start()])
+            # Arabic ads often put the contact line in the middle, so the car can sit on the
+            # far side of it. The tail is kept only when it still carries a figure and starts
+            # no call to action of its own.
+            tail = s[cta.end() :].strip(_STRIP_CHARS)
+            keep_tail = (
+                len(tail) >= _MIN_KEEP and not _CTA_RE.search(tail) and _FACT_RE.search(tail)
+            )
+            if len(head) < _MIN_KEEP:
+                if not keep_tail:
+                    continue
+                s = tail
+            else:
+                s = f"{head} {tail}" if keep_tail else head
         # A bare 7+ digit run after phone stripping is a landline or a leftover number.
         if re.fullmatch(r"[\d\s\-()+]{7,}", s):
             removed += 1
