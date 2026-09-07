@@ -71,3 +71,16 @@ def test_the_static_block_carries_the_price_labelling_rule(client):
     assert '"price not listed" rather than placing it under a budget' in static
     # The greeting rule is turn-dependent, so it must not sit in the cached prefix.
     assert "Greet" not in static
+    # Arithmetic is barred outright, not only for financing: the figures come from the ad.
+    assert "do no arithmetic on any figure" in static
+    for banned in (
+        "no totals",
+        "no interest rates",
+        "no cost per kilometre",
+        "no sums across years",
+    ):
+        assert banned in static
+    assert "calculate financing" not in static
+    # One chat, one person. Switching accounts is a deliberate act elsewhere.
+    assert "One chat belongs to one person" in static
+    assert "changing who is signed in happens in the account panel" in static
