@@ -1,6 +1,6 @@
 {
  "meta": {
-  "generated_at": "2026-09-07 07:27 UTC",
+  "generated_at": "2026-09-07 07:36 UTC",
   "source_file": "cars.xlsx",
   "source_sha256": "94a97f84aa742ec8ed526bb14d41ca4134ab8a2e1db1ab7f3d2f03af5c38bbb9",
   "llm_model": "gemini/gemini-3.5-flash-lite",
@@ -2838,10 +2838,10 @@
      "confidence": 0.9
     },
     "monthly_aed": {
-     "value": 54500,
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "mileage_km": {
      "value": 111000,
@@ -3066,10 +3066,10 @@
      "confidence": 0.0
     },
     "monthly_aed": {
-     "value": 200,
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "mileage_km": {
      "value": null,
@@ -26157,10 +26157,10 @@
      "confidence": 0.0
     },
     "monthly_aed": {
-     "value": 760,
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "mileage_km": {
      "value": 45000,
@@ -27439,10 +27439,10 @@
      "confidence": 0.0
     },
     "monthly_aed": {
-     "value": 1375,
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "mileage_km": {
      "value": null,
@@ -32827,10 +32827,10 @@
      "confidence": 0.9
     },
     "monthly_aed": {
-     "value": 1600,
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "mileage_km": {
      "value": 40000,
