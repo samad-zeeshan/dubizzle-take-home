@@ -125,6 +125,39 @@ def test_a_monthly_needs_monthly_wording():
         assert r["fields"]["monthly_aed"]["value"] == n, text
 
 
+def test_the_word_for_empty_is_not_a_colour():
+    def rec(**fields):
+        return {
+            "id": "C-000",
+            "title": "",
+            "description_clean": "",
+            "description_raw": "",
+            "keywords_en": "",
+            "fields": fields,
+        }
+
+    # 118 fields in the committed build carried the string "null" as their value.
+    for word in ("null", "None", " N/A ", "unknown", "not stated", "-", "  "):
+        r = rec()
+        merge(r, {"exterior_color": word, "transmission": word}, [])
+        assert r["fields"] == {}, word
+
+    # Worse than cosmetic: it overwrote a colour regex had read out of the ad.
+    r = rec(
+        exterior_color={"value": "black", "source": "regex", "evidence": "black", "confidence": 0.5}
+    )
+    merge(r, {"exterior_color": "null"}, [])
+    assert r["fields"]["exterior_color"]["value"] == "black"
+
+    # A real answer still lands.
+    r = rec()
+    merge(
+        r, {"exterior_color": "Diamond White", "english_summary": "none", "keywords_en": "null"}, []
+    )
+    assert r["fields"]["exterior_color"]["value"] == "diamond white"
+    assert not r.get("english_summary") and not r["keywords_en"]
+
+
 def test_salary_and_fees_rejected():
     price, monthly, rejected = extract_prices(
         "Salary requirement: AED 3000 (WPS). Condition report for only AED 369. "

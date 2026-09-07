@@ -1,6 +1,6 @@
 {
  "meta": {
-  "generated_at": "2026-09-07 07:36 UTC",
+  "generated_at": "2026-09-07 10:19 UTC",
   "source_file": "cars.xlsx",
   "source_sha256": "94a97f84aa742ec8ed526bb14d41ca4134ab8a2e1db1ab7f3d2f03af5c38bbb9",
   "llm_model": "gemini/gemini-3.5-flash-lite",
@@ -154,13 +154,6 @@
     "resolution": "regex kept (has evidence)"
    },
    {
-    "id": "C-070",
-    "field": "exterior_color",
-    "regex": "black",
-    "llm": "null",
-    "resolution": "llm used (regex confidence low)"
-   },
-   {
     "id": "C-071",
     "field": "mileage_km",
     "regex": 3,
@@ -180,13 +173,6 @@
     "regex": 1500,
     "llm": 1950,
     "resolution": "regex kept (has evidence)"
-   },
-   {
-    "id": "C-097",
-    "field": "exterior_color",
-    "regex": "gold",
-    "llm": "null",
-    "resolution": "llm used (regex confidence low)"
    },
    {
     "id": "R-005",
@@ -13536,16 +13522,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -13751,10 +13737,10 @@
      "confidence": 0.85
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -13956,16 +13942,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "coupe",
@@ -14175,16 +14161,16 @@
      "confidence": 0.9
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -14400,16 +14386,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -14611,16 +14597,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -14832,10 +14818,10 @@
      "confidence": 0.85
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -15040,10 +15026,10 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
-     "evidence": null,
-     "confidence": 0.6
+     "value": "black",
+     "source": "regex",
+     "evidence": "Of the Model - 2013 Interior Black Low Mileage Japan Imported Re",
+     "confidence": 0.5
     },
     "interior_color": {
      "value": "black",
@@ -15679,16 +15665,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "coupe",
@@ -16099,16 +16085,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -16310,16 +16296,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -16521,16 +16507,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "coupe",
@@ -16733,16 +16719,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "sedan",
@@ -16942,16 +16928,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "coupe",
@@ -17157,10 +17143,10 @@
      "confidence": 0.85
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "hatchback",
@@ -17365,10 +17351,10 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
      "value": "black",
@@ -17574,16 +17560,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "convertible",
@@ -17788,10 +17774,10 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
      "value": "black",
@@ -17997,16 +17983,16 @@
      "confidence": 0.9
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "sedan",
@@ -18211,16 +18197,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "sedan",
@@ -18420,16 +18406,16 @@
      "confidence": 0.9
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "coupe",
@@ -18629,16 +18615,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "truck_chassis",
@@ -18840,16 +18826,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "sedan",
@@ -19079,16 +19065,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "convertible",
@@ -19294,10 +19280,10 @@
      "confidence": 0.85
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -19497,16 +19483,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -19930,16 +19916,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -20145,10 +20131,10 @@
      "confidence": 0.85
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -20350,16 +20336,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -20803,16 +20789,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
-     "evidence": null,
-     "confidence": 0.6
+     "value": "gold",
+     "source": "regex",
+     "evidence": "; Dubizzle Cars Awards 2025 - Gold Circle: Dealer Of The Year Dr",
+     "confidence": 0.5
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "convertible",
@@ -21017,16 +21003,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "van",
@@ -21235,16 +21221,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "hatchback",
@@ -21661,16 +21647,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "coupe",
@@ -21878,10 +21864,10 @@
      "confidence": 0.9
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -22084,10 +22070,10 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
      "value": "leather",
@@ -22306,16 +22292,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "sedan",
@@ -22515,10 +22501,10 @@
      "confidence": 0.9
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
      "value": "orange",
@@ -22955,16 +22941,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -23176,16 +23162,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "sedan",
@@ -23385,16 +23371,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "sedan",
@@ -23806,16 +23792,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -24022,10 +24008,10 @@
      "confidence": 0.9
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
      "value": "black",
@@ -24237,10 +24223,10 @@
      "confidence": 0.85
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -24440,16 +24426,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "sedan",
@@ -24664,16 +24650,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "van",
@@ -25111,16 +25097,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "sedan",
@@ -25324,16 +25310,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "sedan",
@@ -25535,16 +25521,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "sedan",
@@ -25753,10 +25739,10 @@
      "confidence": 0.5
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "truck_chassis",
@@ -25964,16 +25950,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "coupe",
@@ -26181,10 +26167,10 @@
      "confidence": 0.85
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "sedan",
@@ -26390,16 +26376,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "convertible",
@@ -26612,16 +26598,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "sedan",
@@ -27248,16 +27234,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "pickup",
@@ -27457,16 +27443,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "coupe",
@@ -27884,16 +27870,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "sedan",
@@ -28093,16 +28079,16 @@
      "confidence": 0.9
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -28520,10 +28506,10 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
      "value": "red",
@@ -31969,16 +31955,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "sedan",
@@ -32188,16 +32174,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "pickup",
@@ -32403,16 +32389,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "coupe",
@@ -32625,10 +32611,10 @@
      "confidence": 0.5
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -33063,10 +33049,10 @@
      "confidence": 0.85
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "wagon",
@@ -33266,16 +33252,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -33477,16 +33463,16 @@
      "confidence": 0.9
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "coupe",
@@ -33712,10 +33698,10 @@
      "confidence": 0.5
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -33925,16 +33911,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "suv",
@@ -34134,16 +34120,16 @@
      "confidence": 0.6
     },
     "exterior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "van",
@@ -34353,10 +34339,10 @@
      "confidence": 0.85
     },
     "interior_color": {
-     "value": "null",
-     "source": "llm",
+     "value": null,
+     "source": "regex",
      "evidence": null,
-     "confidence": 0.6
+     "confidence": 0.0
     },
     "body_type": {
      "value": "sedan",

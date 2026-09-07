@@ -183,12 +183,25 @@ def _figure_in_text(n: int, rec: dict[str, Any]) -> bool:
     return n in seen
 
 
+# Asked for a field the ad never states, the model sometimes writes the word for empty instead
+# of leaving it out. Stored as a value it reaches the card, the filters, and the reply as fact.
+_NOT_STATED = frozenset(
+    {"null", "none", "n/a", "na", "nil", "unknown", "not specified", "not stated", "-"}
+)
+
+
+def _missing(v: Any) -> bool:
+    if isinstance(v, str):
+        return v.strip().lower() in _NOT_STATED or not v.strip()
+    return v in (None, "", [])
+
+
 def merge(rec: dict[str, Any], llm: dict[str, Any], disagreements: list[dict[str, Any]]) -> None:
     """Regex keeps figures it found. The model fills gaps and overrides only low-confidence words."""
     fields = rec["fields"]
     for f in LLM_FIELDS:
         v = llm.get(f)
-        if v in (None, "", []):
+        if _missing(v):
             continue
         cur: dict[str, Any] = fields.get(f) or {
             "value": None,
@@ -235,14 +248,14 @@ def merge(rec: dict[str, Any], llm: dict[str, Any], disagreements: list[dict[str
                 )
             fields[f] = {"value": v, "source": "llm", "evidence": None, "confidence": 0.6}
     summary = (llm.get("english_summary") or "").strip()
-    if summary and not contains_contact(summary):
+    if not _missing(summary) and not contains_contact(summary):
         rec["english_summary"] = summary
     kws = (llm.get("keywords_en") or "").strip()
-    if kws:
+    if not _missing(kws):
         have = [k.strip() for k in rec["keywords_en"].split(",") if k.strip()]
         for k in kws.split(","):
             k = k.strip().lower()
-            if k and k not in have and not contains_contact(k):
+            if not _missing(k) and k not in have and not contains_contact(k):
                 have.append(k)
         rec["keywords_en"] = ", ".join(have)
 

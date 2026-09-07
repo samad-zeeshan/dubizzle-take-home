@@ -1,6 +1,6 @@
 # Inventory enrichment report
 
-Generated 2026-09-07 07:36 UTC from `cars.xlsx` (sha256 94a97f84aa74).
+Generated 2026-09-07 10:19 UTC from `cars.xlsx` (sha256 94a97f84aa74).
 LLM enrichment: yes, gemini/gemini-3.5-flash-lite.
 
 ## Sheets and columns
@@ -47,8 +47,8 @@ Total listings: **189**, 46 makes, years 2003 to 2026.
 | down_payment_pct | 38 (20%) | 0 | 38 | 0 | 0 | 0 | 0 |
 | mileage_km | 91 (48%) | 0 | 77 | 0 | 0 | 14 | 0 |
 | is_brand_new | 16 (8%) | 0 | 13 | 0 | 3 | 0 | 0 |
-| exterior_color | 121 (64%) | 0 | 52 | 0 | 0 | 69 | 0 |
-| interior_color | 116 (61%) | 0 | 25 | 0 | 0 | 91 | 0 |
+| exterior_color | 67 (35%) | 0 | 54 | 0 | 0 | 13 | 0 |
+| interior_color | 54 (28%) | 0 | 25 | 0 | 0 | 29 | 0 |
 | body_type | 189 (100%) | 0 | 21 | 167 | 0 | 1 | 0 |
 | regional_spec | 126 (66%) | 0 | 126 | 0 | 0 | 0 | 0 |
 | fuel_type | 180 (95%) | 0 | 21 | 2 | 0 | 157 | 0 |
@@ -146,11 +146,9 @@ Figures that looked like a price or an odometer reading but were rejected by con
 | C-027 | mileage_km | 2 | 75500 | regex kept (has evidence) |
 | C-038 | exterior_color | black | yellow | llm used (regex confidence low) |
 | C-044 | monthly_aed | 2503 | 2816 | regex kept (has evidence) |
-| C-070 | exterior_color | black | null | llm used (regex confidence low) |
 | C-071 | mileage_km | 3 | 71000 | regex kept (has evidence) |
 | C-092 | exterior_color | black | diamond white | llm used (regex confidence low) |
 | C-095 | monthly_aed | 1500 | 1950 | regex kept (has evidence) |
-| C-097 | exterior_color | gold | null | llm used (regex confidence low) |
 | R-005 | monthly_aed | 1813 | 2040 | regex kept (has evidence) |
 | R-007 | monthly_aed | 2700 | 4000 | regex kept (has evidence) |
 | R-025 | exterior_color | grey | white | llm used (regex confidence low) |
