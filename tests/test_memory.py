@@ -240,3 +240,54 @@ def test_the_greeting_rule_only_applies_to_the_first_turn(tmp_path):
     assert turn1 and "Greet them by name once" in turn1
     assert turn2 and "already greeted them this session" in turn2
     assert "Greet them by name once" not in turn2
+
+
+LAND_ROVERS = [
+    {
+        "display_index": 1,
+        "id": "R-069",
+        "year": 2023,
+        "make": "land rover",
+        "model": "range rover evoque",
+        "trim": None,
+        "price_aed": 149999,
+        "monthly_aed": None,
+        "mileage_km": 69000,
+    },
+    {
+        "display_index": 2,
+        "id": "C-003",
+        "year": 2018,
+        "make": "land rover",
+        "model": "range rover velar",
+        "trim": None,
+        "price_aed": 119750,
+        "monthly_aed": 1876,
+        "mileage_km": 68000,
+    },
+]
+
+
+def test_a_model_the_make_does_not_have_is_not_a_reference():
+    """A make alias like "defender" arrived looking like land rover and became the Evoque."""
+    for phrase in ("defender", "the defender", "mazda 3", "the mazda 3", "chevy"):
+        r = resolve_reference(phrase, LAND_ROVERS, "R-069")
+        assert r["resolved"] is None, f"{phrase} resolved to {r['resolved']} by {r['rule']}"
+    # The make on its own, named with a determiner, still points at the car on screen.
+    assert resolve_reference("the velar", LAND_ROVERS, None)["resolved"] == "C-003"
+    assert resolve_reference("tell me about the evoque", LAND_ROVERS, None)["resolved"] == "R-069"
+
+
+def test_a_phrase_carrying_a_constraint_is_a_search_not_a_reference():
+    # The ceiling used to be dropped on the floor: this resolved to the focused Evoque.
+    for phrase in (
+        "range rover under 150k",
+        "the range rover under 150k",
+        "land rover below AED 120,000",
+        "range rover under 50,000 km",
+        "range rover under 2000 a month",
+    ):
+        r = resolve_reference(phrase, LAND_ROVERS, "R-069")
+        assert r["resolved"] is None, f"{phrase} resolved to {r['resolved']} by {r['rule']}"
+    # A question about a car on screen still resolves, constraint words and all.
+    assert resolve_reference("the velar, what mileage?", LAND_ROVERS, None)["resolved"] == "C-003"

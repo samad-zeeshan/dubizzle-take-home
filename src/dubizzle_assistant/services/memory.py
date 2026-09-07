@@ -329,6 +329,76 @@ _FROM_END_RE = re.compile(
     re.I,
 )
 _FROM_END = {"second": 2, "2nd": 2, "third": 3, "3rd": 3, "fourth": 4, "4th": 4}
+# A phrase points at a car on screen or it describes one to look for, and only the surface form
+# says which. "the honda" points; a bare "chevy" or "defender" asks to search.
+_DETERMINER_RE = re.compile(r"\b(?:the|that|this|these|those|it|its)\b", re.I)
+# "range rover under 150k" is a search with a ceiling. A bare word like "mileage" is not a
+# constraint, or "the haval, what mileage?" would stop being a reference.
+_CONSTRAINT_RE = re.compile(
+    r"\b(?:under|below|over|above|up to|at most|at least|less than|more than|cheaper than|"
+    r"between|max|maximum|min|minimum|budget|around)\b[^,.]{0,12}?\d"
+    r"|\baed\s*\d|\$\s*\d|\b\d[\d,]*\s*(?:k|m|aed|dirhams?|usd|dollars?)\b"
+    r"|\b\d[\d,]*\s*(?:km|kms|kilomet\w*)\b"
+    r"|\b\d[\d,]*\s*(?:a|per)\s*month\b",
+    re.I,
+)
+# Words carrying no identity, so whatever is left over is the part that has to name the make.
+_REF_FILLER = frozenset(
+    {
+        "the",
+        "that",
+        "this",
+        "these",
+        "those",
+        "it",
+        "its",
+        "a",
+        "an",
+        "one",
+        "car",
+        "cars",
+        "about",
+        "tell",
+        "me",
+        "more",
+        "on",
+        "of",
+        "for",
+        "what",
+        "whats",
+        "which",
+        "is",
+        "are",
+        "was",
+        "have",
+        "has",
+        "had",
+        "does",
+        "do",
+        "did",
+        "with",
+        "and",
+        "much",
+        "how",
+        "many",
+        "s",
+        "show",
+        "got",
+        "mileage",
+        "price",
+        "cost",
+        "colour",
+        "color",
+        "warranty",
+        "year",
+        "km",
+        "kms",
+        "spec",
+        "details",
+        "detail",
+        "info",
+    }
+)
 _SEARCH_VERB_RE = re.compile(
     r"\b(show|find|search|list|any|looking for|do you have|give me|what do you have|got any|i want|i need|are there)\b",
     re.I,
@@ -337,6 +407,20 @@ _COMPARATIVE_RE = re.compile(
     r"\b(cheaper|cheapest|less expensive|pricier|more expensive|newer|newest|older|oldest|lower mileage|fewer km|higher mileage)\b",
     re.I,
 )
+
+
+def _points_at_a_shown_car(low: str, make: str, model: str | None) -> bool:
+    """Whether an alias hit is the customer pointing at a car on screen or describing one to find."""
+    if not _DETERMINER_RE.search(low):
+        return False
+    if _CONSTRAINT_RE.search(low):
+        return False
+    if model:
+        return True
+    # Only the make came back. "defender" and "chevy" are make aliases, so a model word the
+    # inventory does not carry arrives here looking like a make, and would match any car of it.
+    rest = [t for t in re.findall(r"[a-z0-9]+", low) if t not in _REF_FILLER]
+    return bool(rest) and all(t in make.split() for t in rest)
 
 
 def resolve_reference(
@@ -411,6 +495,10 @@ def resolve_reference(
     if not searching:
         # "the velar", "that range rover", "the honda": the alias table maps the phrase to make and model.
         rm, rmo, _ = resolve_make_model(low)
+        if rm and not _points_at_a_shown_car(low, rm, rmo):
+            # A description, not a reference. Leaving it unresolved is what sends the model to search.
+            searching = True
+            rm = None
         if rm:
             same = [
                 c
