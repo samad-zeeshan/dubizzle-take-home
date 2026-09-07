@@ -48,6 +48,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "chat.input_new": "Ask about a car, or say hi and tell me your name",
         "card.no_price": "Price not listed",
         "card.per_mo": "or {amount}/mo",
+        "card.mo_only": "{amount}/mo · cash price not listed",
         "card.km": "{km} km",
         "badge.warranty": "Warranty",
         "badge.inspected": "dubizzle inspected",
@@ -116,6 +117,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "chat.input_new": "اسأل عن سيارة، أو قل مرحباً واذكر اسمك",
         "card.no_price": "السعر غير مذكور",
         "card.per_mo": "أو {amount} شهرياً",
+        "card.mo_only": "{amount} شهرياً · السعر النقدي غير مذكور",
         "card.km": "{km} كم",
         "badge.warranty": "ضمان",
         "badge.inspected": "مفحوصة من دوبيزل",
@@ -195,9 +197,18 @@ def t(key: str, lang: str = "en", **fmt: object) -> str:
     return text.format(**fmt) if fmt else text
 
 
+NOT_STATED = frozenset({"null", "none", "n/a", "na", "nil", "unknown", "not specified", "-"})
+
+
+def stated(value: object) -> str:
+    """A field the model filled in with the word for empty is empty, and shows as nothing."""
+    s = str(value or "").strip()
+    return "" if s.lower() in NOT_STATED else s
+
+
 def enum_label(value: object, lang: str = "en") -> str:
     """Card facts come from closed sets, so Arabic needs no model call. Anything else is left as is."""
-    s = str(value or "")
+    s = stated(value)
     if lang != "ar" or not s:
         return s
     return ENUMS.get(s.strip().lower(), s)

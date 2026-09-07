@@ -7,6 +7,7 @@ from typing import Any
 import streamlit as st
 
 from views import common
+from views.i18n import stated
 
 BODIES = [
     "",
@@ -171,10 +172,10 @@ def page(h: dict[str, Any]) -> None:
                 "price_aed": c["price_aed"],
                 "monthly_aed": c["monthly_aed"],
                 "mileage_km": c["mileage_km"],
-                "colour": c["exterior_color"],
-                "body": c["body_type"],
-                "spec": c["regional_spec"],
-                "fuel": c["fuel_type"],
+                "colour": stated(c["exterior_color"]),
+                "body": stated(c["body_type"]),
+                "spec": stated(c["regional_spec"]),
+                "fuel": stated(c["fuel_type"]),
                 "warranty": c["has_warranty"],
                 "inspected": c["is_dubizzle_managed"],
                 "new": c["is_brand_new"],

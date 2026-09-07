@@ -18,7 +18,7 @@ import httpx
 import streamlit as st
 import streamlit.components.v1 as components
 
-from views.i18n import LANGS, enum_label
+from views.i18n import LANGS, enum_label, stated
 from views.i18n import t as _t
 
 BACKEND = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000").rstrip("/")
@@ -660,13 +660,19 @@ def car_card(c: dict[str, Any], show_index: bool = True, show_id: bool = True) -
         else f'<a class="imglink" href="{href}" target="_self"><div class="img"></div></a>'
     )
     ar = lang() == "ar"
-    price = money(c.get("price_aed")) or t("card.no_price")
-    monthly = (
-        f" <small>{t('card.per_mo', amount=money(c.get('monthly_aed')))}</small>"
-        if c.get("monthly_aed")
-        else ""
-    )
-    body = str(c.get("body_type") or "")
+    if c.get("price_aed"):
+        price = money(c.get("price_aed"))
+        monthly = (
+            f" <small>{t('card.per_mo', amount=money(c.get('monthly_aed')))}</small>"
+            if c.get("monthly_aed")
+            else ""
+        )
+    elif c.get("monthly_aed"):
+        # An instalment with no cash figure is what the listing says, not a missing price.
+        price, monthly = t("card.mo_only", amount=money(c.get("monthly_aed"))), ""
+    else:
+        price, monthly = t("card.no_price"), ""
+    body = stated(c.get("body_type"))
     meta = " · ".join(
         p
         for p in (
@@ -674,10 +680,10 @@ def car_card(c: dict[str, Any], show_index: bool = True, show_id: bool = True) -
             enum_label(body, lang()) if ar else (body.upper() if body == "suv" else body.title()),
             enum_label(c.get("regional_spec"), lang())
             if ar
-            else str(c.get("regional_spec") or "").upper(),
+            else stated(c.get("regional_spec")).upper(),
             enum_label(c.get("exterior_color"), lang())
             if ar
-            else str(c.get("exterior_color") or "").title(),
+            else stated(c.get("exterior_color")).title(),
         )
         if p
     )

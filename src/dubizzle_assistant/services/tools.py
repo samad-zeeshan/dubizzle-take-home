@@ -167,8 +167,14 @@ def _search(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
     ids = [c["id"] for c in result.results]
     on_screen = {c["id"] for c in ctx.shown} | {c["id"] for c in ctx.new_cards}
     # A search that finds only the car already under discussion is usually a hunt for alternatives
-    # run on its own make and model. Showing the same card again would answer the wrong question.
-    only_focus = offset == 0 and ids == [ctx.focus_id] and ctx.focus_id in on_screen
+    # run on its own make and model. Showing the same card again would answer the wrong question,
+    # but when the customer plainly asked to see stock an empty grid is the worse answer.
+    only_focus = (
+        offset == 0
+        and ids == [ctx.focus_id]
+        and ctx.focus_id in on_screen
+        and not ctx.stock_request
+    )
     if not only_focus:
         ctx.new_cards.extend(result.results)
     memory.record_search(

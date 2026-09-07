@@ -33,6 +33,9 @@ class TurnContext:
     user_name: str | None = None
     raw_message: str = ""
     locale: str = "en"
+    # True when the customer plainly asked to see stock, which decides whether a result already
+    # on screen is worth a card again.
+    stock_request: bool = False
     on_token: Callable[[str], None] | None = None
     streamed_text: str | None = None
 

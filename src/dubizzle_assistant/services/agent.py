@@ -549,6 +549,7 @@ def _run_loop(
     turn_model: str | None = None
     n = 0
     nudged = False
+    ctx.stock_request = _stock_question(ctx.raw_message)
     while n < settings.max_tool_iterations:
         n += 1
         resp = _call(
@@ -616,7 +617,7 @@ def _run_loop(
             and not ctx.tool_results
             and not ctx.pending_booking
             and not (resolved or {}).get("resolved")
-            and _stock_question(ctx.raw_message)
+            and ctx.stock_request
         ):
             trace.add("search_nudge", reason="stock question answered without a search")
             messages.append(SEARCH_NUDGE)
