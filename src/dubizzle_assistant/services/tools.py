@@ -305,14 +305,28 @@ def _get(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+MAX_COMPARE = 4
+
+
 def _compare(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
-    ids = [str(i).upper() for i in (args.get("listing_ids") or []) if i][:4]
-    if len(ids) < 2:
+    asked = [str(i).upper() for i in (args.get("listing_ids") or []) if i]
+    if len(asked) < 2:
         return {"error": "compare needs two to four listing ids"}
+    ids = asked[:MAX_COMPARE]
     out = inv.compare(ctx.conn, ids)
     missing = [i for i in ids if i not in out["ids"]]
     if missing:
         return {"error": f"unknown listing ids: {', '.join(missing)}"}
+    # The slice used to happen before missing was computed, so a dropped id could never appear
+    # anywhere in the result. Asked for six, the model saw four and told the customer that the
+    # other two were not in the inventory.
+    dropped = asked[MAX_COMPARE:]
+    if dropped:
+        out["not_compared"] = dropped
+        out["note"] = (
+            f"Only the first {MAX_COMPARE} were compared. {', '.join(dropped)} are in the "
+            "inventory but were not included. Call get_listing for each, or compare again."
+        )
     for c in out["cards"]:
         if c["id"] not in {x["id"] for x in ctx.shown} | {x["id"] for x in ctx.new_cards}:
             ctx.new_cards.append(c)
