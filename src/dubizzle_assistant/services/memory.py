@@ -117,6 +117,12 @@ def forget_user(conn: sqlite3.Connection, user_id: str) -> dict[str, int]:
             counts[table] = conn.execute(
                 f"DELETE FROM {table} WHERE user_id = ?", (user_id,)
             ).rowcount
+        # The rate limiter keys on the user id too, and a forget that leaves the identifier
+        # behind is not a forget. Matched exactly: a user id contains _, a LIKE wildcard.
+        counts["rate_counters"] = conn.execute(
+            "DELETE FROM rate_counters WHERE scope IN (?, ?)",
+            (f"user:{user_id}:min", f"user:{user_id}:day"),
+        ).rowcount
         counts["users"] = conn.execute("DELETE FROM users WHERE user_id = ?", (user_id,)).rowcount
     return counts
 

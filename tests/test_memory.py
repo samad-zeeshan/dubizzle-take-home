@@ -216,6 +216,30 @@ def test_forget_user_cascades(tmp_path, app_settings):
     assert memory.get_user(conn, "u4") is None
 
 
+def test_forget_user_takes_the_rate_counters_with_it(tmp_path, app_settings):
+    """A forget that leaves "user:u4:min" behind has not forgotten the identifier."""
+    from dubizzle_assistant.services import ratelimit
+
+    db = tmp_path / "fr.db"
+    init_db(db)
+    conn = connect(db)
+    now = app_settings.now()
+    for uid in ("u4", "u5"):
+        memory.identify_user(conn, now, user_id=uid, name=uid)
+        ratelimit.check(conn, now, user_id=uid, client_ip="10.0.0.1", per_min=100, per_day=100)
+
+    def scopes():
+        return {r[0] for r in conn.execute("SELECT DISTINCT scope FROM rate_counters")}
+
+    assert {"user:u4:min", "user:u4:day", "user:u5:min", "ip:10.0.0.1:min"} <= scopes()
+    counts = memory.forget_user(conn, "u4")
+
+    assert counts["rate_counters"] == 2
+    assert not any(s.startswith("user:u4:") for s in scopes())
+    # The other user, and the shared address counter, are untouched.
+    assert {"user:u5:min", "user:u5:day", "ip:10.0.0.1:min"} <= scopes()
+
+
 def test_the_greeting_rule_only_applies_to_the_first_turn(tmp_path):
     """Told to greet on every turn, the model opened all of them with "Welcome back, Sara"."""
     from fastapi.testclient import TestClient
