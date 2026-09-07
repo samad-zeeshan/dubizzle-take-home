@@ -35,5 +35,7 @@ CLAUDE.local.md
 # simulated outbox
 outbox/
 
-# markdown is written by hand at the end, generated reports stay local
+# Notes and scratch markdown stay local. The README and the reports in docs/ ship.
 *.md
+!README.md
+!docs/*.md

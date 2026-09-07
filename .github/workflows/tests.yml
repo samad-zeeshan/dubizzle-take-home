@@ -15,9 +15,9 @@ jobs:
       - name: Sync (locked, with dev group)
         run: uv sync --frozen
       - name: Lint
-        run: uv run ruff check src scripts tests main.py app.py pages
+        run: uv run ruff check src scripts tests main.py app.py views
       - name: Format check
-        run: uv run ruff format --check src scripts tests main.py app.py pages
+        run: uv run ruff format --check src scripts tests main.py app.py views
       - name: Types
         run: uv run pyright src
       - name: Inventory builds from the workbook without a key
