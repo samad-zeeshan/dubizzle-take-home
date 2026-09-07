@@ -176,6 +176,29 @@ def postfilter(text: str) -> tuple[str, list[dict[str, str]]]:
 
 
 _ID_RE = re.compile(r"\b([CR]-\d{3})\b")
+
+# Ids are how the server and the model address a car. They are not how a person talks about
+# one, and outside demo mode nothing on screen explains what C-003 is, so they never belong
+# in reply prose. They stay in cited_listing_ids, the cards, and the trace.
+ID_IN_PROSE = r"#?\b[CR]-\d{3}\b"
+_ID_IN_PROSE_RE = re.compile(ID_IN_PROSE, re.I)
+_ID_WITH_PUNCTUATION_RE = re.compile(r"\s*[(\[]?\s*#?\b[CR]-\d{3}\b\s*[)\]]?\s*[:,]?", re.I)
+
+
+def ids_in_prose(text: str) -> list[str]:
+    return list(
+        dict.fromkeys(m.group(0).lstrip("#").upper() for m in _ID_IN_PROSE_RE.finditer(text))
+    )
+
+
+def strip_ids(text: str) -> str:
+    """Last resort when a model keeps writing ids: cut them and close the gap they leave."""
+    out = _ID_WITH_PUNCTUATION_RE.sub(" ", text)
+    out = re.sub(r"\(\s*\)|\[\s*\]", "", out)
+    out = re.sub(r"[ \t]{2,}", " ", out)
+    return re.sub(r" ([,.:;!?])", r"\1", out).strip()
+
+
 # Whole numbers first, then context decides. A number glued to a word, a path, a decimal point or a
 # hyphen ("R-005", "6-year/200,000", "115,750.000") is skipped as a whole, so no fragment of it
 # ("000") can ever be judged on its own.

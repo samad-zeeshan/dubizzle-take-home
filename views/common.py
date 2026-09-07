@@ -286,6 +286,20 @@ def demo() -> bool:
     return st.session_state.get("mode") == "demo"
 
 
+_ID_RE = re.compile(r"\s*[(\[]?\s*#?\b[CR]-\d{3}\b\s*[)\]]?\s*[:,]?", re.I)
+
+
+def without_ids(text: str) -> str:
+    """Card buttons send the listing id so the car pins on a fresh session. Nobody should read it."""
+    out = _ID_RE.sub(" ", text)
+    out = re.sub(r"\(\s*\)|\[\s*\]", "", out)
+    return re.sub(r"[ \t]{2,}", " ", out).strip()
+
+
+def for_display(text: str) -> str:
+    return text if demo() else without_ids(text)
+
+
 def set_mode(mode: str) -> None:
     st.session_state.mode = mode
     if mode == "demo":

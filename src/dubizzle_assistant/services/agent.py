@@ -106,6 +106,8 @@ def _intent_from(tool_names: list[str], prefilter_hit: dict[str, Any] | None) ->
         return "lead"
     if "compare_listings" in tool_names:
         return "compare"
+    if "similar_listings" in tool_names:
+        return "similar"
     if "identify_user" in tool_names:
         return "memory_recall"
     if "search_inventory" in tool_names:
@@ -127,7 +129,7 @@ def _template_reply(ctx: TurnContext) -> str:
         price = f"AED {c['price_aed']:,}" if c.get("price_aed") else "price not listed"
         km = f"{c['mileage_km']:,} km" if c.get("mileage_km") is not None else "mileage not stated"
         lines.append(
-            f"- {c['id']}: {c['year']} {str(c['make']).title()} {str(c['model']).title()}, {price}, {km}"
+            f"- {c['year']} {str(c['make']).title()} {str(c['model']).title()}, {price}, {km}"
         )
     return "Here is what the listing data shows:\n" + "\n".join(lines)
 
@@ -593,7 +595,7 @@ def _run_loop(
                     rec["result_ids"] = _ids_in(result)
                     if result.get("error"):
                         rec["error"] = result["error"]
-                    if tc.name == "search_inventory":
+                    if tc.name in ("search_inventory", "similar_listings"):
                         rec["total_matches"] = result.get("total_matches")
                         rec["normalization"] = result.get("normalization")
                 ctx.tool_results.append({"name": tc.name, "args": tc.arguments, "result": result})
@@ -663,6 +665,17 @@ def _run_loop(
     else:
         reply, hits = guardrails.postfilter(reply)
         trace.add("postfilter", hits=hits)
+
+    post_filter: dict[str, Any] = {"id_leak": False, "leaked_ids": []}
+    if not settings.ablate_postfilter:
+        leaked = guardrails.ids_in_prose(reply)
+        if leaked:
+            post_filter["leaked_ids"] = leaked
+            reply = _rewrite_without_ids(ctx, llm, messages, reply, leaked, turn_model, usage)
+            if guardrails.ids_in_prose(reply):
+                # The model would not let go of them, so the text loses them on the way out.
+                reply, post_filter["id_leak"] = guardrails.strip_ids(reply), True
+        trace.add("id_check", leaked=leaked, id_leak=post_filter["id_leak"])
 
     sources = guardrails.collect_sources(ctx.tool_results, ctx.shown + ctx.new_cards)
     # The recall, summary, and lead blocks are written by the server from the database, so their figures are sourced too.
@@ -762,7 +775,48 @@ def _run_loop(
         started=started,
         llm_used=True,
         verification=verification,
+        post_filter=post_filter,
     )
+
+
+def _rewrite_without_ids(
+    ctx: TurnContext,
+    llm: LLMClient,
+    messages: list[dict[str, Any]],
+    reply: str,
+    leaked: list[str],
+    turn_model: str | None,
+    usage: dict[str, int],
+) -> str:
+    """One corrected attempt at the same answer with the cars named instead of numbered."""
+    note = {
+        "role": "system",
+        "content": (
+            f"The reply contains listing ids ({', '.join(leaked)}). Rewrite it with the same facts, "
+            "naming each car by year, make, and model, and with no listing id anywhere in the text."
+        ),
+    }
+    try:
+        resp = _call(
+            ctx,
+            llm,
+            [*messages, {"role": "assistant", "content": reply}, note],
+            None,
+            0,
+            want_schema=False,
+            model=turn_model,
+            purpose="regenerate_ids",
+        )
+    except ChatUnavailableError:
+        return reply
+    for k in usage:
+        usage[k] += resp.usage.get(k, 0)
+    rewritten, _, _ = _parse_structured(resp.text)
+    if not rewritten.strip():
+        return reply
+    if not ctx.settings.ablate_postfilter:
+        rewritten, _ = guardrails.postfilter(rewritten)
+    return rewritten
 
 
 def _verify(
@@ -796,6 +850,7 @@ def _finish(
     started: float,
     llm_used: bool,
     verification: dict[str, Any] | None = None,
+    post_filter: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     conn, trace = ctx.conn, ctx.trace
     if not turn_msgs:
@@ -823,7 +878,7 @@ def _finish(
         (
             s
             for s in reversed(trace.stages)
-            if s["stage"] == "tool" and s.get("name") == "search_inventory"
+            if s["stage"] == "tool" and s.get("name") in ("search_inventory", "similar_listings")
         ),
         None,
     )
@@ -873,6 +928,7 @@ def _finish(
         "query_explain": query_explain,
         "trace": trace_dict,
         "grounding": grounding,
+        "post_filter": post_filter or {"id_leak": False, "leaked_ids": []},
         "memory": {"read": recall, "writes": ctx.memory_writes},
         "verification": verification,
         "structured_reply": structured,

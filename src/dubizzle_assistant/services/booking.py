@@ -404,7 +404,7 @@ def create_booking(
         "slot_start": start.isoformat(timespec="minutes"),
         "slot_label": label,
         "kind": kind,
-        "message": f"Booked: {kind} for the {car['year']} {str(car['make']).title()} {str(car['model']).title()} ({listing_id}), {label}. Reference {ref}.",
+        "message": f"Booked: {kind} for the {car['year']} {str(car['make']).title()} {str(car['model']).title()}, {label}. Reference {ref}.",
         # The file name only: an absolute path differs between machines and would break cassette replay.
         "outbox_file": Path(outbox).name,
     }
@@ -511,7 +511,7 @@ def _propose(ctx: TurnContext, args: dict[str, Any]) -> dict[str, Any]:
     ctx.focus_id = lid
     ctx.suggested_actions.insert(0, "Confirm the viewing")
     readback = (
-        f"To confirm: a viewing of the {car['year']} {str(car['make']).title()} {str(car['model']).title()} ({lid}) on {label}"
+        f"To confirm: a viewing of the {car['year']} {str(car['make']).title()} {str(car['model']).title()} on {label}"
         f"{' (dubizzle inspected, test drive included)' if car.get('is_dubizzle_managed') else ''}. Shall I book it?"
     )
     return {

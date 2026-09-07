@@ -81,7 +81,9 @@ def test_structured_reply_cited_ids_are_validated(client):
     finally:
         client.app.state.llm = real
     assert e["structured_reply"] is True and e["cited_listing_ids"] == ["R-078"]
-    assert e["reply"] == "One Honda: R-078, 79,000 km."
+    # The id is dropped from the prose and survives only in cited_listing_ids.
+    assert e["reply"] == "One Honda: 79,000 km."
+    assert e["post_filter"]["id_leak"] is True
     st = next(s for s in e["trace"]["stages"] if s["stage"] == "structured_reply")
     assert st["dropped_unknown"] == ["Z-999"]
     assert e["grounding"]["ungrounded"] == []

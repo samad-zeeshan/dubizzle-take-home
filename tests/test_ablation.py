@@ -46,8 +46,8 @@ def test_postfilter_off_leaks_a_phone_from_the_model(tmp_path):
 def test_grounding_off_lets_an_invented_price_through(tmp_path):
     scripted = [
         {"tool_calls": [{"name": "search_inventory", "arguments": {"make": "honda"}}]},
-        {"text": "The Honda CR-V (R-078) is a bargain at AED 999,999."},
-        {"text": "The Honda CR-V (R-078) is a bargain at AED 999,999."},
+        {"text": "The Honda CR-V is a bargain at AED 999,999."},
+        {"text": "The Honda CR-V is a bargain at AED 999,999."},
     ]
     with _app(tmp_path, ablate_grounding_check=True) as c:
         c.app.state.llm = ScriptedLLM(list(scripted))

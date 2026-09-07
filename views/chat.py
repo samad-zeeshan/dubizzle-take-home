@@ -23,9 +23,11 @@ def send(text: str) -> None:
         body["session_id"] = st.session_state.session_id
     elif st.session_state.user_name:
         body["name"] = st.session_state.user_name
-    st.session_state.messages.append({"role": "user", "content": text})
+    # The backend still gets the id so the resolver can pin the car; the transcript never shows it.
+    shown = common.for_display(text)
+    st.session_state.messages.append({"role": "user", "content": shown})
     with st.chat_message("user"):
-        st.markdown(text)
+        st.markdown(shown)
     envelope: dict[str, Any] | None = None
     error: str | None = None
     with st.chat_message("assistant"):
