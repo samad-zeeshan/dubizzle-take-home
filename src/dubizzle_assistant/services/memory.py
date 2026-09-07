@@ -322,6 +322,13 @@ _ORDINAL_RE = re.compile(
     r"\b(?:the\s+)?(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth|1st|2nd|3rd|4th|5th|last)\b(?:\s+(one|car|\w+))?|#\s?(\d{1,2})\b|\bnumber\s+(\d{1,2})\b|\boption\s+(\d{1,2})\b",
     re.I,
 )
+# "the second to last" counts back from the end of what is on screen. It has to be tried before
+# the plain ordinal, which reads "second last" as the second card with "last" as a make.
+_FROM_END_RE = re.compile(
+    r"\b(?:the\s+)?(?:(penultimate)|(second|third|fourth|2nd|3rd|4th)\s+(?:to\s+|from\s+)?last)\b",
+    re.I,
+)
+_FROM_END = {"second": 2, "2nd": 2, "third": 3, "3rd": 3, "fourth": 4, "4th": 4}
 _SEARCH_VERB_RE = re.compile(
     r"\b(show|find|search|list|any|looking for|do you have|give me|what do you have|got any|i want|i need|are there)\b",
     re.I,
@@ -349,6 +356,15 @@ def resolve_reference(
         out.update(resolved=explicit.group(1).upper(), rule="explicit_id")
         return out
     if not shown:
+        return out
+
+    fe = _FROM_END_RE.search(low)
+    if fe:
+        # shown is appended in display order, so counting back the list is counting back the screen.
+        back = 2 if fe.group(1) else _FROM_END[fe.group(2).lower()]
+        if back <= len(shown):
+            out.update(resolved=shown[-back]["id"], rule="from_end")
+        # Never fall through: "the second to last" with one card is not the second card.
         return out
 
     m = _ORDINAL_RE.search(low)

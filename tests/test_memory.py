@@ -78,6 +78,23 @@ def test_ordinals_and_display_numbers():
     assert resolve_reference("the last one", s, None)["resolved"] == "C-044"
 
 
+def test_counting_back_from_the_end_of_the_screen():
+    s = shown()  # R-078, C-003, C-044 in display order
+    assert resolve_reference("the last one", s, None)["resolved"] == "C-044"
+    for phrase in ("the second last one", "second to last", "the second from last", "penultimate"):
+        r = resolve_reference(phrase, s, None)
+        assert (r["resolved"], r["rule"]) == ("C-003", "from_end"), phrase
+    for phrase in ("the third to last", "the third last"):
+        assert resolve_reference(phrase, s, None)["resolved"] == "R-078", phrase
+    # Counting back past the start is unresolved, never the plain ordinal's answer.
+    r = resolve_reference("the second to last", s[:1], None)
+    assert r["resolved"] is None and r["rule"] == "none"
+    # Four cards separate the two readings: "second last" is #3, "second one" is #2.
+    four = push_shown(s, [{**CARDS[0], "id": "C-020"}], turn=2)
+    assert resolve_reference("the second to last", four, None)["resolved"] == "C-044"
+    assert resolve_reference("the second one", four, None)["resolved"] == "C-003"
+
+
 def test_qualified_ordinal_narrows_by_make():
     s = shown()
     r = resolve_reference("what's the mileage on that first honda?", s, None)
