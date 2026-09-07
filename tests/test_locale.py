@@ -75,12 +75,21 @@ def test_the_static_block_carries_the_price_labelling_rule(client):
     assert "do no arithmetic on any figure" in static
     for banned in (
         "no totals",
+        "no differences",
         "no interest rates",
         "no cost per kilometre",
         "no sums across years",
     ):
         assert banned in static
     assert "calculate financing" not in static
+    # Refusing a calculation has to explain itself, the same words the rewrite note uses.
+    assert "say plainly that you cannot work it out" in static
     # One chat, one person. Switching accounts is a deliberate act elsewhere.
     assert "One chat belongs to one person" in static
     assert "changing who is signed in happens in the account panel" in static
+    # A relaxed search names the filters in words the customer would recognise.
+    assert "name every one of them in the reply" in static
+    for stage in ("drop_color", "widen_year", "raise_budget", "drop_body_type", "make_only"):
+        assert stage in static
+    assert "never present a relaxed result as a match" in static
+    assert "before calling anything the cheapest" in static
