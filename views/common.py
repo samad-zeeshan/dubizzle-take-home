@@ -182,27 +182,42 @@ def bento(tiles: list[tuple[str, str, str]]) -> str:
 _GLOW_JS = """
 <script>
 (function () {
-  var doc = window.parent && window.parent.document;
-  if (!doc || doc.getElementById('cursor-glow')) return;
-  var win = window.parent;
+  var win = window.parent, doc = win && win.document;
+  if (!doc) return;
   if (win.matchMedia && win.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   if (win.matchMedia && win.matchMedia('(pointer: coarse)').matches) return;
-  var g = doc.createElement('div');
-  g.id = 'cursor-glow';
-  doc.body.appendChild(g);
-  var x = 0, y = 0, tx = 0, ty = 0, raf = null;
+  // Streamlit builds a new component frame on every rerun and throws this one away. The listeners
+  // went with it while the div stayed in the page, which is what left the glow stuck mid-screen.
+  if (win.__glowTeardown) win.__glowTeardown();
+  var g = doc.getElementById('cursor-glow');
+  if (!g) { g = doc.createElement('div'); g.id = 'cursor-glow'; doc.body.appendChild(g); }
+  // The position outlives the frame too, or every rerun would fling the glow back to the corner.
+  var s = win.__glowState || (win.__glowState = { x: 0, y: 0, tx: 0, ty: 0 });
+  var raf = null;
   function tick() {
-    x += (tx - x) * 0.16;
-    y += (ty - y) * 0.16;
-    g.style.transform = 'translate(' + x + 'px,' + y + 'px)';
-    raf = (Math.abs(tx - x) > 0.5 || Math.abs(ty - y) > 0.5) ? win.requestAnimationFrame(tick) : null;
+    raf = null;  // cleared first, so a frame that dies mid-tick cannot block the next one
+    s.x += (s.tx - s.x) * 0.16;
+    s.y += (s.ty - s.y) * 0.16;
+    g.style.transform = 'translate(' + s.x + 'px,' + s.y + 'px)';
+    if (Math.abs(s.tx - s.x) > 0.5 || Math.abs(s.ty - s.y) > 0.5) {
+      raf = win.requestAnimationFrame(tick);
+    }
   }
-  doc.addEventListener('mousemove', function (e) {
-    tx = e.clientX; ty = e.clientY;
+  function onMove(e) {
+    s.tx = e.clientX; s.ty = e.clientY;
     g.style.opacity = '1';
-    if (!raf) raf = win.requestAnimationFrame(tick);
-  }, { passive: true });
-  doc.documentElement.addEventListener('mouseleave', function () { g.style.opacity = '0'; });
+    if (raf === null) raf = win.requestAnimationFrame(tick);
+  }
+  function hide() { g.style.opacity = '0'; }
+  doc.addEventListener('mousemove', onMove, { passive: true });
+  doc.documentElement.addEventListener('mouseleave', hide);
+  win.addEventListener('blur', hide);
+  win.__glowTeardown = function () {
+    doc.removeEventListener('mousemove', onMove);
+    doc.documentElement.removeEventListener('mouseleave', hide);
+    win.removeEventListener('blur', hide);
+    if (raf !== null) { win.cancelAnimationFrame(raf); raf = null; }
+  };
 })();
 </script>
 """
