@@ -247,6 +247,67 @@ def _search_args(text: str) -> dict[str, Any]:
     return args
 
 
+# A figure filed as the buyer's budget has to be surer than one used to widen a search. The
+# search pattern takes the first digit run in the sentence, which costs nothing when it only
+# moves a price ceiling and is wrong once it is written to the CSV as what the buyer said:
+# "3 kids ... max budget 90000" filed AED 3,000, and "under 50000 km" filed AED 50,000,000.
+_LEAD_BUDGET_RE = re.compile(
+    r"\b(?:budget(?:\s+(?:of|is))?|under|below|less\s+than|max(?:imum)?|up\s+to|around|about"
+    r"|spend(?:ing)?|pay(?:ing)?|afford)\b\s*[:=]?\s*"
+    r"(?P<amount>\$?\s*\d[\d,\. ]*(?:\s*(?:k|m|thousand|million|mil))?)(?![a-z])"
+    r"\s*(?P<cur>aed|dhs|dirhams?|usd|dollars?|euros?|eur|pounds?|gbp|sterling|rupees?|inr"
+    r"|riyals?|sar|qar|dinars?|yen|jpy|yuan|rmb|rand|zar|lira|francs?|chf)?"
+    r"(?P<per>\s*(?:a|per)\s*month|\s*/\s*mo(?:nth)?|\s*monthly|\s*p\.?m\.?)?",
+    re.I,
+)
+# What the number is counting, when it is counting something other than money.
+_NOT_MONEY_RE = re.compile(
+    r"\s*(k?ms?\b|kilomet|miles?\b|seat|door|cylinder|kids?\b|child|years?\b|yrs?\b)", re.I
+)
+
+
+def _lead_budget_text(text: str) -> str | None:
+    """The budget phrase to file against the buyer, or nothing when it is not clearly a budget.
+
+    The currency word and any monthly wording stay in the phrase, because update_lead reads
+    both again: without the currency "25,000 euros" reached the CSV as AED 25,000, which is the
+    contradiction leads.py already guards against, and without the wording a financing budget
+    was filed as cash and every later turn was told the buyer had AED 2,000 to spend.
+    """
+    low = text.lower()
+    for m in _LEAD_BUDGET_RE.finditer(low):
+        if _NOT_MONEY_RE.match(low, m.end("amount")):
+            continue
+        phrase = m.group("amount").strip()
+        if m.group("cur"):
+            phrase += f" {m.group('cur')}"
+        if m.group("per"):
+            phrase += f" {m.group('per').strip()}"
+        return phrase
+    return None
+
+
+def _lead_args(args: dict[str, Any], text: str) -> dict[str, Any]:
+    """The half of a message that is a fact about the buyer, under update_lead's names.
+
+    Gemini records budget and needs with update_lead as they come up, and that call is what
+    fills the lead CSV. Without the same call here, someone running offline typed a budget,
+    saw it remembered, and still got a lead row with an empty budget and a status of partial.
+    """
+    lead: dict[str, Any] = {}
+    budget = _lead_budget_text(text)
+    if budget:
+        lead["budget_text"] = budget
+    pairs = (
+        ("make", "preferred_makes"),
+        ("body_type", "body_type"),
+        ("year_min", "min_year"),
+        ("regional_spec", "spec"),
+    )
+    lead.update({name: args[search] for search, name in pairs if args.get(search)})
+    return lead
+
+
 def _money(v: Any) -> str:
     return f"AED {int(v):,}" if v is not None else "price not listed"
 
@@ -548,6 +609,15 @@ def _listing_answer(c: dict[str, Any], user: str) -> str:  # noqa: PLR0911, PLR0
 
 
 def _reply_for_results(results: list[dict[str, Any]], user: str) -> tuple[str, list[str]]:
+    # A budget leads.py would not price outranks whatever else the turn recorded. It is checked
+    # across every result, not inside one branch, because remember_preference is called first
+    # and its readback would otherwise answer the turn and leave the refusal unsaid.
+    for r in results:
+        refusal = str(r["data"].get("currency_not_converted") or r["data"].get("reason") or "")
+        if "cannot be converted" in refusal:
+            noted = str(r["data"].get("message") or "").strip()
+            ask = "I cannot convert that currency, so could you give me the budget in dirhams?"
+            return (f"{noted} {ask}".strip(), [])
     for r in results:
         name, data = r["name"], r["data"]
         if name == "search_inventory":
@@ -830,8 +900,9 @@ class HeuristicLLM:
         if _REMEMBER_RE.search(low) and "remember_preference" in available:
             args = _search_args(user)
             calls: list[ToolCall] = []
-            if args.get("budget_text"):
-                b = parse_budget(args["budget_text"])
+            budget_phrase = _lead_budget_text(user)
+            if budget_phrase:
+                b = parse_budget(budget_phrase)
                 if b:
                     calls.append(
                         self._call(
@@ -843,6 +914,9 @@ class HeuristicLLM:
             for kind in ("make", "body_type", "color", "regional_spec"):
                 if args.get(kind):
                     calls.append(self._call("remember_preference", kind=kind, value=args[kind]))
+            lead = _lead_args(args, user)
+            if lead and "update_lead" in available:
+                calls.append(self._call("update_lead", **lead))
             if calls:
                 return self._resp(calls=calls)
         if (
@@ -886,5 +960,13 @@ class HeuristicLLM:
             return self._resp(
                 "I can help with cars in our inventory, viewings, and your preferences. What would you like to know?"
             )
+        lead = _lead_args(args, user)
         args.setdefault("limit", 5)
-        return self._resp(calls=[self._call("search_inventory", **args)])
+        calls = [self._call("search_inventory", **args)]
+        # A budget said while searching is still a budget, and it is the figure that makes a
+        # browser a lead, so it is what triggers the record. Naming a make is not: every idle
+        # search would raise a lead with nothing in it. Search stays first in the list, so the
+        # reply is built from the cars and the lead is written quietly behind it.
+        if lead.get("budget_text") and "update_lead" in available:
+            calls.append(self._call("update_lead", **lead))
+        return self._resp(calls=calls)

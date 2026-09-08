@@ -113,8 +113,6 @@ def _intent_from(tool_names: list[str], prefilter_hit: dict[str, Any] | None) ->
         for n in tool_names
     ):
         return "booking"
-    if "update_lead" in tool_names:
-        return "lead"
     if "compare_listings" in tool_names:
         return "compare"
     if "similar_listings" in tool_names:
@@ -125,6 +123,10 @@ def _intent_from(tool_names: list[str], prefilter_hit: dict[str, Any] | None) ->
         return "inventory_search"
     if "get_listing" in tool_names:
         return "listing_question"
+    # Below every tool that names what the buyer did, on purpose. Recording a lead rides along
+    # with the real action, so a search that mentions a budget is a search, not a lead turn.
+    if "update_lead" in tool_names:
+        return "lead"
     if any(n in ("like_listing", "remember_preference") for n in tool_names):
         return "preference"
     return "chitchat"
