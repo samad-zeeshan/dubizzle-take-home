@@ -68,6 +68,35 @@ def main() -> int:
     monday = now + timedelta(days=(7 - now.weekday()) % 7 or 7)
     slot = monday.replace(hour=10, minute=0, second=0, microsecond=0)
     result = booking.create_booking(conn, s, uid, "C-003", slot, now)
+
+    # Yesterday's transcript, not just yesterday's rows. Without it the greeting says "last time
+    # you searched for ..." while the conversation list is empty, because a session nobody typed
+    # into is not a conversation. Every figure here is one the seed itself just wrote.
+    ref = result.get("ref")
+    when = slot.strftime("%A %d %B at %H:%M")
+    transcript = [
+        ("white SUV under AED 75k", "I found 11 white SUVs under AED 75,000."),
+        (
+            "show me SUVs with warranty under AED 150k",
+            "I found 25 SUVs with a warranty under AED 150,000, including the 2018 Land Rover"
+            f" Range Rover Velar at AED {velar['price_aed']:,}.",
+        ),
+        (
+            "I like that Velar. Can I see it Monday at 10?",
+            f"Booked. Your viewing for the 2018 Land Rover Range Rover Velar is {when}"
+            + (f", reference {ref}." if ref else "."),
+        ),
+    ]
+    for question, answer in transcript:
+        turn = memory.begin_turn(conn, sid, yesterday)
+        memory.append_messages(
+            conn,
+            sid,
+            turn,
+            [{"role": "user", "content": question}, {"role": "assistant", "content": answer}],
+            yesterday,
+        )
+
     print(
         f"seeded user {uid} (Sara): 2 searches, 2 preferences, liked C-003, booking {result.get('ref') or result.get('reason')}"
     )
