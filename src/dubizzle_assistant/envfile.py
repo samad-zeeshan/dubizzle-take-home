@@ -19,7 +19,10 @@ def looks_like_a_key(value: str) -> bool:
     have refused a working key. Length and no whitespace is all that can be claimed honestly.
     """
     value = value.strip()
-    return len(value) >= 20 and not any(c.isspace() for c in value)
+    # Both halves are needed. isspace alone missed a null byte, which sailed through and then
+    # killed os.environ; isprintable alone allows a space, which is a split paste. And a
+    # credential two hundred characters long is not a credential.
+    return 20 <= len(value) <= 200 and all(c.isprintable() and not c.isspace() for c in value)
 
 
 def masked(value: str) -> str:

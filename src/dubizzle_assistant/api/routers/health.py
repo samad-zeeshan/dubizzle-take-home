@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from dubizzle_assistant.api.deps import get_conn, get_settings_dep
 from dubizzle_assistant.config import Settings
-from dubizzle_assistant.envfile import masked, write_key
+from dubizzle_assistant.envfile import looks_like_a_key, masked, write_key
 from dubizzle_assistant.services.llm import build_embedder, build_llm
 
 router = APIRouter(tags=["health"])
@@ -77,10 +77,8 @@ def set_llm_key(body: NewKey, request: Request) -> dict[str, Any]:
         raise HTTPException(status_code=403, detail="only the machine running the app may do this")
 
     settings: Settings = request.app.state.settings
-    try:
-        write_key(settings.dotenv_path, body.key)
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e)) from e
+    if not looks_like_a_key(body.key):
+        raise HTTPException(status_code=422, detail="that does not look like a Gemini key")
 
     # A run that fell back to the stand-in for want of a key should stop doing that now.
     update: dict[str, Any] = {"gemini_api_key": body.key.strip(), "llm_provider": "litellm"}
@@ -89,9 +87,38 @@ def set_llm_key(body: NewKey, request: Request) -> dict[str, Any]:
         update["llm_model"] = Settings.model_fields["llm_model"].default
         update["llm_api_base"] = None
     updated = settings.model_copy(update=update)
+
+    # Build first. Writing the file and swapping the live client before knowing the key even
+    # produces one left the app answering 503 with the bad key already persisted, so a restart
+    # did not recover it either.
+    try:
+        candidate = build_llm(updated)
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail="that key was not usable") from exc
+    if candidate is None:
+        raise HTTPException(status_code=422, detail="that key was not usable")
+
+    # Constructing a client proves nothing: a typo builds one just as happily as a real key.
+    # Ask the provider before committing, or the app reports "saved" and then answers 503 to
+    # every turn with the offline stand-in already thrown away.
+    try:
+        candidate.complete(
+            [{"role": "user", "content": "ping"}],
+            None,
+            temperature=0,
+            max_tokens=1,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail="the provider rejected that key") from exc
+
+    try:
+        write_key(settings.dotenv_path, body.key)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
     request.app.state.settings = updated
-    request.app.state.llm = build_llm(updated)
-    request.app.state.embedder = build_embedder(updated, request.app.state.llm)
+    request.app.state.llm = candidate
+    request.app.state.embedder = build_embedder(updated, candidate)
     request.app.state.llm_error = None
     active = getattr(request.app.state.llm, "model", None)
     return {

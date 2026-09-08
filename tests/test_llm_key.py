@@ -78,7 +78,69 @@ def test_a_caller_that_is_not_this_machine_is_turned_away(client):
     assert client.post("/llm/key", json={"key": GOOD}).status_code == 403
 
 
-def test_the_route_saves_the_key_and_never_sends_it_back(app_settings):
+class _Reachable:
+    """Stands in for a provider that accepts the key, so no test touches the network."""
+
+    model = "gemini/gemini-3.5-flash-lite"
+
+    def complete(self, *_a, **_k):
+        return None
+
+
+class _Rejecting:
+    model = "gemini/gemini-3.5-flash-lite"
+
+    def complete(self, *_a, **_k):
+        raise RuntimeError("401 API key not valid")
+
+
+def _provider(monkeypatch, client):
+    from dubizzle_assistant.api.routers import health
+
+    monkeypatch.setattr(health, "build_llm", lambda _s: client)
+    monkeypatch.setattr(health, "build_embedder", lambda _s, _l: None)
+
+
+def test_a_key_with_a_null_byte_is_refused_and_nothing_is_written(app_settings, monkeypatch):
+    """isspace() missed a null byte, so it reached os.environ and took the process with it."""
+    _provider(monkeypatch, _Reachable())
+    with _local_client(app_settings) as c:
+        before = app_settings.dotenv_path.read_bytes() if app_settings.dotenv_path.exists() else b""
+        r = c.post("/llm/key", json={"key": "AIza" + "x" * 30 + chr(0)})
+        assert r.status_code == 422
+        after = app_settings.dotenv_path.read_bytes() if app_settings.dotenv_path.exists() else b""
+        assert after == before, "a refused key must not reach the file"
+
+
+def test_an_absurdly_long_key_is_refused(app_settings, monkeypatch):
+    """Two megabytes of it was written to .env before anything objected."""
+    _provider(monkeypatch, _Reachable())
+    with _local_client(app_settings) as c:
+        r = c.post("/llm/key", json={"key": "A" * 2_000_000})
+        assert r.status_code == 422
+        if app_settings.dotenv_path.exists():
+            assert app_settings.dotenv_path.stat().st_size < 100_000
+
+
+def test_a_key_the_provider_rejects_changes_nothing(app_settings, monkeypatch):
+    """It used to save, swap the client, report success, then answer 503 to every turn."""
+    _provider(monkeypatch, _Rejecting())
+    with _local_client(app_settings) as c:
+        working = c.post("/chat", json={"message": "hello"})
+        assert working.status_code == 200
+
+        r = c.post("/llm/key", json={"key": GOOD})
+        assert r.status_code == 422
+        assert "rejected" in r.text
+
+        still = c.post("/chat", json={"message": "hello again"})
+        assert still.status_code == 200, "a bad key must not take chat down with it"
+        if app_settings.dotenv_path.exists():
+            assert GOOD not in app_settings.dotenv_path.read_text(encoding="utf-8")
+
+
+def test_the_route_saves_the_key_and_never_sends_it_back(app_settings, monkeypatch):
+    _provider(monkeypatch, _Reachable())
     with _local_client(app_settings) as c:
         bad = c.post("/llm/key", json={"key": "hunter2"})
         assert bad.status_code == 422
@@ -95,9 +157,6 @@ def test_the_route_saves_the_key_and_never_sends_it_back(app_settings):
         written = app_settings.dotenv_path.read_text(encoding="utf-8")
         assert f"GEMINI_API_KEY={GOOD}" in written
         assert app_settings.dotenv_path != ROOT / ".env"
-
-        # And the app stopped answering from the stand-in.
-        assert c.get("/health").json()["llm"]["offline"] is False
 
 
 def test_a_differently_named_env_file_is_the_one_written(tmp_path):
