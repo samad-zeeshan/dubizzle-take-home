@@ -109,7 +109,10 @@ def forget(
         raise HTTPException(status_code=404, detail="no such user")
     counts = memory.forget_user(conn, user_id)
     with contextlib.suppress(ImportError):
-        from dubizzle_assistant.services import leads
+        from dubizzle_assistant.services import booking, leads
 
         leads.export_csv(conn, settings.leads_csv)
+        # The rows leave the table, but this file is otherwise only rewritten on a booking
+        # event, so a forget used to leave the customer in bookings.csv until the next one.
+        booking.export_csv(conn, settings.bookings_csv)
     return {"forgotten": user_id, "deleted": counts}

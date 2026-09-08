@@ -315,3 +315,17 @@ def test_a_phrase_carrying_a_constraint_is_a_search_not_a_reference():
         assert r["resolved"] is None, f"{phrase} resolved to {r['resolved']} by {r['rule']}"
     # A question about a car on screen still resolves, constraint words and all.
     assert resolve_reference("the velar, what mileage?", LAND_ROVERS, None)["resolved"] == "C-003"
+
+
+def test_forgetting_a_customer_clears_the_exported_bookings_file(client, app_settings):
+    """The rows left the table, but the CSV was only rewritten on the next booking event."""
+    who = client.post("/chat", json={"message": "hi, it's Farah"}).json()["user_id"]
+    booked = client.post(
+        "/bookings",
+        json={"user_id": who, "listing_id": "C-003", "slot_start": "2026-09-15T11:00:00+04:00"},
+    )
+    assert booked.status_code in (200, 201), booked.text
+    assert who in app_settings.bookings_csv.read_text(encoding="utf-8-sig")
+
+    assert client.delete(f"/users/{who}").status_code == 200
+    assert who not in app_settings.bookings_csv.read_text(encoding="utf-8-sig")
