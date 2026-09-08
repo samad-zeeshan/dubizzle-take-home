@@ -171,3 +171,13 @@ def test_the_refusal_carries_no_recall_block(tmp_path: Path) -> None:
     # The handler left the caller's own view of who they are untouched.
     assert ctx.user_id == opened["user_id"] and not ctx.memory_writes
     conn.close()
+
+
+def test_a_session_id_without_a_user_id_keeps_its_owner(client):
+    """Continuing a conversation by session id alone used to mint a stranger and lose the history."""
+    first = client.post("/chat", json={"message": "hi, it's Nadia"}).json()
+    again = client.post(
+        "/chat", json={"message": "what was i looking at", "session_id": first["session_id"]}
+    ).json()
+    assert again["user_id"] == first["user_id"]
+    assert again["session_id"] == first["session_id"]

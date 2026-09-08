@@ -86,6 +86,13 @@ def prepare(
         )
     now = settings.now()
 
+    # A caller that sends a session id and no identity is continuing that conversation. Minting a
+    # fresh user first made the session lookup below miss, and the history was silently dropped.
+    if req.session_id and not req.user_id and not req.name:
+        prior = memory.get_session(conn, req.session_id)
+        if prior and prior["user_id"] and memory.get_user(conn, prior["user_id"]):
+            req = req.model_copy(update={"user_id": prior["user_id"]})
+
     known = bool(req.user_id and memory.get_user(conn, req.user_id))
     # Minting the user before the lookup guaranteed a miss for anonymous first contact, the one
     # case the key exists for, so a double click made a second user, session and lead row. The
