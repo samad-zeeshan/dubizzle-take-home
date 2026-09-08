@@ -68,13 +68,14 @@ user, so the sidebar lists past chats, any of them reopens, and each downloads a
 JSON.
 
 Outside the scope of this prototype: authentication, because there is nothing local to verify
-a token against, so today anyone who knows a user id can read that profile, and in production
-one FastAPI dependency reading dubizzle's bearer token would fix it. Identity is a typed name
-that a marketplace login would replace. Listing ids are sheet row numbers where production
-would use dubizzle listing ids read from the listing feed, leads would post to a CRM endpoint
-instead of a CSV, and the availability grid is where a seller's calendar would plug in. At
-scale the first things to fix are identity, pruning the turn traces, widening the three-digit
-id pattern, and making the chat route async.
+a token against, so today anyone who knows a user id can read that profile and list the saved
+conversations under it, opening lines included, and in production one FastAPI dependency
+reading dubizzle's bearer token would fix it. Identity is a typed name that a marketplace
+login would replace. Listing ids are sheet row numbers where production would use dubizzle
+listing ids read from the listing feed, leads would post to a CRM endpoint instead of a CSV,
+and the availability grid is where a seller's calendar would plug in. At scale the first
+things to fix are identity, pruning the turn traces, widening the three-digit id pattern, and
+making the chat route async.
 
 ## Screenshots
 
