@@ -40,6 +40,8 @@ def make_settings(tmp: Path, **overrides) -> Settings:
         "outbox_dir": tmp / "outbox",
         "leads_file": tmp / "leads.csv",
         "bookings_file": tmp / "bookings.csv",
+        # A key written through the API must never reach the real .env during a test run.
+        "dotenv_file": tmp / ".env",
         "llm_cassette_path": tmp / "cassette.jsonl",
         "rate_limit_per_min": 1000,
         "rate_limit_per_day": 10000,

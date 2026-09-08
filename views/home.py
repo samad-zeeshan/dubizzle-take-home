@@ -12,6 +12,38 @@ from views import common
 FEATURES = ("search", "calendar", "memory", "shield")
 
 
+def _key_panel() -> None:
+    """Offer a Gemini key when the stand-in is answering, and use it straight away.
+
+    The field is a password input, the key goes to the backend on this machine which writes it
+    into .env and rebuilds its client, and nothing echoes it back but the first and last four.
+    """
+    with st.expander(common.t("key.title"), expanded=False):
+        st.caption(common.t("key.help"))
+        with st.form("gemini_key", border=False):
+            key = st.text_input(
+                common.t("key.input"),
+                type="password",
+                placeholder=common.t("key.placeholder"),
+                autocomplete="off",
+            )
+            saved = st.form_submit_button(common.t("key.save"), type="primary")
+        st.markdown(
+            f'<a class="quiet" href="https://aistudio.google.com/apikey" target="_blank"'
+            f' rel="noopener">{common.t("key.get")}</a>',
+            unsafe_allow_html=True,
+        )
+        if saved and key:
+            r = common.api("POST", "/llm/key", json={"key": key}, timeout=30)
+            if r.status_code == 200:
+                st.success(common.t("key.saved", model=r.json()["model"]))
+                st.rerun()
+            elif r.status_code == 422:
+                st.error(common.t("key.bad"))
+            else:
+                st.error(f"{r.status_code}: {r.text[:120]}")
+
+
 def page(h: dict[str, Any]) -> None:
     st.markdown(
         f'<div class="hero"><div class="eyebrow">{html.escape(common.APP_NAME)}</div>'
@@ -73,6 +105,8 @@ def page(h: dict[str, Any]) -> None:
         "</div>",
         unsafe_allow_html=True,
     )
+    if llm.get("offline"):
+        _key_panel()
     st.markdown(
         f'<div class="foot">{html.escape(common.APP_NAME)} is a take-home assignment build for dubizzle, not an official dubizzle product. Listings are the assignment sample.</div>',
         unsafe_allow_html=True,

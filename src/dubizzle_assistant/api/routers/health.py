@@ -1,14 +1,17 @@
-"""GET /health: is the service up, is the model configured, what modes and ablations are active."""
+"""GET /health, and POST /llm/key so a key added in the app takes effect without a restart."""
 
 from __future__ import annotations
 
 import sqlite3
 from typing import Any
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel
 
 from dubizzle_assistant.api.deps import get_conn, get_settings_dep
 from dubizzle_assistant.config import Settings
+from dubizzle_assistant.envfile import masked, write_key
+from dubizzle_assistant.services.llm import build_embedder, build_llm
 
 router = APIRouter(tags=["health"])
 
@@ -55,4 +58,45 @@ def health(
         "debug_endpoints": settings.debug_endpoints,
         "ablations_active": settings.ablations_active,
         "demo_clock": settings.demo_now.isoformat() if settings.demo_now else None,
+    }
+
+
+class NewKey(BaseModel):
+    key: str
+
+
+@router.post("/llm/key")
+def set_llm_key(body: NewKey, request: Request) -> dict[str, Any]:
+    """Take a Gemini key from the app, save it, and start using it without a restart.
+
+    Only the machine running the app may call this, the key is never sent back, and only the
+    key and provider are replaced, so a run pointed at another database or put in mock mode by
+    flag keeps everything else it started with.
+    """
+    if request.client and request.client.host not in ("127.0.0.1", "::1", "localhost"):
+        raise HTTPException(status_code=403, detail="only the machine running the app may do this")
+
+    settings: Settings = request.app.state.settings
+    try:
+        write_key(settings.dotenv_path, body.key)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e)) from e
+
+    # A run that fell back to the stand-in for want of a key should stop doing that now.
+    update: dict[str, Any] = {"gemini_api_key": body.key.strip(), "llm_provider": "litellm"}
+    if not settings.llm_model.startswith("gemini/"):
+        # Someone adding a Gemini key wants Gemini, not the local model the file still names.
+        update["llm_model"] = Settings.model_fields["llm_model"].default
+        update["llm_api_base"] = None
+    updated = settings.model_copy(update=update)
+    request.app.state.settings = updated
+    request.app.state.llm = build_llm(updated)
+    request.app.state.embedder = build_embedder(updated, request.app.state.llm)
+    request.app.state.llm_error = None
+    active = getattr(request.app.state.llm, "model", None)
+    return {
+        "saved": True,
+        "key": masked(body.key),
+        "model": active,
+        "offline": not str(active).startswith("gemini/"),
     }

@@ -89,6 +89,9 @@ class Settings(BaseSettings):
     outbox_dir: Path = ROOT / "outbox"
     # Overrides so tests and demos can point state files elsewhere while sharing the inventory.
     db_file: Path | None = None
+    # Which .env a key written from the app lands in. Tests point it at a tmp file so a
+    # run of the suite can never touch the real one.
+    dotenv_file: Path | None = None
     inventory_file: Path | None = None
     embeddings_file: Path | None = None
     leads_file: Path | None = None
@@ -108,6 +111,7 @@ class Settings(BaseSettings):
         "logs_dir",
         "outbox_dir",
         "db_file",
+        "dotenv_file",
         "inventory_file",
         "embeddings_file",
         "leads_file",
@@ -131,6 +135,10 @@ class Settings(BaseSettings):
     @property
     def db_path(self) -> Path:
         return self.db_file or self.data_dir / "app.db"
+
+    @property
+    def dotenv_path(self) -> Path:
+        return self.dotenv_file or ROOT / ".env"
 
     @property
     def inventory_path(self) -> Path:

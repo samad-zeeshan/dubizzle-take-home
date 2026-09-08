@@ -8,7 +8,6 @@ working app rather than an error on the first turn.
 from __future__ import annotations
 
 import argparse
-import contextlib
 import getpass
 import os
 import socket
@@ -73,26 +72,16 @@ def set_key() -> int:
     if not key:
         print("Cancelled. The app still runs without a key.")
         return 0
-    if not key.startswith("AIza") or len(key) < 30:
-        print("That does not look like a Gemini key. They start with AIza and are longer.")
-        return 1
 
-    env, example = ROOT / ".env", ROOT / ".env.example"
-    source = env if env.exists() else example
-    lines = source.read_text(encoding="utf-8").splitlines() if source.exists() else []
-    out, replaced = [], False
-    for line in lines:
-        if line.split("=", 1)[0].strip() == "GEMINI_API_KEY":
-            out.append(f"GEMINI_API_KEY={key}")
-            replaced = True
-        else:
-            out.append(line)
-    if not replaced:
-        out.insert(0, f"GEMINI_API_KEY={key}")
-    env.write_text("\n".join(out) + "\n", encoding="utf-8")
-    with contextlib.suppress(OSError):
-        # The file holds a credential now, so take it off group and world.
-        env.chmod(0o600)
+    # The client writes the same file the same way, so the rule lives in one module.
+    sys.path.insert(0, str(ROOT / "src"))
+    from dubizzle_assistant.envfile import write_key
+
+    try:
+        env = write_key(ROOT / ".env", key)
+    except ValueError:
+        print("That does not look like a key. Check for a stray space or a truncated paste.")
+        return 1
     print(f"Saved to {env.name}, which is gitignored and will not be committed.")
 
     check = ROOT / "scripts" / "check_llm.py"
