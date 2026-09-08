@@ -70,6 +70,8 @@ returning user named Sara for the recall scenario.
 a multi-turn exploration of the inventory, then a new session in which Sara is recognised and
 her history recalled.
 
+![Thirty seconds of Sayara](screenshots/demo.gif)
+
 ![Exploring the inventory](screenshots/explore.png)
 
 ![Sara recognised in a new session](screenshots/recall.png)

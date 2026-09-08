@@ -4,6 +4,12 @@ A chat assistant over 189 used-car listings. It searches the inventory, books vi
 writes qualified buyers to a lead sheet. FastAPI backend, Streamlit client, SQLite, Gemini
 through LiteLLM.
 
+![Thirty seconds of Sayara: search, compare, book, recall](docs/screenshots/demo.gif)
+
+Search, a follow-up that resolves "that first one", a comparison, a booking, recall in a new
+session, a saved conversation reopened, Arabic, and the trace behind a reply. Recorded against
+Gemini.
+
 Longer notes on the data, retrieval, guardrails, and scale are in
 [docs/DESIGN.md](docs/DESIGN.md).
 
