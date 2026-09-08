@@ -392,6 +392,13 @@ def set_mode(mode: str) -> None:
         st.query_params.pop("mode", None)
 
 
+def open_session(session_id: str) -> None:
+    """Reopen a saved conversation. The transcript is refetched, so nothing is held client side."""
+    st.session_state.session_id = session_id
+    st.session_state.messages = []
+    st.query_params["session"] = session_id
+
+
 def new_session() -> None:
     st.session_state.session_id = None
     st.session_state.messages = []
@@ -531,6 +538,35 @@ def _account_body() -> None:
         st.rerun()
 
 
+def _conversations() -> None:
+    """Past chats for whoever is signed in, newest first, each one reopenable."""
+    user_id = st.session_state.get("user_id")
+    if not user_id:
+        return
+    data = get_json(f"/users/{user_id}/conversations") or {}
+    chats = data.get("conversations") or []
+    with st.expander(t("side.chats"), expanded=False):
+        if not chats:
+            st.caption(t("side.chats_empty"))
+            return
+        current = st.session_state.get("session_id")
+        for c in chats:
+            sid = c["session_id"]
+            # The opening line is what a customer recognises the conversation by; the date is
+            # the tie-breaker when they searched for the same thing twice.
+            label = c.get("preview") or t("side.chats_turns", n=c.get("turns", 0))
+            when = str(c.get("last_active_at") or "")[:10]
+            st.button(
+                f"{'• ' if sid == current else ''}{label[:46]}",
+                key=f"chat_{sid}",
+                help=f"{when} · {t('side.chats_turns', n=c.get('turns', 0))}",
+                use_container_width=True,
+                type="tertiary",
+                on_click=open_session,
+                args=(sid,),
+            )
+
+
 def sidebar(h: dict[str, Any]) -> None:
     """The one sidebar for every page: pages, new chat, who you are, the mode switch, and in demo mode the backend."""
     with st.sidebar:
@@ -550,6 +586,7 @@ def sidebar(h: dict[str, Any]) -> None:
             use_container_width=True,
             on_click=new_session,
         )
+        _conversations()
         st.divider()
         if st.button(
             _display_name(),

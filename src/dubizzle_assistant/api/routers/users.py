@@ -53,6 +53,18 @@ def get_profile(
     return prof
 
 
+@router.get("/{user_id}/conversations")
+def conversations(
+    user_id: str,
+    limit: int = 50,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Every conversation this customer has had, so they can reopen or download one."""
+    if not memory.get_user(conn, user_id):
+        raise HTTPException(status_code=404, detail="no such user")
+    return {"user_id": user_id, "conversations": memory.list_sessions(conn, user_id, limit)}
+
+
 @router.get("/{user_id}/history")
 def history(
     user_id: str,

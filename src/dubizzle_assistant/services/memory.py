@@ -9,6 +9,7 @@ instruction next session.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import re
 import secrets
@@ -155,6 +156,45 @@ def create_session(conn: sqlite3.Connection, user_id: str, now: datetime) -> str
 def get_session(conn: sqlite3.Connection, session_id: str) -> dict[str, Any] | None:
     row = conn.execute("SELECT * FROM sessions WHERE session_id = ?", (session_id,)).fetchone()
     return dict(row) if row else None
+
+
+def list_sessions(conn: sqlite3.Connection, user_id: str, limit: int = 50) -> list[dict[str, Any]]:
+    """A customer's own conversations, newest first, each with the line that opened it.
+
+    The preview is the first thing the customer typed rather than a model reply, because that
+    is what they recognise the conversation by in a list.
+    """
+    rows = conn.execute(
+        "SELECT session_id, created_at, last_active_at, turn_counter FROM sessions s"
+        # A session nobody typed into is not a conversation. Opening a page mints one, and the
+        # seed script makes a few, so without this the list fills up with empty rows.
+        " WHERE user_id = ? AND EXISTS ("
+        "   SELECT 1 FROM messages m WHERE m.session_id = s.session_id AND m.role = 'user')"
+        # rowid breaks the tie, because a frozen demo clock gives several sessions the
+        # same timestamp and the order would otherwise be whatever SQLite felt like.
+        " ORDER BY last_active_at DESC, s.rowid DESC LIMIT ?",
+        (user_id, limit),
+    ).fetchall()
+    out = []
+    for r in rows:
+        first = conn.execute(
+            "SELECT blob_json FROM messages WHERE session_id = ? AND role = 'user' ORDER BY id LIMIT 1",
+            (r["session_id"],),
+        ).fetchone()
+        opened = ""
+        if first:
+            with contextlib.suppress(json.JSONDecodeError, TypeError):
+                opened = str(json.loads(first["blob_json"]).get("content") or "")
+        out.append(
+            {
+                "session_id": r["session_id"],
+                "created_at": r["created_at"],
+                "last_active_at": r["last_active_at"],
+                "turns": r["turn_counter"],
+                "preview": opened.strip()[:120],
+            }
+        )
+    return out
 
 
 def begin_turn(conn: sqlite3.Connection, session_id: str, now: datetime) -> int:

@@ -343,6 +343,40 @@ def welcome() -> None:
                 st.session_state.pending_prompt = s
 
 
+def _download_bar() -> None:
+    """Take the conversation away: Markdown to read, JSON to keep the traces with it.
+
+    The bytes are fetched only when the row is drawn, and the backend answers 404 unless the
+    session belongs to the caller, so a stray id in a URL is not a licence to read the chat.
+    """
+    sid = st.session_state.get("session_id")
+    uid = st.session_state.get("user_id")
+    if not sid or not uid:
+        return
+    left, right, note = st.columns([1, 1, 3])
+    for col, fmt, key in ((left, "md", "chat.download_md"), (right, "json", "chat.download_json")):
+        try:
+            r = common.api(
+                "GET",
+                f"/sessions/{sid}/export",
+                params={"user_id": uid, "format": fmt},
+                timeout=20,
+            )
+        except httpx.HTTPError:
+            return
+        if r.status_code != 200:
+            return
+        col.download_button(
+            common.t(key),
+            data=r.content,
+            file_name=f"{sid}.{fmt}",
+            mime="text/markdown" if fmt == "md" else "application/json",
+            use_container_width=True,
+            key=f"dl_{fmt}",
+        )
+    note.caption(common.t("chat.saved_note"))
+
+
 def page(h: dict[str, Any]) -> None:
     ask = st.query_params.get("ask")
     if ask and st.session_state.get("last_ask") != ask:
@@ -357,6 +391,8 @@ def page(h: dict[str, Any]) -> None:
     if not st.session_state.messages:
         welcome()
     msgs = st.session_state.messages
+    if msgs:
+        _download_bar()
     # Buttons live on the last reply that showed cars, and chips name any car seen this session.
     with_cards = [i for i, m in enumerate(msgs) if (m.get("envelope") or {}).get("cars")]
     hot = with_cards[-1] if with_cards else -1

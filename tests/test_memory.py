@@ -329,3 +329,36 @@ def test_forgetting_a_customer_clears_the_exported_bookings_file(client, app_set
 
     assert client.delete(f"/users/{who}").status_code == 200
     assert who not in app_settings.bookings_csv.read_text(encoding="utf-8-sig")
+
+
+def test_a_customer_can_list_and_download_their_own_conversations(client):
+    """Chats are saved per user, listed newest first, and only the owner can read one back."""
+    who = client.post("/chat", json={"message": "hi, it's Omar"}).json()["user_id"]
+    first = client.post(
+        "/chat", json={"message": "show me a white SUV under 150k", "user_id": who}
+    ).json()["session_id"]
+    second = client.post("/chat", json={"message": "any hondas", "user_id": who}).json()[
+        "session_id"
+    ]
+    assert first != second
+
+    listed = client.get(f"/users/{who}/conversations")
+    assert listed.status_code == 200
+    chats = listed.json()["conversations"]
+    ids = [c["session_id"] for c in chats]
+    assert {first, second} <= set(ids)
+    # Newest first, and each row carries the line that opened it.
+    assert ids.index(second) < ids.index(first)
+    opening = {c["session_id"]: c["preview"] for c in chats}
+    assert "white SUV" in opening[first]
+    assert opening[second].startswith("any hondas")
+
+    md = client.get(f"/sessions/{second}/export", params={"user_id": who, "format": "md"})
+    assert md.status_code == 200 and md.text.strip()
+    blob = client.get(f"/sessions/{second}/export", params={"user_id": who, "format": "json"})
+    assert blob.status_code == 200 and blob.json()["messages"]
+
+    # A transcript belongs to one person, and an unknown user is not a listing.
+    stranger = client.post("/chat", json={"message": "hi, it's Rania"}).json()["user_id"]
+    assert client.get(f"/sessions/{second}/export", params={"user_id": stranger}).status_code == 404
+    assert client.get("/users/u_nope/conversations").status_code == 404
