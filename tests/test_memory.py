@@ -362,3 +362,32 @@ def test_a_customer_can_list_and_download_their_own_conversations(client):
     stranger = client.post("/chat", json={"message": "hi, it's Rania"}).json()["user_id"]
     assert client.get(f"/sessions/{second}/export", params={"user_id": stranger}).status_code == 404
     assert client.get("/users/u_nope/conversations").status_code == 404
+
+
+def test_reopening_an_idle_conversation_continues_it(client, app_settings, monkeypatch):
+    """Picking a conversation from the list is a deliberate act, so the idle rule must not fork it.
+
+    Without the flag the thread the customer was reading is left behind and the next message
+    lands in a brand new session, which is what made a reopened chat look like a new one.
+    """
+    started = client.post("/chat", json={"message": "show me the velar"}).json()
+    uid, sid = started["user_id"], started["session_id"]
+
+    # Push the session past the idle window, the way yesterday's conversation already is.
+    conn = connect(app_settings.db_path)
+    stale = (app_settings.now() - timedelta(days=1)).isoformat(timespec="seconds")
+    with conn:
+        conn.execute("UPDATE sessions SET last_active_at = ? WHERE session_id = ?", (stale, sid))
+
+    forked = client.post(
+        "/chat", json={"message": "is it good?", "user_id": uid, "session_id": sid}
+    ).json()
+    assert forked["session_id"] != sid, "an idle session should still fork by default"
+
+    with conn:
+        conn.execute("UPDATE sessions SET last_active_at = ? WHERE session_id = ?", (stale, sid))
+    resumed = client.post(
+        "/chat",
+        json={"message": "is it good?", "user_id": uid, "session_id": sid, "resume": True},
+    ).json()
+    assert resumed["session_id"] == sid, "an explicit resume must continue the conversation"

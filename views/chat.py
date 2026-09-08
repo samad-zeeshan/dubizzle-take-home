@@ -52,7 +52,11 @@ def send(text: str) -> None:
     if st.session_state.get("send_key_for") != text or not key:
         key = str(uuid.uuid4())
         st.session_state.send_key, st.session_state.send_key_for = key, text
-    body: dict[str, Any] = {"message": text, "locale": common.lang()}
+    body: dict[str, Any] = {
+        "message": text,
+        "locale": common.lang(),
+        "resume": bool(st.session_state.get("resume")),
+    }
     if st.session_state.user_id:
         body["user_id"] = st.session_state.user_id
     if st.session_state.session_id:

@@ -33,6 +33,13 @@ class ChatRequest(BaseModel):
     locale: Literal["en", "ar"] = Field(
         "en", description="Language for the reply and the canned declines"
     )
+    resume: bool = Field(
+        False,
+        description=(
+            "Continue the named session even if it has been idle. Set it when the customer "
+            "picked the conversation, which is a deliberate act, unlike a stale id in a URL."
+        ),
+    )
 
     model_config = {
         "json_schema_extra": {
@@ -130,10 +137,13 @@ def prepare(
     session_id = None
     if req.session_id:
         s = memory.get_session(conn, req.session_id)
+        # Idle means a stale id should not silently reopen an abandoned thread. Choosing the
+        # conversation from the list says otherwise, and forking it there loses the thread the
+        # customer was just reading.
         if (
             s
             and s["user_id"] == user_id
-            and not memory.is_idle(s, now, settings.session_idle_minutes)
+            and (req.resume or not memory.is_idle(s, now, settings.session_idle_minutes))
         ):
             session_id, new_session = req.session_id, False
     if session_id is None:

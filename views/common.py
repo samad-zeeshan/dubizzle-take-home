@@ -346,6 +346,9 @@ def restore_history(session_id: str, user_id: str) -> None:
             and not text.startswith("{")
         ):
             st.session_state.messages.append({"role": m["role"], "content": text, "envelope": None})
+    # A transcript is on screen, so the next message belongs to it rather than to a fresh thread.
+    if st.session_state.messages:
+        st.session_state.resume = True
 
 
 def demo() -> bool:
@@ -398,6 +401,8 @@ def open_session(session_id: str) -> None:
     st.session_state.session_id = session_id
     st.session_state.messages = []
     st.query_params["session"] = session_id
+    # Picking a conversation means continuing it, however long ago it was.
+    st.session_state.resume = True
     # The list is in the sidebar, so it can be clicked from any page. Picking a conversation
     # only looks like it worked if it takes you to the one place that shows it.
     st.session_state.open_chat = True
@@ -406,6 +411,7 @@ def open_session(session_id: str) -> None:
 def new_session() -> None:
     st.session_state.session_id = None
     st.session_state.messages = []
+    st.session_state.resume = False
     st.query_params.pop("session", None)
 
 
