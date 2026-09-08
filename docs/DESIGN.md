@@ -10,12 +10,25 @@ Python 3.11 to 3.13 and [uv](https://docs.astral.sh/uv/). One step, no key neede
 double-click `run.bat` on Windows, run `./run.sh` on macOS or Linux, or
 `uv run python run.py` anywhere.
 
-The two wrappers call `uv sync` first. `run.py` reads `.env` only to test whether a Gemini
+The two wrappers offer to install uv when it is missing, prompting before anything is
+downloaded, then call `uv sync`, which creates `.venv` and installs from the lockfile. So a
+clean machine needs nothing but the clone. `run.py` reads `.env` only to test whether a Gemini
 key is non-empty, and picks the model when there is one and the offline stand-in when there
 is not, so a reviewer never meets an error on the first turn. It steps past busy ports,
 waits for `/health` before starting the client, seeds the returning customer once on a fresh
 clone, and stops both servers together on Ctrl+C. It takes `--mode live|mock`, `--port`,
-`--client-port`, `--no-browser` and `--no-seed`.
+`--client-port`, `--no-browser`, `--no-seed` and `--set-key`.
+
+`--set-key` is the safe way in: the key is read with `getpass`, so it never appears on screen
+or in shell history, it is written into `.env` alone with the rest of the file preserved, the
+file is chmod 600 where the platform allows, and `scripts/check_llm.py` then confirms it works.
+`.env` is gitignored, so the key cannot be committed. Nothing else in the tree reads a key from
+anywhere but that file and the process environment.
+
+`/health` reports the model that is actually answering, not the configured id. Offline that is
+`mock/heuristic` with `offline: true`, and the home page prints "offline stand-in", because the
+setting still reads `gemini/...` and the page used to claim replies came from a model that had
+never run.
 
 To run the pieces yourself instead:
 

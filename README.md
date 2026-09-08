@@ -9,43 +9,30 @@ Longer notes on the data, retrieval, guardrails, and scale are in
 
 ## Setup
 
-You need Python 3.11 to 3.13 and [uv](https://docs.astral.sh/uv/). Then one step, and no
-API key:
+One command. It installs what it needs, and no API key is required.
 
 | Platform | Run this |
 |---|---|
 | Windows | double-click `run.bat` |
 | macOS, Linux | `./run.sh` |
-| Anywhere | `uv run python run.py` |
 
-That installs the dependencies, starts the backend and the client, seeds a returning
-customer so the recall demo works, and opens a browser. With a Gemini key in `.env` it
-uses the model; without one it falls back to a rule-based stand-in, so the app still
-answers. Ctrl+C stops both servers.
+It installs [uv](https://docs.astral.sh/uv/) if you do not have it, asking first, then fetches
+the dependencies, starts the backend and the client, seeds a returning customer so the memory
+demo works, and opens a browser. Ctrl+C stops both. Needs Python 3.11 to 3.13.
 
-To run the pieces yourself instead:
+Until you add a key, replies come from a rule-based stand-in, and the home page says which one
+is answering. To use Gemini, run `run.bat --set-key` or `./run.sh --set-key`: it takes the key
+without showing it, writes it to `.env`, which is gitignored, and checks that it works.
 
-```
-uv sync
-LLM_PROVIDER=mock uv run uvicorn main:app
-uv run streamlit run app.py
-```
-
-Client on http://localhost:8501, backend on 8000.
-
-The recorded demo is closer to the real thing. Start the backend in replay mode and run the
-demo script. It plays two scripted conversations from a cassette of 28 model calls. No key, no
-network, and the same replies every time.
+For a run that is identical every time, with no key and no network, replay the recorded demo.
+It plays two scripted conversations from a cassette of 28 model calls.
 
 ```
 LLM_CASSETTE_MODE=replay uv run uvicorn main:app
 uv run python scripts/demo.py
 ```
 
-For a live run, copy `.env.example` to `.env` and add a Gemini key. Defaults are
-gemini-3.5-flash-lite with 3.1-flash-lite as fallback. `uv run python scripts/check_llm.py`
-tells you in ten seconds whether the key works. `scripts/reset_db.py` wipes local state and
-`scripts/seed_demo_user.py` creates a returning user named Sara for the recall scenario.
+Every other way to start it, and every flag, is in [docs/DESIGN.md](docs/DESIGN.md).
 
 ## Why these choices
 
