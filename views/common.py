@@ -66,7 +66,7 @@ h1,h2,h3,.hero h1,.tile h3{font-family:'Space Grotesk','DM Sans',system-ui,sans-
 [data-testid="stSidebar"] .st-key-newchat button:hover,[data-testid="stSidebar"] .st-key-account button:hover{background:rgba(255,255,255,.06);color:var(--ink)}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes sheen{0%{background-position:0% 50%}100%{background-position:100% 50%}}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(134,239,172,.55)}70%{box-shadow:0 0 0 8px rgba(134,239,172,0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .hero{position:relative;overflow:hidden;background:linear-gradient(120deg,#8F1017 0%,var(--brand-dark) 30%,var(--brand) 62%,#F0563F 100%);background-size:200% 200%;animation:rise .6s var(--ease) both,sheen 14s ease-in-out infinite alternate;color:#fff;border-radius:24px;padding:3rem 2.6rem 2.6rem;box-shadow:0 24px 50px -32px rgba(227,38,46,.3)}
 .hero:after{content:"";position:absolute;inset:auto -20% -60% auto;width:60%;aspect-ratio:1;border-radius:50%;background:radial-gradient(closest-side,rgba(255,255,255,.18),transparent 70%);pointer-events:none}
 .hero .eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:.72rem;opacity:.85;font-weight:600}
@@ -106,8 +106,9 @@ h1,h2,h3,.hero h1,.tile h3{font-family:'Space Grotesk','DM Sans',system-ui,sans-
 .tile p{color:var(--slate);font-size:.93rem;line-height:1.55;margin:0}
 .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem;margin:1.4rem 0 .4rem}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:1rem 1.2rem;min-height:96px;display:flex;flex-direction:column;justify-content:center}
-.stat b{display:block;font-size:1.55rem;font-variant-numeric:tabular-nums;font-family:'Space Grotesk',sans-serif;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat b{display:block;padding-left:2px;font-size:1.55rem;font-variant-numeric:tabular-nums;font-family:'Space Grotesk',sans-serif;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stat span{color:var(--muted);font-size:.84rem}
+div[data-testid="stForm"] [data-testid="InputInstructions"]{display:none}
 .stat .live{display:inline-block;width:9px;height:9px;border-radius:50%;background:#4ADE80;margin-right:.45rem;animation:pulse 2s ease-out infinite;vertical-align:middle}
 .reviewer{background:linear-gradient(135deg,#1C1C1F,#141416);border:1px solid var(--line);border-radius:var(--radius);padding:1.4rem 1.5rem;height:100%}
 .reviewer h3{color:var(--ink);margin:0 0 .4rem}
