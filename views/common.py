@@ -398,6 +398,9 @@ def open_session(session_id: str) -> None:
     st.session_state.session_id = session_id
     st.session_state.messages = []
     st.query_params["session"] = session_id
+    # The list is in the sidebar, so it can be clicked from any page. Picking a conversation
+    # only looks like it worked if it takes you to the one place that shows it.
+    st.session_state.open_chat = True
 
 
 def new_session() -> None:
@@ -570,6 +573,12 @@ def _conversations() -> None:
 
 def sidebar(h: dict[str, Any]) -> None:
     """The one sidebar for every page: pages, new chat, who you are, the mode switch, and in demo mode the backend."""
+    # Set by open_session during a click callback, where switch_page is not allowed. app.py calls
+    # this before nav.run(), so here it is an ordinary command.
+    if st.session_state.pop("open_chat", False):
+        chat_page = pages().get("chat")
+        if chat_page is not None:
+            st.switch_page(chat_page)
     with st.sidebar:
         flash = st.session_state.pop("flash", None)
         if flash:
