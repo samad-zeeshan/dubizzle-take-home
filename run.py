@@ -8,6 +8,8 @@ working app rather than an error on the first turn.
 from __future__ import annotations
 
 import argparse
+import contextlib
+import getpass
 import os
 import socket
 import subprocess
@@ -43,6 +45,47 @@ def gemini_key_present() -> bool:
         if sep and key.strip() == "GEMINI_API_KEY" and value.strip():
             return True
     return False
+
+
+def set_key() -> int:
+    """Put a Gemini key in .env without it showing on screen or landing in shell history."""
+    print("Get a free key at https://aistudio.google.com/apikey")
+    try:
+        key = getpass.getpass("Paste it here (nothing will appear), or press Enter to cancel: ")
+    except (EOFError, KeyboardInterrupt):
+        print("\nCancelled.")
+        return 1
+    key = key.strip()
+    if not key:
+        print("Cancelled. The app still runs without a key.")
+        return 0
+    if not key.startswith("AIza") or len(key) < 30:
+        print("That does not look like a Gemini key. They start with AIza and are longer.")
+        return 1
+
+    env, example = ROOT / ".env", ROOT / ".env.example"
+    source = env if env.exists() else example
+    lines = source.read_text(encoding="utf-8").splitlines() if source.exists() else []
+    out, replaced = [], False
+    for line in lines:
+        if line.split("=", 1)[0].strip() == "GEMINI_API_KEY":
+            out.append(f"GEMINI_API_KEY={key}")
+            replaced = True
+        else:
+            out.append(line)
+    if not replaced:
+        out.insert(0, f"GEMINI_API_KEY={key}")
+    env.write_text("\n".join(out) + "\n", encoding="utf-8")
+    with contextlib.suppress(OSError):
+        # The file holds a credential now, so take it off group and world.
+        env.chmod(0o600)
+    print(f"Saved to {env.name}, which is gitignored and will not be committed.")
+
+    check = ROOT / "scripts" / "check_llm.py"
+    if check.exists():
+        print("Checking the key ...")
+        return subprocess.run([sys.executable, str(check)], cwd=ROOT).returncode
+    return 0
 
 
 def wait_for_backend(base_url: str, process: subprocess.Popen[bytes], timeout: float) -> bool:
@@ -88,7 +131,12 @@ def main() -> int:
     parser.add_argument("--client-port", type=int, default=8501, help="Streamlit port")
     parser.add_argument("--no-browser", action="store_true", help="do not open a browser")
     parser.add_argument("--no-seed", action="store_true", help="skip the returning-user demo data")
+    parser.add_argument(
+        "--set-key", action="store_true", help="paste a Gemini key into .env, then exit"
+    )
     args = parser.parse_args()
+    if args.set_key:
+        return set_key()
 
     mode = args.mode
     if mode == "auto":
@@ -150,9 +198,14 @@ def main() -> int:
 
         client_url = f"http://localhost:{client_port}"
         engine = "Gemini" if mode == "live" else "the offline stand-in, so no API key is needed"
+        # Someone running offline should not have to find this in the README.
+        hint = (
+            "" if mode == "live" else "  To use Gemini instead:  uv run python run.py --set-key\n"
+        )
         print(
             f"\n  Sayara is running on {client_url}\n"
-            f"  Answers come from {engine}.\n\n"
+            f"  Answers come from {engine}.\n"
+            f"{hint}\n"
             f"  Try:  show me a white SUV under 150k\n"
             f"        what's the mileage on that first one?\n"
             f"  A returning customer named Sara is already in the database, so"
