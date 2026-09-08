@@ -19,11 +19,19 @@ waits for `/health` before starting the client, seeds the returning customer onc
 clone, and stops both servers together on Ctrl+C. It takes `--mode live|mock`, `--port`,
 `--client-port`, `--no-browser`, `--no-seed` and `--set-key`.
 
-`--set-key` is the safe way in: the key is read with `getpass`, so it never appears on screen
-or in shell history, it is written into `.env` alone with the rest of the file preserved, the
-file is chmod 600 where the platform allows, and `scripts/check_llm.py` then confirms it works.
-`.env` is gitignored, so the key cannot be committed. Nothing else in the tree reads a key from
-anywhere but that file and the process environment.
+There are two safe ways in. `--set-key` reads the key with `getpass`, so it never appears on
+screen or in shell history, then `scripts/check_llm.py` confirms it works. Or, when the
+stand-in is answering, the home page offers a masked field: the key goes to `POST /llm/key`,
+which only the machine running the app may call, and the response carries back the first and
+last four characters and nothing else. Either way `envfile.write_key` writes that one line and
+preserves the rest of the file, chmod 600 where the platform allows, and `.env` is gitignored
+so the key cannot be committed. The route then rebuilds the client in place, so the next turn
+uses the model without a restart, and it moves off a local model id if `.env` still names one.
+The key is never logged, never echoed, and never sent anywhere but the local backend.
+
+One deliberate looseness: the key is checked for length and whitespace, not for a prefix.
+Studio issues both `AIza...` and `AQ.A...` keys, and an earlier prefix check refused a working
+one.
 
 `/health` reports the model that is actually answering, not the configured id. Offline that is
 `mock/heuristic` with `offline: true`, and the home page prints "offline stand-in", because the

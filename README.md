@@ -21,8 +21,9 @@ the dependencies, starts the backend and the client, seeds a returning customer 
 demo works, and opens a browser. Ctrl+C stops both. Needs Python 3.11 to 3.13.
 
 Until you add a key, replies come from a rule-based stand-in, and the home page says which one
-is answering. To use Gemini, run `run.bat --set-key` or `./run.sh --set-key`: it takes the key
-without showing it, writes it to `.env`, which is gitignored, and checks that it works.
+is answering. To use Gemini, paste a key into the panel the home page offers, or run
+`run.bat --set-key` or `./run.sh --set-key`. Either way the key is masked as you type, written
+to `.env`, which is gitignored, and used from the next turn without a restart.
 
 For a run that is identical every time, with no key and no network, replay the recorded demo.
 It plays two scripted conversations from a cassette of 28 model calls.
