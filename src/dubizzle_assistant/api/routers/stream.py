@@ -81,6 +81,7 @@ async def chat_stream(
                     session_id=prep["session_id"],
                     message=prep["text"],
                     request_id=secrets.token_hex(6),
+                    locale=req.locale,
                     on_stage=on_stage,
                     embedder=getattr(request.app.state, "embedder", None),
                     on_token=on_token,

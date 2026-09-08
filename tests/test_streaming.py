@@ -103,3 +103,27 @@ def test_stream_endpoint_emits_scrubbed_tokens_then_the_envelope(tmp_path: Path)
     assert draft.strip() == env["reply"].strip()
     assert env["streamed"] == {"chars": len(draft), "matches_reply": True}
     assert [c["id"] for c in env["cars"]] == ["R-078"]
+
+
+def _streamed_reply(client, body):
+    with client.stream("POST", "/chat/stream", json=body) as r:
+        assert r.status_code == 200
+        for line in r.iter_lines():
+            if line.startswith("data: "):
+                data = json.loads(line[6:])
+                if isinstance(data, dict) and data.get("reply"):
+                    return data["reply"]
+    return ""
+
+
+def test_the_stream_replies_in_the_language_it_was_given(client):
+    """The route accepted locale and then dropped it, so the Arabic toggle did nothing here."""
+    message = "how many planets are there"
+    plain = client.post("/chat", json={"message": message, "locale": "ar"}).json()["reply"]
+    streamed = _streamed_reply(client, {"message": message, "locale": "ar"})
+
+    def arabic(text):
+        return any("؀" <= ch <= "ۿ" for ch in text or "")
+
+    assert arabic(plain), "the non-streaming route should already answer in Arabic"
+    assert arabic(streamed), "locale=ar reached the stream route and came back English"
