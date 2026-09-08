@@ -24,6 +24,12 @@ def health(
         "SELECT COUNT(*) FROM llm_calls WHERE ts >= ?", (today,)
     ).fetchone()[0]
     db_ok = conn.execute("SELECT COUNT(*) FROM listings").fetchone()[0] > 0
+    # The client that is actually answering, not the configured id. With LLM_PROVIDER=mock, or
+    # with no key at all, llm_model still reads gemini-... and the page claimed a model that
+    # never ran. Someone cloning the repo offline was told the replies came from Gemini.
+    client = getattr(request.app.state, "llm", None)
+    active_model = getattr(client, "model", None) or settings.llm_model
+    offline = not str(active_model).startswith("gemini/")
     return {
         "status": "ok" if db_ok else "degraded",
         "now": settings.now().isoformat(timespec="minutes"),
@@ -34,7 +40,9 @@ def health(
         "llm": {
             "configured": settings.llm_configured,
             "provider": settings.llm_provider,
-            "model": settings.llm_model,
+            "model": active_model,
+            "configured_model": settings.llm_model,
+            "offline": offline,
             "fallback_model": settings.usable_fallback_model,
             "requests_today": requests_today,
             "budget": settings.daily_llm_budget,

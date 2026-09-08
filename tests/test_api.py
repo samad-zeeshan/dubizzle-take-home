@@ -135,3 +135,13 @@ def test_no_phone_numbers_in_any_search_payload(client):
 def test_makes(client):
     makes = client.get("/inventory/makes").json()
     assert "mercedes-benz" in makes and "tova" in makes and len(makes) >= 40
+
+
+def test_health_names_the_model_that_actually_answers(client):
+    """Offline, llm_model still reads gemini-..., and the home page claimed replies came from it."""
+    llm = client.get("/health").json()["llm"]
+    assert llm["provider"] == "mock"
+    assert llm["model"] == "mock/heuristic"
+    assert llm["offline"] is True
+    # The configured id is still reported, because the admin panel shows what was asked for.
+    assert llm["configured_model"].startswith("gemini/")

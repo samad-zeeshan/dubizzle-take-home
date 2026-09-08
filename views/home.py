@@ -61,7 +61,8 @@ def page(h: dict[str, Any]) -> None:
         )
 
     llm = h["llm"]
-    model = llm["model"].split("/")[-1]
+    # An id like mock/heuristic means nothing to a reviewer, so say what it is in words.
+    model = common.t("stat.offline") if llm.get("offline") else llm["model"].split("/")[-1]
     clock = '<span class="live"></span>live' if not h.get("demo_clock") else "frozen"
     st.markdown(
         '<div class="stats">'
