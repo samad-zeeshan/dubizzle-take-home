@@ -391,3 +391,6 @@ def test_reopening_an_idle_conversation_continues_it(client, app_settings, monke
         json={"message": "is it good?", "user_id": uid, "session_id": sid, "resume": True},
     ).json()
     assert resumed["session_id"] == sid, "an explicit resume must continue the conversation"
+    # The turn count carries on, which is what keeps the greeting rule from firing a second
+    # time. A fork reset it to 1 and the reply opened with "Welcome back" all over again.
+    assert resumed["turn"] > 1, "a resumed conversation must not restart its turn count"
