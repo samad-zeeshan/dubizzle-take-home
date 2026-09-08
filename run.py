@@ -32,19 +32,33 @@ def first_free_port(start: int) -> int:
     raise SystemExit(f"no free port between {start} and {start + 19}")
 
 
-def gemini_key_present() -> bool:
-    # Read .env directly rather than importing settings, because settings raises on a bad
-    # value and this has to answer before anything else starts.
-    if os.environ.get("GEMINI_API_KEY", "").strip():
-        return True
+def setting(name: str) -> str:
+    """One setting, from the environment or .env.
+
+    Read directly rather than importing settings, because settings raises on a bad value and
+    this has to answer before anything else starts.
+    """
+    live = os.environ.get(name, "").strip()
+    if live:
+        return live
     env_file = ROOT / ".env"
     if not env_file.exists():
-        return False
+        return ""
     for line in env_file.read_text(encoding="utf-8").splitlines():
         key, sep, value = line.partition("=")
-        if sep and key.strip() == "GEMINI_API_KEY" and value.strip():
-            return True
-    return False
+        if sep and key.strip() == name:
+            return value.strip()
+    return ""
+
+
+def gemini_key_present() -> bool:
+    return bool(setting("GEMINI_API_KEY"))
+
+
+def database_path() -> Path:
+    """Where state actually lives, which DB_FILE can move."""
+    override = setting("DB_FILE")
+    return (ROOT / override) if override else ROOT / "data" / "app.db"
 
 
 def set_key() -> int:
@@ -153,8 +167,9 @@ def main() -> int:
         env["LLM_PROVIDER"] = "mock"
 
     # A missing database means a fresh clone, and that is the only time seeding is safe.
-    # Running it twice would stack duplicate searches and a second booking onto Sara.
-    fresh = not (ROOT / "data" / "app.db").exists()
+    # Running it twice would stack duplicate searches and a second booking onto Sara. It has to
+    # be the configured file: keyed on data/app.db, a DB_FILE run skipped seeding a fresh one.
+    fresh = not database_path().exists()
 
     backend = client = None
     try:
