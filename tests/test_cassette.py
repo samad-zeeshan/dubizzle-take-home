@@ -6,7 +6,8 @@ import json
 
 import pytest
 
-from dubizzle_assistant.services.llm.cassette import CassetteClient, CassetteMissError
+from dubizzle_assistant.services.llm.base import ToolCall
+from dubizzle_assistant.services.llm.cassette import CassetteClient, CassetteMissError, _key
 from dubizzle_assistant.services.llm.mock_client import ScriptedLLM
 from dubizzle_assistant.text import PHONE_RE
 
@@ -85,3 +86,29 @@ def test_replay_through_the_api(tmp_path):
             },
         )
         assert miss.status_code == 503 and "no recording" in miss.json()["detail"]
+
+
+def test_one_recording_replays_more_than_once(tmp_path):
+    """Building the response edited the store in place, so the second replay raised TypeError."""
+    client = CassetteClient(inner=None, path=tmp_path / "none.jsonl", mode="replay")
+    messages = [{"role": "user", "content": "show me a white SUV under 150k"}]
+    tools = [{"type": "function", "function": {"name": "search_inventory"}}]
+    key = _key(client._payload("complete", messages=messages, tools=tools, schema=None))
+    client._store[key] = {
+        "key": key,
+        "response": {
+            "text": None,
+            "tool_calls": [{"id": "c1", "name": "search_inventory", "arguments": {}}],
+            "finish_reason": "tool_calls",
+            "usage": {"prompt_tokens": 1, "completion_tokens": 1},
+            "raw_message": {},
+            "model": "gemini/gemini-3.5-flash-lite",
+            "latency_ms": 3,
+        },
+    }
+    for attempt in range(3):
+        out = client.complete(messages, tools)
+        assert isinstance(out.tool_calls[0], ToolCall), (
+            f"replay {attempt + 1} returned the wrong type"
+        )
+        assert out.tool_calls[0].name == "search_inventory"

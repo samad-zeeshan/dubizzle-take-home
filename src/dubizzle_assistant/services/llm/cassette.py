@@ -67,7 +67,10 @@ class CassetteClient:
         payload = self._payload("complete", messages=messages, tools=tools, schema=response_schema)
         key = _key(payload)
         if key in self._store:
-            rec = self._store[key]["response"]
+            # A copy, because converting tool_calls in place turned the stored dicts into
+            # ToolCall objects, and the next replay of the same call fed those back into
+            # ToolCall(**...).
+            rec = dict(self._store[key]["response"])
             rec["tool_calls"] = [ToolCall(**tc) for tc in rec.get("tool_calls", [])]
             resp = LLMResponse(**rec)
             resp.cassette_hit = True
