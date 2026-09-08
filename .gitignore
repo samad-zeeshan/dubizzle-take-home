@@ -13,8 +13,9 @@ __pycache__/
 data/app.db
 data/app.db-*
 data/*.db
-data/leads.csv
-data/bookings.csv
+# Any export, not just the default names: a lead sheet carries names, phones and emails,
+# so a differently named one must not become a commit candidate.
+data/*.csv
 logs/
 
 # editors / os
