@@ -69,7 +69,9 @@ which it dropped. The reply comes back as JSON against a schema, and every numbe
 checked against that turn's tool results: a miss gets one retry, a second miss gets a template
 built from the tool results. The dataset has no price, mileage, colour, or body column, so a
 two-pass ingest pulls those out of the descriptions, regex first and then one batched model
-pass, cached and committed so a rebuild costs nothing.
+pass, cached and committed so a rebuild costs nothing. Conversations are saved against the
+user, so the sidebar lists past chats, any of them reopens, and each downloads as Markdown or
+JSON.
 
 Outside the scope of this prototype: authentication, because there is nothing local to verify
 a token against, so today anyone who knows a user id can read that profile, and in production

@@ -104,6 +104,13 @@ preferences, bookings, and search history attach to it. A returning user is gree
 gets a recall block in the prompt, so "anything new in my budget" works a day later. The dialog
 has a forget-me button.
 
+Every conversation is kept against that user, and the sidebar lists them newest first, labelled
+by the line that opened each one. Picking one reopens it: the transcript is refetched from the
+backend rather than held in the browser, so it survives a refresh and a new machine. Each chat
+downloads as Markdown to read or JSON to keep the per-turn traces with it. Both the read and the
+export route answer 404 unless the session belongs to the caller, so an id that leaks into a URL
+is not a licence to read the conversation. Forget-me takes the transcripts with it.
+
 Viewings are Monday to Saturday, 08:00 to 20:00 Dubai time, hourly, the window the brief sets
 for dubizzle managed cars. A real marketplace would cut that down by the seller's calendar.
 Availability is computed per listing, so that is one more filter on the same grid. Here every
