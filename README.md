@@ -49,7 +49,7 @@ full-text search built in. Leads go to CSV because the brief says CSV.
 
 ## Implementation
 
-A message goes through regex guardrails before any model call, then a resolver turns "the
+A message goes through regex guardrails before any model call, then a resolver turns phrases like "the
 second one" or "the white one" into a listing id from the cars on screen, so the model never
 guesses which car is meant. The model gets seven tools and up to six calls a turn. Search
 applies structured filters first and relaxes them one at a time when nothing matches, saying
